@@ -4,3 +4,6 @@ node_modules/
 *.log
 .env
 .firebase/
+
+# โน้ตส่วนตัว (ลิงก์เว็บ) - ไม่ต้อง deploy
+*.txt
