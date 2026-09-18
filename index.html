@@ -272,9 +272,86 @@
     .swatch .sw-name{ font-size:11px; color:var(--text); }
     .apane input[type=color]{ height:44px; padding:4px; }
     .admin-tabs{ overflow-x:auto; } .atab{ flex:0 0 auto; min-width:70px; font-size:13px; }
+    .logout-btn{ border:1px solid var(--stroke); background:var(--glass-2); color:#ff8a90; border-radius:10px;
+      padding:6px 12px; font-family:inherit; font-size:13px; cursor:pointer; }
+
+    /* ---- แชทซ้อนบนจอ ---- */
+    .chat-overlay{ position:absolute; left:10px; right:64px; bottom:10px; max-height:52%; z-index:5;
+      display:flex; flex-direction:column; justify-content:flex-end; gap:5px; overflow:hidden; pointer-events:none;
+      -webkit-mask-image:linear-gradient(to top, #000 72%, transparent); mask-image:linear-gradient(to top, #000 72%, transparent); }
+    .chat-overlay .msg{ animation:rise .25s ease; }
+    .chat-overlay .msg .av{ width:22px; height:22px; font-size:11px; }
+    .chat-overlay .msg .body{ background:rgba(0,0,0,.42); border-color:rgba(255,255,255,.12); padding:5px 9px; max-width:100%;
+      -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); }
+    .chat-overlay .msg .nm{ font-size:11px; } .chat-overlay .msg .tx{ font-size:13.5px; }
+    /* ---- ปุ่มรีแอคชัน ---- */
+    .react-bar{ position:absolute; right:10px; bottom:10px; z-index:6; display:flex; flex-direction:column; gap:8px; }
+    .react-bar button{ width:44px; height:44px; border-radius:50%; border:1px solid var(--stroke); cursor:pointer;
+      background:rgba(0,0,0,.4); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); font-size:20px;
+      display:flex; align-items:center; justify-content:center; transition:transform .12s; }
+    .react-bar button:active{ transform:scale(1.25); }
+    .react-float{ position:absolute; inset:0; z-index:4; pointer-events:none; overflow:hidden; }
+    .react-float .fx{ position:absolute; bottom:8%; font-size:30px; animation:floatUp 2.6s ease-out forwards; }
+    @keyframes floatUp{ 0%{ transform:translateY(0) scale(.6); opacity:0; } 15%{ opacity:1; transform:translateY(-10px) scale(1.1);} 100%{ transform:translateY(-260px) scale(1) rotate(12deg); opacity:0; } }
+
+    /* ---- แถบกำลังออกอากาศ + แชร์ ---- */
+    .live-bar{ display:flex; align-items:center; gap:8px; margin-top:10px; }
+    .now-chip{ display:inline-flex; align-items:center; background:var(--glass); border:1px solid var(--stroke);
+      border-radius:999px; padding:7px 14px; font-size:13px; max-width:78%; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+    .now-chip b{ color:var(--accent); font-weight:600; }
+    .share-btn{ border:1px solid var(--accent); background:color-mix(in srgb, var(--accent) 14%, transparent); color:var(--accent);
+      border-radius:999px; padding:7px 16px; font-family:inherit; font-weight:700; font-size:14px; cursor:pointer; white-space:nowrap; }
+
+    /* ---- เวลาละหมาด ---- */
+    .prayer{ margin-top:8px; padding:14px; }
+    .prayer-head{ display:flex; gap:8px; margin-bottom:12px; }
+    .prayer-head select{ flex:1; background:var(--glass-2); border:1px solid var(--stroke); color:var(--text);
+      border-radius:12px; padding:9px 12px; font-family:inherit; color-scheme:dark; }
+    .prayer-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+    .pcell{ text-align:center; background:var(--glass); border:1px solid var(--stroke); border-radius:14px; padding:10px 4px; }
+    .pcell.next{ border-color:var(--accent); box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent), 0 0 24px -8px var(--glow); }
+    .pcell .pn{ font-size:12px; color:var(--muted); } .pcell .pt{ font-size:16px; font-weight:700; margin-top:3px; }
+    .prayer-next{ text-align:center; margin-top:12px; font-size:14px; color:var(--accent); }
+
+    /* ---- lightbox / quran modal ---- */
+    .lb-img{ max-width:96vw; max-height:86vh; border-radius:14px; }
+    .quran-modal{ width:96vw; height:90vh; max-width:900px; border-radius:18px; padding:8px; position:relative; display:flex; flex-direction:column; }
+    .quran-modal iframe{ flex:1; width:100%; border:0; border-radius:12px; background:#fff; }
+
+    /* ---- splash ก่อนเข้า ---- */
+    #splash{ position:fixed; inset:0; z-index:100; background:var(--bg); display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:18px; transition:opacity .5s; }
+    #splash.hide{ opacity:0; pointer-events:none; }
+    #splash img{ width:120px; height:120px; border-radius:28px; object-fit:cover; box-shadow:0 0 0 1px var(--stroke), 0 0 60px -10px var(--glow); animation:pop .6s ease; }
+    #splash .st{ font-size:26px; font-weight:700; } #splash .st span{ color:var(--accent); }
+    #splash .sload{ width:38px; height:38px; border:3px solid var(--stroke); border-top-color:var(--accent); border-radius:50%; animation:spin 1s linear infinite; }
+    @keyframes spin{ to{ transform:rotate(360deg); } } @keyframes pop{ from{ transform:scale(.8); opacity:0 } to{ transform:scale(1); opacity:1 } }
+    /* ---- install banner ---- */
+    #install-banner{ position:fixed; left:12px; right:12px; bottom:12px; z-index:70; display:none; align-items:center; gap:12px;
+      padding:12px 14px; padding-bottom:calc(12px + env(safe-area-inset-bottom)); }
+    #install-banner img{ width:40px; height:40px; border-radius:11px; }
+    #install-banner .ib-t{ flex:1; font-size:13px; } #install-banner .ib-t b{ color:var(--accent); }
+    #install-banner button{ border:none; border-radius:10px; padding:9px 14px; font-family:inherit; font-weight:700; cursor:pointer;
+      color:#241a00; background:linear-gradient(135deg,var(--accent),var(--accent-2)); }
+    #install-banner .ib-x{ background:none; color:var(--muted); font-size:20px; padding:4px 8px; }
   </style>
 </head>
 <body>
+  <!-- SPLASH ก่อนเข้า -->
+  <div id="splash">
+    <img src="logo.png" alt="Yateem TV" onerror="this.onerror=null;this.src='icon.jpg'">
+    <div class="st">Yateem<span> TV</span></div>
+    <div class="sload"></div>
+  </div>
+
+  <!-- INSTALL BANNER (เพิ่มเป็นแอพ) -->
+  <div id="install-banner" class="glass">
+    <img src="logo.png" alt="" onerror="this.onerror=null;this.src='icon.jpg'">
+    <div class="ib-t" id="install-text">ติดตั้ง <b>Yateem TV</b> เป็นแอพบนหน้าจอโฮม</div>
+    <button id="install-btn" onclick="doInstall()">ติดตั้ง</button>
+    <button class="ib-x" onclick="dismissInstall()">×</button>
+  </div>
+
   <!-- ============================================================
        CONFIG — ผู้ดูแลกรอกค่าตรงนี้ (ดูวิธีใน README.md)
        ============================================================ -->
@@ -315,10 +392,13 @@
         badWords:['เหี้ย','สัส','ควย','เย็ด','fuck','shit','bitch']  // เติมได้ตามต้องการ
       },
       cloudinary: { cloudName:'qk5q5cys', preset:'pjmfqmmf' },  // ใช้บัญชีเดิมของ Yateem (อัปรูป/PDF ผัง)
-      videos: []   // วิดีโอแนะนำ [{id,title}] — ปกติแอดมินตั้งผ่านหน้าแอดมิน เก็บใน /settings
+      videos: [],  // วิดีโอแนะนำ [{id,title}] — ปกติแอดมินตั้งผ่านหน้าแอดมิน เก็บใน /settings
+      domain: '',            // โดเมนเว็บ (ไว้ทำลิงก์แชร์) — ว่าง = ใช้ URL ปัจจุบัน
+      prayerProvince: 'Bangkok',   // จังหวัดเริ่มต้นสำหรับเวลาละหมาด
+      quranPdfUrl: ''        // ลิงก์ไฟล์ PDF อัลกุรอานแปลไทย (แอดมินอัป)
     };
     // ค่าที่แอดมินแก้ได้ (ทับด้วย /settings จาก Firebase ตอนโหลด)
-    const ADMIN_KEYS = ['streamUrl','social','market','donate','videos','theme','labels','logoUrl'];
+    const ADMIN_KEYS = ['streamUrl','social','market','donate','videos','theme','labels','logoUrl','domain','prayerProvince','quranPdfUrl'];
 
     // ---- ชุดธีมสำเร็จ (อิงสีโลโก้ยาตีมทีวี: น้ำเงิน–ทอง) ----
     const THEMES = {
@@ -383,7 +463,7 @@
   </header>
 
   <div class="wrap">
-    <!-- HERO / LIVE -->
+    <!-- HERO / LIVE (มีแชทซ้อน + ปุ่มรีแอคชัน) -->
     <div class="hero" id="hero">
       <div class="chips">
         <span class="chip live"><span class="dot"></span><span data-lbl="liveBadge">LIVE</span></span>
@@ -395,7 +475,28 @@
         <div data-lbl="offlineTitle">ขณะนี้ยังไม่มีการถ่ายทอดสด ค่ะ</div>
         <div style="font-size:13px" data-lbl="offlineSub">กลับมาอีกครั้งเมื่อช่องเริ่มไลฟ์นะคะ</div>
       </div>
+      <!-- แชทซ้อนบนจอ -->
+      <div class="chat-overlay" id="chat-list"></div>
+      <!-- อิโมจิลอย -->
+      <div class="react-float" id="react-float"></div>
+      <!-- ปุ่มรีแอคชัน (สร้างด้วย JS) -->
+      <div class="react-bar" id="react-bar"></div>
     </div>
+
+    <!-- แถบ กำลังออกอากาศ + แชร์ -->
+    <div class="live-bar">
+      <span class="now-chip" id="now-chip" style="display:none">🔴 <b>กำลังออกอากาศ:</b>&nbsp;<span id="now-title"></span></span>
+      <span style="flex:1"></span>
+      <button class="share-btn" onclick="shareSite()">🔗 แชร์</button>
+    </div>
+
+    <!-- ช่องพิมพ์แชท -->
+    <div class="chat-input glass" style="padding:8px;border-radius:16px;margin-top:8px">
+      <input id="chat-text" type="text" placeholder="พิมพ์ข้อความ..." data-ph="chatPlaceholder" maxlength="300"
+             autocomplete="off" onkeydown="if(event.key==='Enter')sendMessage()">
+      <button onclick="sendMessage()" data-lbl="chatSend">ส่ง</button>
+    </div>
+    <div class="chat-note" id="chat-note">กำลังเชื่อมต่อแชท...</div>
 
     <!-- DONATE CTA -->
     <button class="donate-cta" onclick="openDonate()" data-lbl="donateBtn">💛 ร่วมบริจาค</button>
@@ -417,19 +518,25 @@
       <div class="rail" id="videos-rail"></div>
     </div>
 
-    <!-- LIVE CHAT -->
-    <div class="chat glass">
-      <h3 data-lbl="chatTitle">💬 แชทสด</h3>
-      <div class="chat-list" id="chat-list">
-        <div class="chat-empty" id="chat-empty" data-lbl="chatEmpty">ยังไม่มีข้อความ — มาเป็นคนแรกที่ทักทายกันเลยค่ะ 👋</div>
+    <!-- PRAYER TIMES -->
+    <div class="sec-title">🕌 <span class="accent">เวลาละหมาดวันนี้</span></div>
+    <div class="prayer glass" id="prayer-box">
+      <div class="prayer-head">
+        <select id="prayer-province" onchange="onProvinceChange()"></select>
+        <button class="mini" id="prayer-notify-btn" onclick="togglePrayerNotify()">🔔 เตือน</button>
       </div>
-      <div class="chat-input">
-        <input id="chat-text" type="text" placeholder="พิมพ์ข้อความ..." data-ph="chatPlaceholder" maxlength="300"
-               autocomplete="off" onkeydown="if(event.key==='Enter')sendMessage()">
-        <button onclick="sendMessage()" data-lbl="chatSend">ส่ง</button>
-      </div>
-      <div class="chat-note" id="chat-note">กำลังเชื่อมต่อแชท...</div>
+      <div class="prayer-grid" id="prayer-grid"><div class="sched-empty">กำลังโหลดเวลาละหมาด...</div></div>
+      <div class="prayer-next" id="prayer-next"></div>
     </div>
+
+    <!-- QURAN -->
+    <div class="sec-title">📖 <span class="accent">อัลกุรอาน</span></div>
+    <div class="rail" id="quran-rail">
+      <a class="card glass" href="javascript:void(0)" onclick="openQuran()"><div class="ic" style="background:#0a7d5a">📖</div><div><div class="nm">อ่านออนไลน์</div><div class="sub">แปล+คำอ่าน</div></div></a>
+      <a class="card glass" id="quran-pdf-card" href="javascript:void(0)" onclick="openQuranPdf()" style="display:none"><div class="ic" style="background:#b9860b">📄</div><div><div class="nm">PDF แปลไทย</div><div class="sub">ดาวน์โหลด/อ่าน</div></div></a>
+    </div>
+
+    <!-- LIVE CHAT (แชทซ้อนบนจอ) -->
 
     <!-- SOCIAL RAIL -->
     <div class="sec-title">📡 <span data-lbl="socialTitle">โซเชียลของเรา</span></div>
@@ -492,12 +599,37 @@
     </div>
   </div>
 
+  <!-- IMAGE LIGHTBOX (ผังรายการกดขยาย) -->
+  <div class="backdrop" id="lightbox-backdrop" onclick="closeLightbox()" style="align-items:center">
+    <img class="lb-img" id="lightbox-img" alt="ผังรายการ" src="">
+  </div>
+
+  <!-- QURAN MODAL (ฝัง daasee ในเว็บเรา) -->
+  <div class="backdrop" id="quran-backdrop" onclick="if(event.target===this)closeQuran()" style="align-items:center">
+    <div class="quran-modal glass">
+      <button class="close" style="position:static;align-self:flex-end" onclick="closeQuran()">×</button>
+      <iframe id="quran-iframe" title="อัลกุรอาน"></iframe>
+    </div>
+  </div>
+
+  <!-- SHARE SHEET (fallback เมื่อไม่มี navigator.share) -->
+  <div class="backdrop" id="share-backdrop" onclick="if(event.target===this)closeShare()">
+    <div class="sheet glass" style="position:relative">
+      <button class="close" onclick="closeShare()">×</button>
+      <h2>🔗 แชร์ Yateem TV</h2>
+      <div class="rail" id="share-links" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- ADMIN PANEL -->
   <div class="backdrop" id="admin-backdrop" style="align-items:stretch">
     <div class="admin-panel glass">
       <div class="admin-head">
         <b>⚙️ แผงแอดมิน Yateem TV</b>
-        <button class="close" style="position:static" onclick="closeAdmin()">×</button>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="logout-btn" onclick="adminLogout()">ออกจากระบบ</button>
+          <button class="close" style="position:static" onclick="closeAdmin()">×</button>
+        </div>
       </div>
       <div class="admin-tabs">
         <button class="atab on" data-tab="settings" onclick="adminTab('settings')">ลิงก์</button>
@@ -534,7 +666,15 @@
           <label>ชื่อธนาคาร</label><input id="f-bankname">
           <label>ชื่อบัญชี</label><input id="f-accname">
           <label>เลขบัญชี</label><input id="f-accnum">
-          <label>URL รูป QR (ถ้าไม่ใช้พร้อมเพย์อัตโนมัติ)</label><input id="f-qr">
+          <label>รูป QR พร้อมเพย์ (อัปโหลด หรือวาง URL)</label>
+          <div class="logo-row">
+            <img id="f-qr-preview" alt="qr" onerror="this.style.visibility='hidden'">
+            <div style="flex:1">
+              <input id="f-qr" placeholder="วาง URL รูป QR หรืออัปโหลดด้านล่าง" oninput="const p=document.getElementById('f-qr-preview');p.src=this.value;p.style.visibility='visible'">
+              <input type="file" id="f-qr-file" accept="image/*" style="margin-top:8px">
+              <button class="mini" onclick="adminUploadQR()">⬆️ อัปโหลดรูป QR</button>
+            </div>
+          </div>
 
           <div class="grp">▶️ วิดีโอแนะนำ (YouTube)</div>
           <div id="vid-list"></div>
@@ -543,8 +683,20 @@
             <input id="f-vidtitle" placeholder="ชื่อคลิป (ไม่บังคับ)" style="max-width:40%">
             <button onclick="adminAddVideo()">+ เพิ่ม</button>
           </div>
+          <button class="mini" onclick="saveVideos()" style="margin-top:8px">💾 บันทึกวิดีโอ (แสดงบนหน้าเว็บทันที)</button>
 
-          <button class="save-btn" onclick="saveSettings()">💾 บันทึกการตั้งค่า</button>
+          <div class="grp">📖 อัลกุรอาน (PDF แปลไทย)</div>
+          <input id="f-quran" placeholder="วาง URL PDF หรืออัปโหลดด้านล่าง">
+          <input type="file" id="f-quran-file" accept="application/pdf,image/*" style="margin-top:8px">
+          <button class="mini" onclick="adminUploadQuran()">⬆️ อัปโหลด PDF กุรอาน</button>
+
+          <div class="grp">🕌 เวลาละหมาด — จังหวัดเริ่มต้น</div>
+          <input id="f-prayer" placeholder="เช่น Bangkok, Pattani, Chiang Mai (ภาษาอังกฤษ)">
+
+          <div class="grp">🌐 โดเมนเนม (สำหรับลิงก์แชร์/อนาคต)</div>
+          <input id="f-domain" placeholder="เช่น https://yateemtv.com (เว้นว่าง = ใช้ URL ปัจจุบัน)">
+
+          <button class="save-btn" onclick="saveSettings()">💾 บันทึกการตั้งค่าทั้งหมด</button>
         </div>
 
         <!-- TAB: theme -->
@@ -699,12 +851,17 @@
     const note=document.getElementById('chat-note');
     if(!initFirebaseApp()){ note.textContent='แชทยังไม่พร้อม (ผู้ดูแลยังไม่ได้ตั้งค่า Firebase)'; return; }
     try{
-      await firebase.auth().signInAnonymously();
-      myUid=firebase.auth().currentUser.uid;
+      // รอ Firebase กู้สถานะล็อกอินที่จำไว้ (persistence = LOCAL) ก่อน — จะได้ไม่ทับ session แอดมิน
+      await new Promise(res=>{ const off=firebase.auth().onAuthStateChanged(()=>{ off(); res(); }); });
+      let user=firebase.auth().currentUser;
+      if(!user){ await firebase.auth().signInAnonymously(); user=firebase.auth().currentUser; }
+      myUid=user.uid;
+      // มีแต่แอดมินที่ล็อกอินด้วยบัญชี email/pass (ไม่ใช่ anonymous)
+      if(user && !user.isAnonymous){ isAdmin=true; document.body.classList.add('is-mod'); }
       chatOn=true; note.textContent='ใส่ชื่อเล่นแล้วพิมพ์ได้เลยค่ะ';
       bindPresence();
       bindMessages();
-      bindModerator();
+      handleAdminHash();
     }catch(e){ note.textContent='เชื่อมต่อแชทไม่สำเร็จค่ะ'; console.error(e); }
   }
 
@@ -742,11 +899,14 @@
     const list=document.getElementById('chat-list'), empty=document.getElementById('chat-empty');
     chatRef.on('child_added',snap=>{
       const m=snap.val()||{}; if(empty) empty.style.display='none';
+      const txt=(m.text||'').trim();
+      if(REACT_SET.has(txt)) spawnFloat(txt);           // ข้อความรีแอคชัน → ลอยขึ้นจอ
       const el=document.createElement('div'); el.className='msg'; el.dataset.key=snap.key;
       const initial=(m.name||'?').trim().charAt(0)||'?';
       const av=m.photo? `<img class="av" src="${esc(m.photo)}" alt="">` : `<div class="av">${esc(initial)}</div>`;
       el.innerHTML=`${av}<div class="body"><div class="nm">${esc(m.name||'ไม่ระบุชื่อ')}<button class="del" onclick="delMsg('${snap.key}')">ลบ</button></div><div class="tx">${esc(m.text||'')}</div></div>`;
       list.appendChild(el);
+      while(list.children.length>60) list.removeChild(list.firstChild);   // ดันแชทเก่าออก กันหน่วง
       list.scrollTop=list.scrollHeight;
     });
     chatRef.on('child_removed',snap=>{
@@ -780,21 +940,32 @@
     }catch(e){ toast('ส่งไม่สำเร็จค่ะ'); lastSend=0; console.error(e); }
   }
 
-  /* แอดมิน — เปิดด้วย #mod (ลบแชทอย่างเดียว) หรือ #admin (เปิดแผงแก้ไข) แล้วล็อกอินบัญชีแอดมิน */
+  /* แอดมิน — เปิดด้วย #mod (ลบแชทอย่างเดียว) หรือ #admin (เปิดแผงแก้ไข) */
   let isAdmin=false;
-  function bindModerator(){
+  function handleAdminHash(){
     const h=location.hash;
     if(h!=='#mod' && h!=='#admin') return;
+    if(isAdmin){                                   // ล็อกอินค้างอยู่แล้ว (จำไว้) — ไม่ต้องถามซ้ำ
+      if(h==='#admin') openAdmin();
+      return;
+    }
+    adminLogin(h==='#admin');
+  }
+  function adminLogin(openPanel){
     const email=prompt('อีเมลแอดมิน:','');
     if(!email) return;
     const pass=prompt('รหัสผ่าน:','')||'';
     firebase.auth().signInWithEmailAndPassword(email,pass)
       .then(cred=>{
         myUid=cred.user.uid; isAdmin=true; document.body.classList.add('is-mod');
-        toast('เข้าสู่ระบบแอดมินแล้ว');
-        if(h==='#admin') openAdmin();
+        toast('เข้าสู่ระบบแอดมินแล้ว (จำไว้ในเครื่องนี้)');
+        if(openPanel) openAdmin();
       })
       .catch(()=>toast('ล็อกอินแอดมินไม่สำเร็จ'));
+  }
+  function adminLogout(){
+    firebase.auth().signOut().then(()=>{ toast('ออกจากระบบแล้ว'); location.hash=''; location.reload(); })
+      .catch(()=>toast('ออกจากระบบไม่สำเร็จ'));
   }
   function delMsg(key){
     if(!document.body.classList.contains('is-mod')) return;
@@ -861,10 +1032,27 @@
   }));
   document.getElementById('amt-input').addEventListener('input',e=>{ selAmt=Number(e.target.value)||0; renderQR(selAmt); });
 
+  // คัดลอกข้อความแบบทนทาน (รองรับ LINE webview/มือถือที่ clipboard API ถูกจำกัด)
+  function copyText(text){
+    return new Promise((resolve,reject)=>{
+      if(navigator.clipboard && window.isSecureContext){
+        navigator.clipboard.writeText(text).then(resolve,()=>fallback());
+      }else{ fallback(); }
+      function fallback(){
+        try{
+          const ta=document.createElement('textarea'); ta.value=text;
+          ta.style.position='fixed'; ta.style.top='-9999px'; ta.setAttribute('readonly','');
+          document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0,ta.value.length);
+          const ok=document.execCommand('copy'); ta.remove();
+          ok?resolve():reject();
+        }catch(e){ reject(e); }
+      }
+    });
+  }
   function copyAccount(){
     const num=CONFIG.donate.accountNumber||''; if(!num){ toast('ยังไม่ได้ตั้งค่าเลขบัญชีค่ะ'); return; }
-    navigator.clipboard.writeText(num).then(()=>toast('คัดลอกเลขบัญชีแล้วค่ะ ✅'))
-      .catch(()=>toast('คัดลอกไม่สำเร็จค่ะ'));
+    copyText(num).then(()=>toast('คัดลอกเลขบัญชีแล้วค่ะ ✅'))
+      .catch(()=>toast('คัดลอกไม่ได้ กดค้างที่เลขเพื่อคัดลอกแทนค่ะ'));
   }
   function saveQR(){
     const box=document.getElementById('qr-box');
@@ -873,10 +1061,19 @@
     if(canvas){ href=canvas.toDataURL('image/png'); }
     else if(img){ href=img.src; }
     else{ toast('ยังไม่มี QR ให้บันทึกค่ะ'); return; }
-    const ext = href.indexOf('data:image/gif')===0 ? 'gif' : 'png';
-    const a=document.createElement('a'); a.href=href; a.download='yateem-donate-qr.'+ext;
-    document.body.appendChild(a); a.click(); a.remove();
-    toast('บันทึก/เปิดรูป QR แล้วค่ะ');
+    // ลองดาวน์โหลด; ถ้า <a download> ไม่รองรับ (iOS/LINE) → เปิดรูปแท็บใหม่ให้กดค้างเซฟ
+    const a=document.createElement('a');
+    const canDownload = 'download' in a && !/iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if(canDownload){
+      const ext = href.indexOf('data:image/gif')===0 ? 'gif' : 'png';
+      a.href=href; a.download='yateem-donate-qr.'+ext;
+      document.body.appendChild(a); a.click(); a.remove();
+      toast('บันทึกรูป QR แล้วค่ะ');
+    }else{
+      try{ const w=window.open(); if(w){ w.document.write('<img src="'+href+'" style="width:100%"><p style="font-family:sans-serif;text-align:center">กดค้างที่รูปเพื่อบันทึกค่ะ</p>'); toast('เปิดรูป QR แล้ว — กดค้างเพื่อบันทึกค่ะ'); }
+        else{ toast('กดค้างที่รูป QR เพื่อบันทึกค่ะ'); } }
+      catch(e){ toast('กดค้างที่รูป QR เพื่อบันทึกค่ะ'); }
+    }
   }
 
   /* ============================================================
@@ -904,7 +1101,8 @@
   }
   function applySettings(){
     applyTheme(CONFIG.theme); applyLabels(); setLogo(CONFIG.logoUrl);
-    setStream(CONFIG.streamUrl||''); initSocial(); renderVideos();
+    setStream(CONFIG.streamUrl||''); initSocial(); renderVideos(); renderReactions();
+    const qc=document.getElementById('quran-pdf-card'); if(qc) qc.style.display = CONFIG.quranPdfUrl?'flex':'none';
   }
 
   // ---- ธีมสี ----
@@ -976,6 +1174,7 @@
   function ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
   function loadSchedule(){
     const el=document.getElementById('sched-date'); if(el && !el.value) el.value=ymd(new Date());
+    setInterval(()=>{ try{ renderSchedule(); }catch(e){} }, 60000);   // อัปเดตป้าย "กำลังออกอากาศ" ทุกนาที
     if(!initFirebaseApp()){ renderSchedule(); return; }
     db.ref('schedule').on('value', snap=>{ schedData=snap.val()||{template:{},overrides:{},files:{}}; renderSchedule(); }, ()=>renderSchedule());
   }
@@ -993,17 +1192,26 @@
     if(!f||!f.url) return '';
     const inner = (f.type==='pdf')
       ? `<a href="javascript:void(0)" onclick="openExternal('${esc(f.url)}')">📄 เปิดผัง (PDF)</a>`
-      : `<img src="${esc(f.url)}" alt="ผังรายการ">`;
+      : `<img src="${esc(f.url)}" alt="ผังรายการ" style="cursor:zoom-in" onclick="openLightbox('${esc(f.url)}')">`;
     return `<div class="sched-file">${label?('<h4>'+esc(label)+'</h4>'):''}${inner}</div>`;
   }
+  function nowHM(){ const d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
   function renderDayBlock(dateStr){
     const s=slotsFor(dateStr), dow=new Date(dateStr+'T00:00:00').getDay();
-    let h=`<h4>${DOW_TH[dow]} ${dateStr}</h4>`;
-    (s.items||[]).slice().sort((a,b)=>String(a.t||'').localeCompare(String(b.t||''))).forEach(it=>{
-      h+=`<div class="slot"><div class="t">${esc(it.t||'')}</div><div class="p">${esc(it.title||'')}</div></div>`;
+    const isToday = dateStr===ymd(new Date());
+    let h=`<h4>${DOW_TH[dow]} ${dateStr}${isToday?' <span class="today-tag">วันนี้</span>':''}</h4>`;
+    const items=(s.items||[]).slice().filter(it=>it&&(it.t||it.title))
+      .sort((a,b)=>String(a.t||'').localeCompare(String(b.t||'')));
+    // หารายการที่ "กำลังออกอากาศ" ตอนนี้ (เฉพาะวันนี้): เวลาเริ่ม ≤ ตอนนี้ และเป็นตัวล่าสุดที่ผ่านมา
+    let nowIdx=-1;
+    if(isToday && items.length){ const now=nowHM();
+      for(let i=0;i<items.length;i++){ if(String(items[i].t||'') <= now) nowIdx=i; else break; } }
+    items.forEach((it,i)=>{ const on=(i===nowIdx);
+      h+=`<div class="slot${on?' now':''}"><div class="t">${esc(it.t||'')}</div>`+
+         `<div class="p">${esc(it.title||'')}${on?'<span class="now-badge">● กำลังออกอากาศ</span>':''}</div></div>`;
     });
     if(s.file) h+=fileHtml('',s.file);
-    if(!(s.items||[]).length && !s.file) h+='<div class="sched-empty">— ไม่มีรายการ —</div>';
+    if(!items.length && !s.file) h+='<div class="sched-empty">— ไม่มีรายการ —</div>';
     return h;
   }
   function renderSchedule(){
@@ -1020,6 +1228,7 @@
     if(files[mk]) html+=`<div class="sched-day">${fileHtml('ผังประจำเดือน '+mk,files[mk])}</div>`;
     if(files[yk]) html+=`<div class="sched-day">${fileHtml('ผังประจำปี '+yk,files[yk])}</div>`;
     body.innerHTML=html || '<div class="sched-empty">ยังไม่มีผังรายการค่ะ</div>';
+    updateNowChip();
   }
 
   // ---- อัปโหลดไฟล์ขึ้น Cloudinary (รูป/PDF) ----
@@ -1053,13 +1262,30 @@
     setv('f-market',CONFIG.market.web);
     setv('f-ppid',CONFIG.donate.promptpayId); setv('f-bankname',CONFIG.donate.bankName);
     setv('f-accname',CONFIG.donate.accountName); setv('f-accnum',CONFIG.donate.accountNumber); setv('f-qr',CONFIG.donate.qrImageUrl);
+    const qp=document.getElementById('f-qr-preview'); qp.src=CONFIG.donate.qrImageUrl||''; qp.style.visibility=CONFIG.donate.qrImageUrl?'visible':'hidden';
+    setv('f-quran',CONFIG.quranPdfUrl); setv('f-prayer',CONFIG.prayerProvince); setv('f-domain',CONFIG.domain);
+  }
+  async function adminUploadQuran(){
+    if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
+    const f=document.getElementById('f-quran-file').files[0]; if(!f){ toast('เลือกไฟล์ PDF ก่อนค่ะ'); return; }
+    try{ toast('กำลังอัปโหลด PDF...'); const up=await uploadToCloudinary(f);
+      setv('f-quran',up.url); toast('อัปโหลดแล้ว กด "บันทึกการตั้งค่าทั้งหมด" เพื่อใช้งาน');
+    }catch(e){ toast('อัปโหลดไม่สำเร็จ'+(e.message?': '+e.message:'')); console.error(e); }
   }
   async function adminUploadLogo(){
     if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
     const f=document.getElementById('f-logo-file').files[0]; if(!f){ toast('เลือกไฟล์โลโก้ก่อนค่ะ'); return; }
     try{ toast('กำลังอัปโหลดโลโก้...'); const up=await uploadToCloudinary(f);
       setv('f-logo',up.url); const lp=document.getElementById('f-logo-preview'); lp.src=up.url; lp.style.visibility='visible';
-      toast('อัปโหลดแล้ว กด "บันทึกการตั้งค่า" เพื่อใช้งาน');
+      toast('อัปโหลดแล้ว กด "บันทึกการตั้งค่าทั้งหมด" เพื่อใช้งาน');
+    }catch(e){ toast('อัปโหลดไม่สำเร็จ'+(e.message?': '+e.message:'')); console.error(e); }
+  }
+  async function adminUploadQR(){
+    if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
+    const f=document.getElementById('f-qr-file').files[0]; if(!f){ toast('เลือกไฟล์รูป QR ก่อนค่ะ'); return; }
+    try{ toast('กำลังอัปโหลดรูป QR...'); const up=await uploadToCloudinary(f);
+      setv('f-qr',up.url); const qp=document.getElementById('f-qr-preview'); qp.src=up.url; qp.style.visibility='visible';
+      toast('อัปโหลดแล้ว กด "บันทึกการตั้งค่าทั้งหมด" เพื่อใช้งาน');
     }catch(e){ toast('อัปโหลดไม่สำเร็จ'+(e.message?': '+e.message:'')); console.error(e); }
   }
   // ---- ธีม (แอดมิน) ----
@@ -1124,6 +1350,13 @@
     adminVideos.push({id, title:val('f-vidtitle')}); setv('f-vidurl',''); setv('f-vidtitle',''); renderAdminVideos();
   }
   function adminRemoveVideo(i){ adminVideos.splice(i,1); renderAdminVideos(); }
+  async function saveVideos(){
+    if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
+    try{
+      await db.ref('settings/videos').set(adminVideos.map(v=>({ id:v.id, title:(v.title||'') })));
+      toast('บันทึกวิดีโอแล้วค่ะ ✅');
+    }catch(e){ saveErr(e); }
+  }
   async function saveSettings(){
     if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
     const payload={
@@ -1132,7 +1365,8 @@
       social:{ youtube:val('f-youtube'),facebook:val('f-facebook'),tiktok:val('f-tiktok'),instagram:val('f-instagram'),lineOA:val('f-lineOA') },
       market:{ web:val('f-market') },
       donate:{ promptpayId:val('f-ppid'),bankName:val('f-bankname'),accountName:val('f-accname'),accountNumber:val('f-accnum'),qrImageUrl:val('f-qr') },
-      videos: adminVideos.map(v=>({id:v.id,title:v.title||''}))
+      videos: adminVideos.map(v=>({id:v.id,title:v.title||''})),
+      quranPdfUrl: val('f-quran'), prayerProvince: val('f-prayer'), domain: val('f-domain')
     };
     try{ await db.ref('settings').update(payload); toast('บันทึกการตั้งค่าแล้วค่ะ ✅'); }
     catch(e){ saveErr(e); }
@@ -1186,6 +1420,133 @@
   }
 
   /* ============================================================
+     7) Reactions / Share / Now-playing / Prayer / Quran / Lightbox
+     ============================================================ */
+  // ---- รีแอคชัน (ส่งเป็นข้อความอิโมจิในแชท + ลอยขึ้นจอ) ----
+  const REACTIONS=[{e:'👍',t:'ชอบ'},{e:'❤️',t:'หัวใจ'},{e:'🌟',t:'เยี่ยม'},{e:'🫶',t:'ห่วงใย'},{e:'💛',t:'บริจาค'},{e:'🤲',t:'ขอดุอาอ'}];
+  const REACT_SET=new Set(REACTIONS.map(r=>r.e));
+  let lastReact=0;
+  function renderReactions(){
+    const bar=document.getElementById('react-bar'); if(!bar) return; bar.innerHTML='';
+    const pop=document.createElement('div'); pop.id='react-pop';
+    pop.style.cssText='position:absolute;right:52px;bottom:0;display:none;flex-direction:column;gap:8px';
+    REACTIONS.forEach(r=>{ const b=document.createElement('button'); b.textContent=r.e; b.title=r.t;
+      b.onclick=(ev)=>{ ev.stopPropagation(); sendReaction(r.e); }; pop.appendChild(b); });
+    const toggle=document.createElement('button'); toggle.textContent='😍'; toggle.title='ส่งความรู้สึก';
+    toggle.onclick=()=>{ pop.style.display = pop.style.display==='none'?'flex':'none'; };
+    bar.appendChild(pop); bar.appendChild(toggle);
+  }
+  function spawnFloat(e){
+    const layer=document.getElementById('react-float'); if(!layer) return;
+    const el=document.createElement('div'); el.className='fx'; el.textContent=e;
+    el.style.right=(10+Math.random()*46)+'px'; el.style.bottom=(6+Math.random()*12)+'%';
+    layer.appendChild(el); setTimeout(()=>el.remove(),2700);
+  }
+  function sendReaction(e){
+    if(!chatOn || !db){ spawnFloat(e); return; }        // แชทไม่พร้อม → ลอยเฉพาะเครื่องเรา
+    const now=Date.now(); if(now-lastReact<800) return; lastReact=now;
+    const name=(displayName()||'ผู้ชม').slice(0,40);
+    db.ref(`rooms/${CONFIG.chat.roomId}/messages`).push({ uid:myUid, name,
+      photo:(lineProfile&&lineProfile.pictureUrl)||'', text:e, ts:firebase.database.ServerValue.TIMESTAMP }).catch(()=>{});
+  }
+
+  // ---- แชร์ ----
+  function shareUrl(){ return (CONFIG.domain&&CONFIG.domain.trim()) ? CONFIG.domain.trim() : location.href.split('#')[0]; }
+  async function shareSite(){
+    const url=shareUrl(), text='ดูไลฟ์สด Yateem TV กันเถอะ 📺💛';
+    if(navigator.share){ try{ await navigator.share({title:'Yateem TV', text, url}); return; }catch(e){ if(e&&e.name==='AbortError') return; } }
+    const enc=encodeURIComponent(url), et=encodeURIComponent(text);
+    document.getElementById('share-links').innerHTML=
+      `<a class="card glass" target="_blank" href="https://social-plugins.line.me/lineit/share?url=${enc}"><div class="ic" style="background:#06c755">💬</div><div class="nm">LINE</div></a>`+
+      `<a class="card glass" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=${enc}"><div class="ic" style="background:#1877F2">f</div><div class="nm">Facebook</div></a>`+
+      `<a class="card glass" target="_blank" href="https://twitter.com/intent/tweet?text=${et}&url=${enc}"><div class="ic" style="background:#000">𝕏</div><div class="nm">X</div></a>`+
+      `<a class="card glass" target="_blank" href="https://wa.me/?text=${et}%20${enc}"><div class="ic" style="background:#25D366">🟢</div><div class="nm">WhatsApp</div></a>`+
+      `<a class="card glass" href="javascript:void(0)" onclick="copyText('${url}').then(()=>toast('คัดลอกลิงก์แล้วค่ะ ✅'))"><div class="ic" style="background:var(--accent);color:#241a00">🔗</div><div class="nm">คัดลอกลิงก์</div></a>`;
+    document.getElementById('share-backdrop').classList.add('open');
+  }
+  function closeShare(){ document.getElementById('share-backdrop').classList.remove('open'); }
+
+  // ---- กำลังออกอากาศ ----
+  function updateNowChip(){
+    const chip=document.getElementById('now-chip'), tt=document.getElementById('now-title'); if(!chip) return;
+    try{
+      const s=slotsFor(ymd(new Date()));
+      const items=(s.items||[]).slice().filter(it=>it&&(it.t||it.title)).sort((a,b)=>String(a.t||'').localeCompare(String(b.t||'')));
+      let cur=null; const now=nowHM();
+      for(const it of items){ if(String(it.t||'')<=now) cur=it; else break; }
+      if(cur&&cur.title){ tt.textContent=cur.title+(cur.t?(' ('+cur.t+')'):''); chip.style.display='inline-flex'; }
+      else chip.style.display='none';
+    }catch(e){ chip.style.display='none'; }
+  }
+
+  // ---- เวลาละหมาด (aladhan) ----
+  const PROVINCES=[['กรุงเทพมหานคร','Bangkok'],['กระบี่','Krabi'],['เชียงใหม่','Chiang Mai'],['เชียงราย','Chiang Rai'],
+    ['ชลบุรี','Chonburi'],['นครศรีธรรมราช','Nakhon Si Thammarat'],['นนทบุรี','Nonthaburi'],['นราธิวาส','Narathiwat'],
+    ['ปัตตานี','Pattani'],['ปทุมธานี','Pathum Thani'],['ประจวบคีรีขันธ์','Prachuap Khiri Khan'],['พระนครศรีอยุธยา','Ayutthaya'],
+    ['พังงา','Phang Nga'],['พัทลุง','Phatthalung'],['ภูเก็ต','Phuket'],['ยะลา','Yala'],['ระยอง','Rayong'],
+    ['สงขลา','Songkhla'],['สตูล','Satun'],['สมุทรปราการ','Samut Prakan'],['สุราษฎร์ธานี','Surat Thani'],
+    ['ตรัง','Trang'],['นครราชสีมา','Nakhon Ratchasima'],['ขอนแก่น','Khon Kaen'],['อุดรธานี','Udon Thani'],
+    ['หาดใหญ่','Hat Yai'],['เพชรบุรี','Phetchaburi']];
+  const PRAYER_NAMES=[['Fajr','ฟัจร์'],['Dhuhr','ซุฮริ'],['Asr','อัศริ'],['Maghrib','มัฆริบ'],['Isha','อิชาอ์']];
+  let prayerTimings=null, prayerTimer=null;
+  function currentProvince(){ try{ return localStorage.getItem('yt_prayer_prov')||CONFIG.prayerProvince||'Bangkok'; }catch(e){ return CONFIG.prayerProvince||'Bangkok'; } }
+  function initPrayerUI(){
+    const sel=document.getElementById('prayer-province'); if(!sel) return;
+    if(!sel.options.length){ PROVINCES.forEach(([th,en])=>{ const o=document.createElement('option'); o.value=en; o.textContent=th; sel.appendChild(o); }); }
+    sel.value=currentProvince();
+    if(![...sel.options].some(o=>o.value===sel.value)){ const o=document.createElement('option'); o.value=sel.value; o.textContent=sel.value; sel.appendChild(o); sel.value=sel.value; }
+    updateNotifyBtn();
+    loadPrayer(sel.value);
+  }
+  function onProvinceChange(){ const v=document.getElementById('prayer-province').value; try{ localStorage.setItem('yt_prayer_prov',v); }catch(e){} loadPrayer(v); }
+  async function loadPrayer(city){
+    const grid=document.getElementById('prayer-grid');
+    try{
+      const r=await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=Thailand&method=3`);
+      const j=await r.json();
+      if(!j.data||!j.data.timings) throw new Error('no data');
+      prayerTimings=j.data.timings; renderPrayer(); schedulePrayerNotify();
+    }catch(e){ grid.innerHTML='<div class="sched-empty">โหลดเวลาละหมาดไม่สำเร็จ ลองใหม่ภายหลังค่ะ</div>'; }
+  }
+  function renderPrayer(){
+    const grid=document.getElementById('prayer-grid'), nx=document.getElementById('prayer-next'); if(!prayerTimings) return;
+    const now=nowHM(); let nextName=null,nextTime=null;
+    for(const [k] of PRAYER_NAMES){ const t=(prayerTimings[k]||'').slice(0,5); if(t>now){ nextName=k; nextTime=t; break; } }
+    grid.innerHTML=PRAYER_NAMES.map(([k,th])=>{ const t=(prayerTimings[k]||'').slice(0,5);
+      return `<div class="pcell${k===nextName?' next':''}"><div class="pn">${th}</div><div class="pt">${t}</div></div>`; }).join('');
+    nx.textContent = nextName ? ('⏳ ละหมาดถัดไป: '+(PRAYER_NAMES.find(p=>p[0]===nextName)[1])+' '+nextTime)
+      : 'ครบเวลาละหมาดของวันนี้แล้ว 🌙';
+  }
+  function prayerNotifyOn(){ try{ return localStorage.getItem('yt_prayer_notify')==='1'; }catch(e){ return false; } }
+  function updateNotifyBtn(){ const b=document.getElementById('prayer-notify-btn'); if(b) b.textContent = prayerNotifyOn()?'🔔 เตือน: เปิด':'🔕 เตือน: ปิด'; }
+  function togglePrayerNotify(){
+    if(!prayerNotifyOn()){
+      if(!('Notification' in window)){ toast('อุปกรณ์นี้ไม่รองรับการแจ้งเตือน'); return; }
+      Notification.requestPermission().then(p=>{ if(p==='granted'){ try{localStorage.setItem('yt_prayer_notify','1');}catch(e){} updateNotifyBtn(); schedulePrayerNotify(); toast('เปิดแจ้งเตือนละหมาดแล้วค่ะ (ขณะเปิดเว็บ)'); } else toast('ไม่ได้อนุญาตแจ้งเตือน'); });
+    }else{ try{localStorage.setItem('yt_prayer_notify','0');}catch(e){} updateNotifyBtn(); if(prayerTimer)clearTimeout(prayerTimer); toast('ปิดแจ้งเตือนละหมาดแล้ว'); }
+  }
+  function schedulePrayerNotify(){
+    if(prayerTimer) clearTimeout(prayerTimer);
+    if(!prayerNotifyOn() || !prayerTimings) return;
+    const now=new Date(); let target=null,tname=null;
+    for(const [k,th] of PRAYER_NAMES){ const t=(prayerTimings[k]||'').slice(0,5); if(!t) continue;
+      const [hh,mm]=t.split(':').map(Number); const d=new Date(now); d.setHours(hh,mm,0,0);
+      if(d>now){ target=d; tname=th; break; } }
+    if(!target) return;
+    prayerTimer=setTimeout(()=>{ try{ new Notification('🕌 ถึงเวลาละหมาด'+tname, {body:'Yateem TV', icon:'icon.jpg'}); }catch(e){}
+      renderPrayer(); schedulePrayerNotify(); }, Math.min(target-now, 2147483647));
+  }
+
+  // ---- อัลกุรอาน ----
+  function openQuran(){ const f=document.getElementById('quran-iframe'); f.src='https://www.daasee.com/quran/quran4.php'; document.getElementById('quran-backdrop').classList.add('open'); }
+  function closeQuran(){ document.getElementById('quran-iframe').src='about:blank'; document.getElementById('quran-backdrop').classList.remove('open'); }
+  function openQuranPdf(){ const u=CONFIG.quranPdfUrl; if(!u){ toast('ยังไม่ได้อัปโหลดไฟล์ PDF ค่ะ'); return; } openExternal(u); }
+
+  // ---- lightbox (ผังรายการกดขยาย) ----
+  function openLightbox(url){ const img=document.getElementById('lightbox-img'); img.src=url; document.getElementById('lightbox-backdrop').classList.add('open'); }
+  function closeLightbox(){ document.getElementById('lightbox-backdrop').classList.remove('open'); }
+
+  /* ============================================================
      util
      ============================================================ */
   let toastTimer;
@@ -1203,14 +1564,44 @@
   }
 
   /* ============================================================
+     PWA — splash + ติดตั้งเป็นแอพ + service worker
+     ============================================================ */
+  function hideSplash(){ const s=document.getElementById('splash'); if(s){ s.classList.add('hide'); setTimeout(()=>{ if(s.parentNode) s.remove(); },600); } }
+  let deferredPrompt=null;
+  window.addEventListener('beforeinstallprompt',(e)=>{ e.preventDefault(); deferredPrompt=e; showInstall(); });
+  window.addEventListener('appinstalled',()=>dismissInstall(true));
+  function isStandalone(){ return (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone===true; }
+  function isIOS(){ return /iPhone|iPad|iPod/i.test(navigator.userAgent); }
+  function showInstall(){
+    try{ if(localStorage.getItem('yt_install_dismiss')==='1') return; }catch(e){}
+    if(isStandalone()) return;
+    const b=document.getElementById('install-banner'); if(b) b.style.display='flex';
+  }
+  function doInstall(){
+    if(deferredPrompt){ deferredPrompt.prompt(); deferredPrompt.userChoice.finally(()=>{ deferredPrompt=null; dismissInstall(); }); }
+    else if(isIOS()){ document.getElementById('install-text').innerHTML='ติดตั้งบน iPhone: กด <b>แชร์</b> ⎋ ด้านล่าง แล้วเลือก <b>เพิ่มไปยังหน้าจอโฮม</b>'; document.getElementById('install-btn').style.display='none'; }
+    else{ toast('เปิดเมนูเบราว์เซอร์ → เพิ่มไปยังหน้าจอโฮม'); }
+  }
+  function dismissInstall(perm){ const b=document.getElementById('install-banner'); if(b) b.style.display='none'; if(perm){ try{localStorage.setItem('yt_install_dismiss','1');}catch(e){} } }
+  function registerSW(){ if('serviceWorker' in navigator){ navigator.serviceWorker.register('service-worker.js').catch(()=>{}); } }
+
+  window.addEventListener('load',hideSplash);
+  setTimeout(hideSplash,3500);  // fallback กันค้าง
+
+  /* ============================================================
      boot
      ============================================================ */
   (async function(){
+    registerSW();
+    if(isIOS()) setTimeout(showInstall,2500);   // iOS ไม่มี beforeinstallprompt → โชว์แบนเนอร์วิธีทำ
     initFirebaseApp();
     await initLiff();      // ต้องรู้ชื่อ LINE ก่อนเปิดแชท
     loadSettings();        // ดึง /settings ทับ CONFIG → setStream/initSocial/renderVideos
     loadSchedule();        // ดึง /schedule → renderSchedule
     initChat();            // anon auth + presence + messages (+ ตรวจ #admin/#mod)
+    renderReactions();     // ปุ่มรีแอคชันบนจอ
+    initPrayerUI();        // เวลาละหมาด
+    setInterval(updateNowChip, 60000);   // อัปเดต "กำลังออกอากาศ" ทุกนาที
   })();
   </script>
 </body>
