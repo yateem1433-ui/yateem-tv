@@ -312,6 +312,9 @@
     .pcell.next{ border-color:var(--accent); box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent), 0 0 24px -8px var(--glow); }
     .pcell .pn{ font-size:12px; color:var(--muted); } .pcell .pt{ font-size:16px; font-weight:700; margin-top:3px; }
     .prayer-next{ text-align:center; margin-top:12px; font-size:14px; color:var(--accent); }
+    .prayer-date{ text-align:center; margin-bottom:12px; }
+    .prayer-date .pd-th{ font-size:14px; color:var(--text); }
+    .prayer-date .pd-ar{ font-size:17px; color:var(--accent); direction:rtl; margin-top:2px; font-weight:600; }
 
     /* ---- lightbox / quran modal ---- */
     .lb-img{ max-width:96vw; max-height:86vh; border-radius:14px; }
@@ -525,6 +528,7 @@
         <select id="prayer-province" onchange="onProvinceChange()"></select>
         <button class="mini" id="prayer-notify-btn" onclick="togglePrayerNotify()">🔔 เตือน</button>
       </div>
+      <div class="prayer-date" id="prayer-date"></div>
       <div class="prayer-grid" id="prayer-grid"><div class="sched-empty">กำลังโหลดเวลาละหมาด...</div></div>
       <div class="prayer-next" id="prayer-next"></div>
     </div>
@@ -1088,8 +1092,11 @@
     });
     return base;
   }
+  let settingsReady=false; const settingsWaiters=[];
+  function markSettingsReady(){ if(settingsReady) return; settingsReady=true; settingsWaiters.splice(0).forEach(f=>{try{f();}catch(e){}}); }
+  function waitSettings(){ return settingsReady ? Promise.resolve() : new Promise(res=>{ settingsWaiters.push(res); setTimeout(res,4000); }); }
   function loadSettings(){
-    if(!initFirebaseApp()){ applySettings(); return; }   // ไม่มี Firebase → ใช้ค่า CONFIG เดิม
+    if(!initFirebaseApp()){ applySettings(); markSettingsReady(); return; }   // ไม่มี Firebase → ใช้ค่า CONFIG เดิม
     db.ref('settings').on('value', snap=>{
       const s=snap.val();
       if(s){ ADMIN_KEYS.forEach(k=>{ if(s[k]===undefined) return;
@@ -1097,8 +1104,9 @@
         else if(s[k] && typeof s[k]==='object'){ CONFIG[k]=CONFIG[k]||{}; deepMerge(CONFIG[k], s[k]); }
         else CONFIG[k]=s[k];
       }); }
-      applySettings();
-    }, ()=>applySettings());
+      applySettings(); markSettingsReady();
+      if(document.getElementById('admin-backdrop').classList.contains('open') && !adminEditing){ fillSettingsForm(); renderAdminVideos(); renderThemeTab(); renderLabelsForm(); }
+    }, ()=>{ applySettings(); markSettingsReady(); });
   }
   function applySettings(){
     applyTheme(CONFIG.theme); applyLabels(); setLogo(CONFIG.logoUrl);
@@ -1177,7 +1185,9 @@
     const el=document.getElementById('sched-date'); if(el && !el.value) el.value=ymd(new Date());
     setInterval(()=>{ try{ renderSchedule(); }catch(e){} }, 60000);   // อัปเดตป้าย "กำลังออกอากาศ" ทุกนาที
     if(!initFirebaseApp()){ renderSchedule(); return; }
-    db.ref('schedule').on('value', snap=>{ schedData=snap.val()||{template:{},overrides:{},files:{}}; renderSchedule(); }, ()=>renderSchedule());
+    db.ref('schedule').on('value', snap=>{ schedData=snap.val()||{template:{},overrides:{},files:{}}; renderSchedule();
+      if(document.getElementById('admin-backdrop').classList.contains('open') && !adminEditing){ try{ adminLoadTemplateDay(); }catch(e){} }
+    }, ()=>renderSchedule());
   }
   function schedToday(){ document.getElementById('sched-date').value=ymd(new Date()); renderSchedule(); }
   function schedShift(n){ const el=document.getElementById('sched-date'); const d=el.value?new Date(el.value+'T00:00:00'):new Date(); d.setDate(d.getDate()+n); el.value=ymd(d); renderSchedule(); }
@@ -1200,9 +1210,10 @@
   function renderDayBlock(dateStr){
     const s=slotsFor(dateStr), dow=new Date(dateStr+'T00:00:00').getDay();
     const isToday = dateStr===ymd(new Date());
-    let h=`<h4>${DOW_TH[dow]} ${dateStr}${isToday?' <span class="today-tag">วันนี้</span>':''}</h4>`;
     const items=(s.items||[]).slice().filter(it=>it&&(it.t||it.title))
       .sort((a,b)=>String(a.t||'').localeCompare(String(b.t||'')));
+    if(!items.length && !s.file) return '';   // วันที่ไม่ได้กรอกข้อมูล → ไม่แสดง
+    let h=`<h4>${DOW_TH[dow]} ${dateStr}${isToday?' <span class="today-tag">วันนี้</span>':''}</h4>`;
     // หารายการที่ "กำลังออกอากาศ" ตอนนี้ (เฉพาะวันนี้): เวลาเริ่ม ≤ ตอนนี้ และเป็นตัวล่าสุดที่ผ่านมา
     let nowIdx=-1;
     if(isToday && items.length){ const now=nowHM();
@@ -1212,7 +1223,6 @@
          `<div class="p">${esc(it.title||'')}${on?'<span class="now-badge">● กำลังออกอากาศ</span>':''}</div></div>`;
     });
     if(s.file) h+=fileHtml('',s.file);
-    if(!items.length && !s.file) h+='<div class="sched-empty">— ไม่มีรายการ —</div>';
     return h;
   }
   function renderSchedule(){
@@ -1221,8 +1231,8 @@
     let html='';
     if(schedWeek){
       const base=new Date(dateStr+'T00:00:00');
-      for(let i=0;i<7;i++){ const d=new Date(base); d.setDate(base.getDate()+i); html+=`<div class="sched-day">${renderDayBlock(ymd(d))}</div>`; }
-    }else{ html=`<div class="sched-day">${renderDayBlock(dateStr)}</div>`; }
+      for(let i=0;i<7;i++){ const d=new Date(base); d.setDate(base.getDate()+i); const b=renderDayBlock(ymd(d)); if(b) html+=`<div class="sched-day">${b}</div>`; }
+    }else{ const b=renderDayBlock(dateStr); html = b ? `<div class="sched-day">${b}</div>` : '<div class="sched-empty">วันนี้ยังไม่มีผังรายการค่ะ</div>'; }
     const files=schedData.files||{};
     if(files.weekly) html+=`<div class="sched-day">${fileHtml('ผังประจำสัปดาห์',files.weekly)}</div>`;
     const mk=dateStr.slice(0,7), yk=dateStr.slice(0,4);
@@ -1265,8 +1275,14 @@
   }
 
   // ---- แผงแอดมิน ----
-  function openAdmin(){ fillSettingsForm(); renderAdminVideos(); renderThemeTab(); renderLabelsForm();
-    adminTab('settings'); adminLoadTemplateDay(); document.getElementById('admin-backdrop').classList.add('open'); }
+  let adminEditing=false;
+  async function openAdmin(){
+    document.getElementById('admin-backdrop').classList.add('open');
+    if(!settingsReady){ toast('กำลังโหลดข้อมูล...'); await waitSettings(); }
+    adminEditing=false;
+    fillSettingsForm(); renderAdminVideos(); renderThemeTab(); renderLabelsForm();
+    adminTab('settings'); adminLoadTemplateDay();
+  }
   function closeAdmin(){ document.getElementById('admin-backdrop').classList.remove('open'); }
   function adminTab(t){
     document.querySelectorAll('.atab').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
@@ -1382,6 +1398,7 @@
   }
   async function saveSettings(){
     if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
+    if(!settingsReady){ toast('ข้อมูลยังโหลดไม่เสร็จ รอสักครู่แล้วลองใหม่ค่ะ'); return; }  // กันเขียนค่าว่างทับ
     const payload={
       logoUrl:val('f-logo'),
       streamUrl:val('f-stream'),
@@ -1511,7 +1528,17 @@
     ['ตรัง','Trang'],['นครราชสีมา','Nakhon Ratchasima'],['ขอนแก่น','Khon Kaen'],['อุดรธานี','Udon Thani'],
     ['หาดใหญ่','Hat Yai'],['เพชรบุรี','Phetchaburi']];
   const PRAYER_NAMES=[['Fajr','ฟัจร์'],['Dhuhr','ซุฮริ'],['Asr','อัศริ'],['Maghrib','มัฆริบ'],['Isha','อิชาอ์']];
-  let prayerTimings=null, prayerTimer=null;
+  let prayerTimings=null, prayerTimer=null, prayerDate=null;
+  function renderPrayerDate(){
+    const el=document.getElementById('prayer-date'); if(!el) return;
+    let th=''; try{ th=new Date().toLocaleDateString('th-TH-u-ca-buddhist',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }catch(e){ th=new Date().toLocaleDateString('th-TH'); }
+    let ar='';
+    if(prayerDate && prayerDate.hijri){ const h=prayerDate.hijri;
+      const wd=(h.weekday&&h.weekday.ar)?h.weekday.ar+' ':''; const mo=(h.month&&h.month.ar)?h.month.ar:'';
+      ar=`${wd}${h.day||''} ${mo} ${h.year||''} هـ`.trim();
+    }
+    el.innerHTML=`<div class="pd-th">${esc(th)}</div>`+(ar?`<div class="pd-ar">${esc(ar)}</div>`:'');
+  }
   function currentProvince(){ try{ return localStorage.getItem('yt_prayer_prov')||CONFIG.prayerProvince||'Bangkok'; }catch(e){ return CONFIG.prayerProvince||'Bangkok'; } }
   function initPrayerUI(){
     const sel=document.getElementById('prayer-province'); if(!sel) return;
@@ -1528,7 +1555,7 @@
       const r=await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=Thailand&method=3`);
       const j=await r.json();
       if(!j.data||!j.data.timings) throw new Error('no data');
-      prayerTimings=j.data.timings; renderPrayer(); schedulePrayerNotify();
+      prayerTimings=j.data.timings; prayerDate=j.data.date||null; renderPrayerDate(); renderPrayer(); schedulePrayerNotify();
     }catch(e){ grid.innerHTML='<div class="sched-empty">โหลดเวลาละหมาดไม่สำเร็จ ลองใหม่ภายหลังค่ะ</div>'; }
   }
   function renderPrayer(){
@@ -1617,6 +1644,7 @@
   (async function(){
     registerSW();
     if(isIOS()) setTimeout(showInstall,2500);   // iOS ไม่มี beforeinstallprompt → โชว์แบนเนอร์วิธีทำ
+    const ab=document.getElementById('admin-backdrop'); if(ab) ab.addEventListener('input',()=>{ adminEditing=true; }, true);  // กัน listener รีเฟรชทับตอนกำลังพิมพ์
     initFirebaseApp();
     await initLiff();      // ต้องรู้ชื่อ LINE ก่อนเปิดแชท
     loadSettings();        // ดึง /settings ทับ CONFIG → setStream/initSocial/renderVideos
