@@ -8,7 +8,7 @@
   <!-- PWA -->
   <meta name="theme-color" content="#07090F">
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="logo.png">
+  <link rel="apple-touch-icon" href="app-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -122,7 +122,8 @@
     /* ---- chat ---- */
     .chat{ margin-top:14px; padding:14px; display:flex; flex-direction:column; height:52vh; max-height:520px; }
     .chat h3{ margin:0 0 10px; font-size:16px; font-weight:600; display:flex; align-items:center; gap:8px; }
-    .chat-list{ flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding-right:4px; }
+    .chat-list{ height:32vh; max-height:320px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding:12px; margin-top:8px; }
+    .chat-list:empty::before{ content:'ยังไม่มีข้อความ — ทักทายกันได้เลยค่ะ 👋'; color:var(--muted); font-size:13px; margin:auto; }
     .chat-list::-webkit-scrollbar{ width:6px; } .chat-list::-webkit-scrollbar-thumb{ background:var(--stroke); border-radius:3px; }
     .msg{ display:flex; gap:10px; align-items:flex-start; animation:rise .25s ease; }
     @keyframes rise{ from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
@@ -275,15 +276,6 @@
     .logout-btn{ border:1px solid var(--stroke); background:var(--glass-2); color:#ff8a90; border-radius:10px;
       padding:6px 12px; font-family:inherit; font-size:13px; cursor:pointer; }
 
-    /* ---- แชทซ้อนบนจอ ---- */
-    .chat-overlay{ position:absolute; left:10px; right:64px; bottom:10px; max-height:52%; z-index:5;
-      display:flex; flex-direction:column; justify-content:flex-end; gap:5px; overflow:hidden; pointer-events:none;
-      -webkit-mask-image:linear-gradient(to top, #000 72%, transparent); mask-image:linear-gradient(to top, #000 72%, transparent); }
-    .chat-overlay .msg{ animation:rise .25s ease; }
-    .chat-overlay .msg .av{ width:22px; height:22px; font-size:11px; }
-    .chat-overlay .msg .body{ background:rgba(0,0,0,.42); border-color:rgba(255,255,255,.12); padding:5px 9px; max-width:100%;
-      -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); }
-    .chat-overlay .msg .nm{ font-size:11px; } .chat-overlay .msg .tx{ font-size:13.5px; }
     /* ---- ปุ่มรีแอคชัน ---- */
     .react-bar{ position:absolute; right:10px; bottom:10px; z-index:6; display:flex; flex-direction:column; gap:8px; }
     .react-bar button{ width:44px; height:44px; border-radius:50%; border:1px solid var(--stroke); cursor:pointer;
@@ -478,8 +470,6 @@
         <div data-lbl="offlineTitle">ขณะนี้ยังไม่มีการถ่ายทอดสด ค่ะ</div>
         <div style="font-size:13px" data-lbl="offlineSub">กลับมาอีกครั้งเมื่อช่องเริ่มไลฟ์นะคะ</div>
       </div>
-      <!-- แชทซ้อนบนจอ -->
-      <div class="chat-overlay" id="chat-list"></div>
       <!-- อิโมจิลอย -->
       <div class="react-float" id="react-float"></div>
       <!-- ปุ่มรีแอคชัน (สร้างด้วย JS) -->
@@ -492,6 +482,9 @@
       <span style="flex:1"></span>
       <button class="share-btn" onclick="shareSite()">🔗 แชร์</button>
     </div>
+
+    <!-- ข้อความแชท (ย้ายลงมาจากจอ) -->
+    <div class="chat-list glass" id="chat-list"></div>
 
     <!-- ช่องพิมพ์แชท -->
     <div class="chat-input glass" style="padding:8px;border-radius:16px;margin-top:8px">
