@@ -1093,7 +1093,7 @@
     const payload = themeSel ? {preset:themeSel}
       : {accent:val('t-accent'),accent2:val('t-accent2'),bg:val('t-bg')};
     try{ await db.ref('settings/theme').set(payload); toast('บันทึกธีมแล้วค่ะ ✅'); }
-    catch(e){ toast('บันทึกไม่สำเร็จ'); console.error(e); }
+    catch(e){ saveErr(e); }
   }
   // ---- ข้อความ (แอดมิน) ----
   function renderLabelsForm(){
@@ -1108,7 +1108,7 @@
     if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
     const out={}; Object.keys(LABELS).forEach(k=>{ const el=document.getElementById('lbl-'+k); if(el) out[k]=el.value; });
     try{ await db.ref('settings/labels').set(out); toast('บันทึกข้อความแล้วค่ะ ✅'); }
-    catch(e){ toast('บันทึกไม่สำเร็จ'); console.error(e); }
+    catch(e){ saveErr(e); }
   }
   let adminVideos=[];
   function renderAdminVideos(){
@@ -1135,7 +1135,7 @@
       videos: adminVideos.map(v=>({id:v.id,title:v.title||''}))
     };
     try{ await db.ref('settings').update(payload); toast('บันทึกการตั้งค่าแล้วค่ะ ✅'); }
-    catch(e){ toast('บันทึกไม่สำเร็จ (สิทธิ์แอดมิน?)'); console.error(e); }
+    catch(e){ saveErr(e); }
   }
   // schedule editors
   function rowHtml(t,title){ return `<div class="row-edit"><input class="t" placeholder="06:00" value="${esc(t||'')}"><input placeholder="ชื่อรายการ" value="${esc(title||'')}"><button class="rm" onclick="this.parentNode.remove()">×</button></div>`; }
@@ -1152,7 +1152,7 @@
     if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
     const d=document.getElementById('tpl-day').value;
     try{ await db.ref('schedule/template/'+d).set(readRows('tpl-rows')); toast('บันทึกแม่แบบแล้วค่ะ ✅'); }
-    catch(e){ toast('บันทึกไม่สำเร็จ'); console.error(e); }
+    catch(e){ saveErr(e); }
   }
   function adminLoadOverride(){
     const date=document.getElementById('ov-date').value; const ov=((schedData.overrides||{})[date])||{};
@@ -1170,7 +1170,7 @@
       else { const ov=((schedData.overrides||{})[date])||{}; if(ov.fileUrl){ payload.fileUrl=ov.fileUrl; payload.fileType=ov.fileType; } }
       await db.ref('schedule/overrides/'+date).set(payload); toast('บันทึกผังเฉพาะวันแล้วค่ะ ✅');
       document.getElementById('ov-file').value='';
-    }catch(e){ toast('ไม่สำเร็จ'+(e.message?': '+e.message:'')); console.error(e); }
+    }catch(e){ saveErr(e); }
   }
   async function saveScopeFile(){
     if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
@@ -1182,7 +1182,7 @@
     try{ toast('กำลังอัปโหลด...'); const up=await uploadToCloudinary(f);
       await db.ref('schedule/files/'+key).set({url:up.url,type:up.type});
       toast('บันทึกไฟล์ผังรวมแล้วค่ะ ✅'); document.getElementById('file-scope-file').value='';
-    }catch(e){ toast('อัปโหลดไม่สำเร็จ'+(e.message?': '+e.message:'')); console.error(e); }
+    }catch(e){ saveErr(e); }
   }
 
   /* ============================================================
@@ -1191,7 +1191,15 @@
   let toastTimer;
   function toast(msg){
     const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
-    clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
+    clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),3200);
+  }
+  // ข้อความ error ตอนบันทึก — แยกกรณี "ไม่มีสิทธิ์" ออกจากอื่น เพื่อบอกวิธีแก้
+  function saveErr(e){
+    console.error(e);
+    const perm = e && (e.code==='PERMISSION_DENIED' || /permission[_ ]?denied/i.test(String(e.message||e)));
+    toast(perm
+      ? 'บันทึกไม่ได้: บัญชีนี้ยังไม่มีสิทธิ์แอดมิน — เพิ่ม UID ของบัญชีที่ /admins ใน Firebase'
+      : ('บันทึกไม่สำเร็จ'+(e&&e.message?': '+e.message:'')));
   }
 
   /* ============================================================
