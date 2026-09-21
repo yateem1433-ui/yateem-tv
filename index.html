@@ -98,9 +98,11 @@
       box-shadow:0 0 0 0 rgba(255,59,70,.7); animation:pulse 1.6s infinite; }
     @keyframes pulse{ 0%{box-shadow:0 0 0 0 rgba(255,59,70,.6)} 70%{box-shadow:0 0 0 10px rgba(255,59,70,0)} 100%{box-shadow:0 0 0 0 rgba(255,59,70,0)} }
     .chip.viewers{ color:var(--text); }
-    /* คลัสเตอร์ LIVE + ผู้ชม บนหัวจอ (ย้ายออกจากบนวิดีโอ) */
+    /* คลัสเตอร์ ผู้ชม + โปรไฟล์ บนหัวจอ */
     header .live-cluster{ margin-left:auto; display:flex; align-items:center; gap:8px; }
     header .live-cluster .chip{ padding:5px 10px; font-size:12px; background:var(--glass); }
+    /* ป้าย LIVE ซ้อนบนวิดีโอ (มุมบนซ้าย — ตำแหน่งเดิม) */
+    .hero .live-tag{ position:absolute; top:12px; left:12px; z-index:8; color:#fff; }
     .hero .offline{ position:absolute; inset:0; display:none; flex-direction:column; gap:8px;
       align-items:center; justify-content:center; text-align:center; color:var(--muted); padding:24px; }
     .hero.is-offline .offline{ display:flex; }
@@ -419,6 +421,14 @@
       font-size:17px; font-weight:700; color:#04150E; background:linear-gradient(135deg,var(--accent),var(--accent-2));
       box-shadow:0 12px 34px -10px var(--glow); transition:transform .15s ease; }
     .market-open-btn:active{ transform:scale(.97); }
+    /* ---- market preview (พรีวิวหน้าร้านในแท็บ Market) ---- */
+    .market-preview{ margin-top:8px; position:relative; border-radius:20px; overflow:hidden;
+      border:1px solid var(--stroke); background:#fff; cursor:pointer; aspect-ratio:16/10; box-shadow:var(--shadow); }
+    .market-preview iframe{ position:absolute; top:0; left:0; width:200%; height:200%;
+      transform:scale(.5); transform-origin:top left; border:0; pointer-events:none; }
+    .market-preview img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .market-preview .mp-tap{ position:absolute; left:0; right:0; bottom:0; padding:10px 14px;
+      font-weight:700; color:#fff; background:linear-gradient(0deg, rgba(0,0,0,.72), transparent); text-align:center; }
 
     /* ---- login sheet ---- */
     #login-choices, #login-profile{ display:flex; flex-direction:column; gap:10px; margin-top:16px; }
@@ -565,7 +575,6 @@
     <img id="brand-logo" src="logo.png" alt="Yateem TV" onerror="this.onerror=null;this.src='icon.jpg'">
     <div class="brand" data-lbl="brandName">Yateem TV</div>
     <div class="live-cluster">
-      <span class="chip live"><span class="dot"></span><span data-lbl="liveBadge">LIVE</span></span>
       <span class="chip viewers" id="viewers">👁 <span id="viewer-count">–</span> <span data-lbl="viewersSuffix">กำลังชม</span></span>
       <button class="profile-btn" id="profile-btn" onclick="openLogin()" aria-label="เข้าสู่ระบบ" title="เข้าสู่ระบบ">👤</button>
     </div>
@@ -576,6 +585,7 @@
     <section class="tab-panel" id="panel-live">
       <!-- HERO / LIVE -->
       <div class="hero" id="hero">
+        <span class="chip live live-tag"><span class="dot"></span><span data-lbl="liveBadge">LIVE</span></span>
         <video id="player" playsinline autoplay muted controls poster="icon.jpg"></video>
         <div class="offline">
           <div class="big">📺</div>
@@ -621,6 +631,7 @@
     <!-- ============ แท็บ 2: YATEEM MARKET ============ -->
     <section class="tab-panel" id="panel-market" style="display:none">
       <div class="sec-title">🛒 <span class="accent" data-lbl="marketTitle">Yateem Market</span></div>
+      <div class="market-preview" id="market-preview" style="display:none" onclick="openMarket()"></div>
       <div class="market-hero glass">
         <div class="mh-ic">🛍️</div>
         <div class="mh-t" data-lbl="marketCardTitle">สั่งอาหารฮาลาล & สินค้าแห้ง</div>
@@ -810,6 +821,16 @@
           <label>LINE OA</label><input id="f-lineOA" placeholder="https://line.me/R/ti/p/@...">
           <div class="grp">Yateem Market</div>
           <label>ลิงก์เว็บร้าน</label><input id="f-market" placeholder="https://...">
+          <div class="filehint">ถ้าลิงก์เว็บร้านเป็น http (เช่น GitHub Pages) แท็บ Market จะโชว์พรีวิวสดอัตโนมัติ</div>
+          <label>รูปพรีวิว Market (ทางเลือก — ใช้เมื่อฝัง iframe ไม่ได้)</label>
+          <div class="logo-row">
+            <img id="f-market-preview-img" alt="preview" onerror="this.style.visibility='hidden'">
+            <div style="flex:1">
+              <input id="f-market-preview" placeholder="วาง URL รูป หรืออัปโหลดด้านล่าง" oninput="const p=document.getElementById('f-market-preview-img');p.src=this.value;p.style.visibility='visible'">
+              <input type="file" id="f-market-preview-file" accept="image/*" style="margin-top:8px">
+              <button class="mini" onclick="adminUploadMarketPreview()">⬆️ อัปโหลดรูปพรีวิว</button>
+            </div>
+          </div>
           <div class="grp">บัญชีบริจาค</div>
           <label>เบอร์พร้อมเพย์ / เลขบัตร ปชช.</label><input id="f-ppid" placeholder="0812345678">
           <label>ชื่อธนาคาร</label><input id="f-bankname">
@@ -1408,7 +1429,7 @@
   }
   function applySettings(){
     applyTheme(CONFIG.theme); applyLabels(); setLogo(CONFIG.logoUrl);
-    setStream(CONFIG.streamUrl||''); initSocial(); renderVideos(); renderSponsors(); renderReactions();
+    setStream(CONFIG.streamUrl||''); initSocial(); renderVideos(); renderSponsors(); renderReactions(); renderMarketPreview();
     const qc=document.getElementById('quran-pdf-card'); if(qc) qc.style.display = CONFIG.quranPdfUrl?'flex':'none';
   }
 
@@ -1483,6 +1504,20 @@
     if(many){ list.forEach(s=>track.appendChild(build(s))); track.style.animation=''; }
     else { track.style.animation='none'; track.style.justifyContent='center'; track.style.width='100%'; }
   }
+  // ---- พรีวิวหน้าร้าน Market ----
+  function renderMarketPreview(){
+    const box=document.getElementById('market-preview'); if(!box) return;
+    const web=((CONFIG.market&&CONFIG.market.web)||'').trim();
+    const prev=((CONFIG.market&&CONFIG.market.previewImg)||'').trim();
+    const isHttp=/^https?:\/\//i.test(web) && !/liff\.line\.me/i.test(web);
+    if(isHttp){
+      box.innerHTML=`<iframe src="${esc(web)}" title="Yateem Market" loading="lazy" scrolling="no" sandbox="allow-scripts allow-same-origin"></iframe><div class="mp-tap">แตะเพื่อเปิดร้าน ›</div>`;
+      box.style.display='block';
+    }else if(prev){
+      box.innerHTML=`<img src="${esc(prev)}" alt="Yateem Market" loading="lazy"><div class="mp-tap">แตะเพื่อเปิดร้าน ›</div>`;
+      box.style.display='block';
+    }else{ box.style.display='none'; box.innerHTML=''; }
+  }
   function openVideo(id,title){
     try{ document.getElementById('player').pause(); }catch(e){}
     document.getElementById('video-iframe').src='https://www.youtube.com/embed/'+id+'?autoplay=1&rel=0';
@@ -1525,21 +1560,13 @@
   }
   function nowHM(){ const d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
   function renderDayBlock(dateStr){
+    // หน้าเว็บโชว์เฉพาะ "ผังที่แนบเป็นรูป/PDF" ของวันนั้น — ผังที่พิมพ์เอง (items) ไม่แสดงบนหน้าเว็บ
+    // (ยังกรอกใน template/override เพื่อใช้คำนวณ "กำลังออกอากาศ" บนแท็บ Live เท่านั้น)
     const s=slotsFor(dateStr), dow=new Date(dateStr+'T00:00:00').getDay();
     const isToday = dateStr===ymd(new Date());
-    const items=(s.items||[]).slice().filter(it=>it&&(it.t||it.title))
-      .sort((a,b)=>String(a.t||'').localeCompare(String(b.t||'')));
-    if(!items.length && !s.file) return '';   // วันที่ไม่ได้กรอกข้อมูล → ไม่แสดง
+    if(!s.file) return '';   // ไม่มีรูปแนบของวันนี้ → ไม่แสดง
     let h=`<h4>${DOW_TH[dow]} ${dateStr}${isToday?' <span class="today-tag">วันนี้</span>':''}</h4>`;
-    // หารายการที่ "กำลังออกอากาศ" ตอนนี้ (เฉพาะวันนี้): เวลาเริ่ม ≤ ตอนนี้ และเป็นตัวล่าสุดที่ผ่านมา
-    let nowIdx=-1;
-    if(isToday && items.length){ const now=nowHM();
-      for(let i=0;i<items.length;i++){ if(String(items[i].t||'') <= now) nowIdx=i; else break; } }
-    items.forEach((it,i)=>{ const on=(i===nowIdx);
-      h+=`<div class="slot${on?' now':''}"><div class="t">${esc(it.t||'')}</div>`+
-         `<div class="p">${esc(it.title||'')}${on?'<span class="now-badge">● กำลังออกอากาศ</span>':''}</div></div>`;
-    });
-    if(s.file) h+=fileHtml('',s.file);
+    h+=fileHtml('',s.file);
     return h;
   }
   function renderSchedule(){
@@ -1616,6 +1643,8 @@
     setv('f-youtube',CONFIG.social.youtube); setv('f-facebook',CONFIG.social.facebook); setv('f-tiktok',CONFIG.social.tiktok);
     setv('f-instagram',CONFIG.social.instagram); setv('f-lineOA',CONFIG.social.lineOA);
     setv('f-market',CONFIG.market.web);
+    setv('f-market-preview',CONFIG.market.previewImg);
+    const mp=document.getElementById('f-market-preview-img'); mp.src=CONFIG.market.previewImg||''; mp.style.visibility=CONFIG.market.previewImg?'visible':'hidden';
     setv('f-ppid',CONFIG.donate.promptpayId); setv('f-bankname',CONFIG.donate.bankName);
     setv('f-accname',CONFIG.donate.accountName); setv('f-accnum',CONFIG.donate.accountNumber); setv('f-qr',CONFIG.donate.qrImageUrl);
     const qp=document.getElementById('f-qr-preview'); qp.src=CONFIG.donate.qrImageUrl||''; qp.style.visibility=CONFIG.donate.qrImageUrl?'visible':'hidden';
@@ -1633,6 +1662,14 @@
     const f=document.getElementById('f-logo-file').files[0]; if(!f){ toast('เลือกไฟล์โลโก้ก่อนค่ะ'); return; }
     try{ toast('กำลังอัปโหลดโลโก้...'); const up=await uploadToCloudinary(f);
       setv('f-logo',up.url); const lp=document.getElementById('f-logo-preview'); lp.src=up.url; lp.style.visibility='visible';
+      toast('อัปโหลดแล้ว กด "บันทึกการตั้งค่าทั้งหมด" เพื่อใช้งาน');
+    }catch(e){ toast('อัปโหลดไม่สำเร็จ'+(e.message?': '+e.message:'')); console.error(e); }
+  }
+  async function adminUploadMarketPreview(){
+    if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
+    const f=document.getElementById('f-market-preview-file').files[0]; if(!f){ toast('เลือกไฟล์รูปก่อนค่ะ'); return; }
+    try{ toast('กำลังอัปโหลดรูปพรีวิว...'); const up=await uploadToCloudinary(f);
+      setv('f-market-preview',up.url); const p=document.getElementById('f-market-preview-img'); p.src=up.url; p.style.visibility='visible';
       toast('อัปโหลดแล้ว กด "บันทึกการตั้งค่าทั้งหมด" เพื่อใช้งาน');
     }catch(e){ toast('อัปโหลดไม่สำเร็จ'+(e.message?': '+e.message:'')); console.error(e); }
   }
@@ -1753,7 +1790,7 @@
       logoUrl:val('f-logo'),
       streamUrl:val('f-stream'),
       social:{ youtube:val('f-youtube'),facebook:val('f-facebook'),tiktok:val('f-tiktok'),instagram:val('f-instagram'),lineOA:val('f-lineOA') },
-      market:{ web:val('f-market') },
+      market:{ web:val('f-market'), previewImg:val('f-market-preview') },
       donate:{ promptpayId:val('f-ppid'),bankName:val('f-bankname'),accountName:val('f-accname'),accountNumber:val('f-accnum'),qrImageUrl:val('f-qr') },
       videos: adminVideos.map(v=>({id:v.id,title:v.title||''})),
       sponsors: adminSponsors.slice(0,10).map(s=>({img:s.img,link:s.link||''})),

@@ -1,5 +1,5 @@
 /* Yateem TV — service worker (ทำให้ติดตั้งเป็นแอพ + โหลดเร็ว/ออฟไลน์เบื้องต้น) */
-const CACHE = 'yateem-tv-v2';
+const CACHE = 'yateem-tv-v3';
 const ASSETS = ['./', './index.html', './manifest.json', './icon.jpg', './logo.png'];
 
 self.addEventListener('install', (e) => {
