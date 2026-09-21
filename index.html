@@ -261,8 +261,16 @@
       font-family:inherit; font-weight:700; color:#241A00; background:linear-gradient(135deg,var(--accent),var(--accent-2)); }
     .mini{ margin-top:8px; border:1px solid var(--stroke); background:var(--glass-2); color:var(--text);
       border-radius:10px; padding:8px 12px; font-family:inherit; cursor:pointer; }
-    .row-edit{ display:flex; gap:8px; margin-top:8px; align-items:center; }
-    .row-edit input.t{ max-width:90px; } .row-edit button.rm{ background:none; border:none; color:#ff6b73; cursor:pointer; font-size:18px; }
+    .row-edit{ display:flex; gap:6px; margin-top:8px; align-items:center; flex-wrap:wrap; }
+    .row-edit input.t{ max-width:76px; } .row-edit input{ min-width:80px; }
+    .row-edit button.rm{ background:none; border:none; color:#ff6b73; cursor:pointer; font-size:18px; padding:0 4px; }
+    .row-edit .ra{ background:var(--glass-2); border:1px solid var(--stroke); color:var(--text);
+      border-radius:8px; width:30px; height:30px; min-width:30px; cursor:pointer; font-size:14px; padding:0; line-height:1;
+      display:flex; align-items:center; justify-content:center; }
+    .row-edit .ra:active{ transform:scale(.9); }
+    .copy-day{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px; font-size:13px; color:var(--muted); }
+    .copy-day select{ flex:0 0 auto; width:auto; min-width:96px; }
+    .copy-day .mini{ margin-top:0; }
     .vid-add{ display:flex; gap:8px; margin-top:8px; }
     .vid-add button{ border:none; background:var(--accent); color:#241A00; border-radius:10px; padding:0 14px; font-family:inherit; font-weight:700; cursor:pointer; }
     .vid-item{ display:flex; gap:8px; align-items:center; margin-top:8px; font-size:14px; }
@@ -907,6 +915,16 @@
             <option value="5">ศุกร์</option><option value="6">เสาร์</option>
             <option value="0">อาทิตย์</option>
           </select>
+          <div class="copy-day">
+            <span>📋 คัดลอกจากวัน</span>
+            <select id="tpl-copy-src">
+              <option value="1">จันทร์</option><option value="2">อังคาร</option>
+              <option value="3">พุธ</option><option value="4">พฤหัสบดี</option>
+              <option value="5">ศุกร์</option><option value="6">เสาร์</option>
+              <option value="0">อาทิตย์</option>
+            </select>
+            <button class="mini" onclick="copyDayInto('tpl')">มาวาง</button>
+          </div>
           <div id="tpl-rows"></div>
           <button class="mini" onclick="adminAddRow('tpl-rows')">+ เพิ่มรายการ</button>
           <button class="save-btn" onclick="saveTemplateDay()">💾 บันทึกแม่แบบวันนี้</button>
@@ -914,6 +932,16 @@
           <div class="grp">แก้เฉพาะวัน (override)</div>
           <label>เลือกวันที่</label>
           <input type="date" id="ov-date" onchange="adminLoadOverride()">
+          <div class="copy-day">
+            <span>📋 คัดลอกจากแม่แบบวัน</span>
+            <select id="ov-copy-src">
+              <option value="1">จันทร์</option><option value="2">อังคาร</option>
+              <option value="3">พุธ</option><option value="4">พฤหัสบดี</option>
+              <option value="5">ศุกร์</option><option value="6">เสาร์</option>
+              <option value="0">อาทิตย์</option>
+            </select>
+            <button class="mini" onclick="copyDayInto('ov')">มาวาง</button>
+          </div>
           <div id="ov-rows"></div>
           <button class="mini" onclick="adminAddRow('ov-rows')">+ เพิ่มรายการ</button>
           <label>แนบรูป/PDF ผังของวันนี้</label>
@@ -1799,15 +1827,36 @@
     catch(e){ saveErr(e); }
   }
   // schedule editors
-  function rowHtml(t,title){ return `<div class="row-edit"><input class="t" placeholder="06:00" value="${esc(t||'')}"><input placeholder="ชื่อรายการ" value="${esc(title||'')}"><button class="rm" onclick="this.parentNode.remove()">×</button></div>`; }
-  function adminAddRow(id){ document.getElementById(id).insertAdjacentHTML('beforeend', rowHtml('','')); }
+  function rowHtml(t,title){ return `<div class="row-edit"><input class="t" placeholder="06:00" value="${esc(t||'')}" inputmode="numeric"><input placeholder="ชื่อรายการ" value="${esc(title||'')}">`+
+    `<button class="ra" title="แทรกด้านบน" onclick="insRow(this,'before')">↑</button>`+
+    `<button class="ra" title="แทรกด้านล่าง" onclick="insRow(this,'after')">↓</button>`+
+    `<button class="ra" title="คัดลอกแถวนี้" onclick="dupRow(this)">⧉</button>`+
+    `<button class="rm" title="ลบแถว" onclick="this.closest('.row-edit').remove()">×</button></div>`; }
+  function adminAddRow(id){ adminEditing=true; document.getElementById(id).insertAdjacentHTML('beforeend', rowHtml('','')); }
+  function insRow(btn, where){ adminEditing=true; btn.closest('.row-edit').insertAdjacentHTML(where==='before'?'beforebegin':'afterend', rowHtml('','')); }
+  function dupRow(btn){ adminEditing=true; const row=btn.closest('.row-edit'); const ins=row.querySelectorAll('input');
+    row.insertAdjacentHTML('afterend', rowHtml(ins[0].value, ins[1].value)); }
   function readRows(id){ const out=[]; document.querySelectorAll('#'+id+' .row-edit').forEach(r=>{
     const ins=r.querySelectorAll('input'); const t=(ins[0].value||'').trim(), title=(ins[1].value||'').trim();
     if(t||title) out.push({t,title}); }); return out; }
+  // เติมแถวลงกล่อง (เคลียร์ของเดิมก่อน) — ใช้ร่วมกันทั้งโหลด/คัดลอก
+  function fillRows(boxId, rows){
+    const box=document.getElementById(boxId); if(!box) return; box.innerHTML='';
+    (rows||[]).forEach(r=>box.insertAdjacentHTML('beforeend', rowHtml(r.t,r.title)));
+    if(!(rows||[]).length) adminAddRow(boxId);
+  }
+  // คัดลอกรายการทั้งวันจากแม่แบบวันที่เลือก มาวางในตัวแก้ (แก้ปัญหาวันซ้ำ)
+  function copyDayInto(target){
+    adminEditing=true;
+    const srcSel=document.getElementById(target==='tpl'?'tpl-copy-src':'ov-copy-src');
+    const d=srcSel.value; const rows=((schedData.template||{})[d])||[];
+    if(!rows.length){ toast('วันต้นทางยังไม่มีรายการค่ะ'); return; }
+    fillRows(target==='tpl'?'tpl-rows':'ov-rows', rows.map(r=>({t:r.t,title:r.title})));
+    toast('คัดลอกมาวางแล้ว — แก้ไขแล้วกดบันทึกเพื่อยืนยันค่ะ');
+  }
   function adminLoadTemplateDay(){
-    const d=document.getElementById('tpl-day').value; const rows=((schedData.template||{})[d])||[];
-    const box=document.getElementById('tpl-rows'); box.innerHTML='';
-    rows.forEach(r=>box.insertAdjacentHTML('beforeend',rowHtml(r.t,r.title))); if(!rows.length) adminAddRow('tpl-rows');
+    const d=document.getElementById('tpl-day').value;
+    fillRows('tpl-rows', (schedData.template||{})[d]);
   }
   async function saveTemplateDay(){
     if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
@@ -1817,8 +1866,7 @@
   }
   function adminLoadOverride(){
     const date=document.getElementById('ov-date').value; const ov=((schedData.overrides||{})[date])||{};
-    const box=document.getElementById('ov-rows'); box.innerHTML='';
-    (ov.items||[]).forEach(r=>box.insertAdjacentHTML('beforeend',rowHtml(r.t,r.title))); if(!(ov.items||[]).length) adminAddRow('ov-rows');
+    fillRows('ov-rows', ov.items);
     document.getElementById('ov-filehint').textContent = ov.fileUrl? ('ไฟล์ปัจจุบัน ('+ov.fileType+')') : '';
   }
   async function saveOverride(){
