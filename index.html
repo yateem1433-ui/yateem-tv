@@ -90,8 +90,6 @@
       aspect-ratio:16/9; background:#000; border:1px solid var(--stroke);
       box-shadow:var(--shadow), 0 0 60px -20px var(--glow); }
     .hero video{ width:100%; height:100%; object-fit:contain; background:#000; display:block; }
-    .hero .chips{ position:absolute; top:12px; left:12px; right:12px; display:flex; gap:8px;
-      align-items:center; pointer-events:none; }
     .chip{ display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px;
       font-size:13px; font-weight:600; background:rgba(0,0,0,.4); border:1px solid var(--stroke);
       -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
@@ -99,7 +97,10 @@
     .chip.live .dot{ width:9px; height:9px; border-radius:50%; background:#ff3b46;
       box-shadow:0 0 0 0 rgba(255,59,70,.7); animation:pulse 1.6s infinite; }
     @keyframes pulse{ 0%{box-shadow:0 0 0 0 rgba(255,59,70,.6)} 70%{box-shadow:0 0 0 10px rgba(255,59,70,0)} 100%{box-shadow:0 0 0 0 rgba(255,59,70,0)} }
-    .chip.viewers{ margin-left:auto; color:var(--text); }
+    .chip.viewers{ color:var(--text); }
+    /* คลัสเตอร์ LIVE + ผู้ชม บนหัวจอ (ย้ายออกจากบนวิดีโอ) */
+    header .live-cluster{ margin-left:auto; display:flex; align-items:center; gap:8px; }
+    header .live-cluster .chip{ padding:5px 10px; font-size:12px; background:var(--glass); }
     .hero .offline{ position:absolute; inset:0; display:none; flex-direction:column; gap:8px;
       align-items:center; justify-content:center; text-align:center; color:var(--muted); padding:24px; }
     .hero.is-offline .offline{ display:flex; }
@@ -137,12 +138,15 @@
     .msg .del{ margin-left:6px; background:none; border:none; color:#ff6b73; font-size:12px; cursor:pointer; display:none; }
     body.is-mod .msg .del{ display:inline; }
     .chat-empty{ margin:auto; text-align:center; color:var(--muted); font-size:14px; }
-    .chat-input{ display:flex; gap:8px; margin-top:10px; }
-    .chat-input input{ flex:1; background:var(--glass-2); border:1px solid var(--stroke); color:var(--text);
-      border-radius:14px; padding:12px 14px; font-family:inherit; font-size:15px; outline:none; }
+    .chat-section{ position:relative; margin-top:8px; }
+    .chat-input{ display:flex; align-items:center; gap:8px; margin-top:8px; padding:8px; border-radius:16px; position:relative; z-index:15; }
+    .chat-input input{ flex:1; min-width:0; height:42px; background:var(--glass-2); border:1px solid var(--stroke); color:var(--text);
+      border-radius:12px; padding:0 14px; font-family:inherit; font-size:15px; outline:none; }
     .chat-input input:focus{ border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
-    .chat-input button{ border:none; cursor:pointer; border-radius:14px; padding:0 18px; font-family:inherit;
-      font-weight:700; color:#04150E; background:linear-gradient(135deg,var(--accent),var(--accent-2)); }
+    .chat-input .chat-send-btn{ border:none; cursor:pointer; border-radius:12px; height:42px; padding:0 18px; font-family:inherit;
+      font-weight:700; color:#04150E; background:linear-gradient(135deg,var(--accent),var(--accent-2)); white-space:nowrap; flex:0 0 auto;
+      transition:transform .12s ease; }
+    .chat-input .chat-send-btn:active{ transform:scale(.95); }
     .chat-note{ font-size:12px; color:var(--muted); margin-top:8px; text-align:center; }
 
     /* ---- rails (Netflix rows) ---- */
@@ -276,15 +280,39 @@
     .logout-btn{ border:1px solid var(--stroke); background:var(--glass-2); color:#ff8a90; border-radius:10px;
       padding:6px 12px; font-family:inherit; font-size:13px; cursor:pointer; }
 
-    /* ---- ปุ่มรีแอคชัน ---- */
-    .react-bar{ position:absolute; right:10px; bottom:10px; z-index:6; display:flex; flex-direction:column; gap:8px; }
-    .react-bar button{ width:44px; height:44px; border-radius:50%; border:1px solid var(--stroke); cursor:pointer;
-      background:rgba(0,0,0,.4); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); font-size:20px;
-      display:flex; align-items:center; justify-content:center; transition:transform .12s; }
-    .react-bar button:active{ transform:scale(1.25); }
-    .react-float{ position:absolute; inset:0; z-index:4; pointer-events:none; overflow:hidden; }
-    .react-float .fx{ position:absolute; bottom:8%; font-size:30px; animation:floatUp 2.6s ease-out forwards; }
-    @keyframes floatUp{ 0%{ transform:translateY(0) scale(.6); opacity:0; } 15%{ opacity:1; transform:translateY(-10px) scale(1.1);} 100%{ transform:translateY(-260px) scale(1) rotate(12deg); opacity:0; } }
+    /* ---- ปุ่มรีแอคชัน & อิโมจิลอย (ตรงช่องพิมพ์แชท) ---- */
+    .react-bar{ position:relative; display:flex; align-items:center; flex:0 0 auto; }
+    .react-toggle{ width:42px; height:42px; min-width:42px; border-radius:12px; border:1px solid var(--stroke); cursor:pointer;
+      background:var(--glass-2); font-size:21px; display:flex; align-items:center; justify-content:center;
+      transition:transform .15s ease, background .15s ease, border-color .15s ease; padding:0; line-height:1; }
+    .react-toggle:hover{ background:rgba(255,255,255,.16); border-color:var(--accent); transform:scale(1.06); }
+    .react-toggle:active{ transform:scale(.92); }
+    .react-toggle.active{ border-color:var(--accent); box-shadow:0 0 14px -2px var(--glow); }
+
+    #react-pop{ position:absolute; bottom:calc(100% + 10px); right:0; z-index:30;
+      display:none; align-items:center; gap:4px; padding:6px 8px; max-width:calc(100vw - 48px);
+      background:rgba(12,18,30,.94); border:1px solid var(--stroke); border-radius:999px;
+      -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px);
+      box-shadow:0 16px 36px rgba(0,0,0,.65), 0 0 24px -6px var(--glow);
+      animation:popIn .18s cubic-bezier(0.16, 1, 0.3, 1); }
+    #react-pop.open{ display:flex; }
+    @keyframes popIn{ from{ opacity:0; transform:translateY(8px) scale(.9); } to{ opacity:1; transform:translateY(0) scale(1); } }
+    #react-pop button{ width:36px; height:36px; min-width:36px; border-radius:50%; border:none; cursor:pointer;
+      background:transparent; font-size:20px; display:flex; align-items:center; justify-content:center;
+      transition:transform .15s cubic-bezier(0.2,0,0.2,1), background .15s ease; padding:0; line-height:1; }
+    #react-pop button:hover{ background:rgba(255,255,255,.18); transform:scale(1.28); }
+    #react-pop button:active{ transform:scale(.92); }
+
+    .react-float{ position:absolute; inset:0; z-index:12; pointer-events:none; overflow:hidden; border-radius:var(--radius); }
+    .react-float .fx{ position:absolute; bottom:56px; font-size:28px;
+      animation:floatUp 2.4s cubic-bezier(0.2,0.6,0.3,1) forwards;
+      pointer-events:none; user-select:none; filter:drop-shadow(0 4px 10px rgba(0,0,0,.6)); }
+    @keyframes floatUp{
+      0%{ transform:translate(0,0) scale(.5); opacity:0; }
+      12%{ opacity:1; transform:translate(calc(var(--dx, 0px) * .3), -28px) scale(1.2); }
+      55%{ transform:translate(calc(var(--dx, 0px) * -.35), -130px) scale(1.05); }
+      100%{ transform:translate(var(--dx, 0px), -270px) scale(.85) rotate(var(--rot, 12deg)); opacity:0; }
+    }
 
     /* ---- แถบกำลังออกอากาศ + แชร์ ---- */
     .live-bar{ display:flex; align-items:center; gap:8px; margin-top:10px; }
@@ -329,6 +357,86 @@
     #install-banner button{ border:none; border-radius:10px; padding:9px 14px; font-family:inherit; font-weight:700; cursor:pointer;
       color:#241a00; background:linear-gradient(135deg,var(--accent),var(--accent-2)); }
     #install-banner .ib-x{ background:none; color:var(--muted); font-size:20px; padding:4px 8px; }
+
+    /* ---- profile / login button (หัวจอ) ---- */
+    .profile-btn{ width:34px; height:34px; min-width:34px; border-radius:50%; border:1px solid var(--stroke);
+      background:var(--glass-2); color:var(--text); font-size:16px; cursor:pointer; display:flex; align-items:center;
+      justify-content:center; padding:0; overflow:hidden; }
+    .profile-btn img{ width:100%; height:100%; object-fit:cover; }
+    .profile-btn.in{ border-color:var(--accent); box-shadow:0 0 12px -2px var(--glow); }
+
+    /* ---- bottom tab bar ---- */
+    .tabbar{ position:fixed; left:0; right:0; bottom:0; z-index:40; display:flex;
+      background:linear-gradient(0deg, rgba(7,9,15,.96), rgba(7,9,15,.86));
+      -webkit-backdrop-filter:blur(18px) saturate(140%); backdrop-filter:blur(18px) saturate(140%);
+      border-top:1px solid var(--stroke); padding-bottom:env(safe-area-inset-bottom); }
+    .tabbtn{ flex:1; border:none; background:none; cursor:pointer; font-family:inherit; color:var(--muted);
+      padding:8px 4px 10px; display:flex; flex-direction:column; align-items:center; gap:3px;
+      transition:color .15s ease; position:relative; }
+    .tabbtn .ti{ font-size:22px; line-height:1; filter:grayscale(.4) opacity(.8); transition:.15s ease; }
+    .tabbtn .tl{ font-size:11px; font-weight:600; }
+    .tabbtn.active{ color:var(--accent); }
+    .tabbtn.active .ti{ filter:none; transform:translateY(-1px); }
+    .tabbtn.active::before{ content:""; position:absolute; top:0; left:50%; transform:translateX(-50%);
+      width:34px; height:3px; border-radius:0 0 4px 4px; background:var(--accent); box-shadow:0 0 10px -1px var(--glow); }
+    /* เผื่อที่ให้แถบล่าง ไม่ให้บังเนื้อหา */
+    .wrap{ padding-bottom:calc(84px + env(safe-area-inset-bottom)); }
+
+    /* ---- unmute button (บนจอไลฟ์) ---- */
+    .unmute-btn{ position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:14;
+      border:1px solid var(--accent); background:rgba(12,18,30,.82); color:var(--accent); font-family:inherit;
+      font-weight:700; font-size:14px; padding:9px 18px; border-radius:999px; cursor:pointer;
+      -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); box-shadow:0 8px 24px -6px rgba(0,0,0,.7);
+      animation:pulseGlow 1.8s ease-in-out infinite; }
+    @keyframes pulseGlow{ 0%,100%{ box-shadow:0 8px 24px -6px rgba(0,0,0,.7), 0 0 0 0 var(--glow); }
+      50%{ box-shadow:0 8px 24px -6px rgba(0,0,0,.7), 0 0 22px 2px var(--glow); } }
+
+    /* ---- chat hourly separator (จาง) ---- */
+    .chat-daysep{ display:flex; align-items:center; gap:10px; margin:6px 4px; color:var(--muted);
+      font-size:11px; opacity:.6; user-select:none; }
+    .chat-daysep::before, .chat-daysep::after{ content:""; flex:1; height:1px; background:var(--stroke); }
+
+    /* ---- sponsor auto-scroll strip ---- */
+    .sponsor-strip{ margin-top:8px; padding:12px 0; overflow:hidden; position:relative; }
+    .sponsor-strip::before, .sponsor-strip::after{ content:""; position:absolute; top:0; bottom:0; width:36px; z-index:2; pointer-events:none; }
+    .sponsor-strip::before{ left:0; background:linear-gradient(90deg, var(--bg), transparent); }
+    .sponsor-strip::after{ right:0; background:linear-gradient(270deg, var(--bg), transparent); }
+    .sponsor-track{ display:flex; align-items:center; gap:22px; width:max-content; animation:spadv 30s linear infinite; }
+    .sponsor-strip:hover .sponsor-track{ animation-play-state:paused; }
+    @keyframes spadv{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+    .sponsor-track a, .sponsor-track span.sp{ flex:0 0 auto; display:flex; align-items:center; justify-content:center;
+      height:56px; padding:0 6px; }
+    .sponsor-track img{ max-height:56px; max-width:140px; width:auto; object-fit:contain;
+      border-radius:10px; background:rgba(255,255,255,.9); padding:6px 10px; }
+    @media(prefers-reduced-motion:reduce){ .sponsor-track{ animation:none; } }
+
+    /* ---- market hero (แท็บ Market) ---- */
+    .market-hero{ margin-top:8px; padding:28px 20px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:6px; }
+    .market-hero .mh-ic{ font-size:64px; }
+    .market-hero .mh-t{ font-weight:700; font-size:22px; }
+    .market-hero .mh-d{ font-size:14px; color:var(--muted); max-width:32ch; }
+    .market-open-btn{ margin-top:16px; border:none; cursor:pointer; padding:15px 24px; border-radius:16px; font-family:inherit;
+      font-size:17px; font-weight:700; color:#04150E; background:linear-gradient(135deg,var(--accent),var(--accent-2));
+      box-shadow:0 12px 34px -10px var(--glow); transition:transform .15s ease; }
+    .market-open-btn:active{ transform:scale(.97); }
+
+    /* ---- login sheet ---- */
+    #login-choices, #login-profile{ display:flex; flex-direction:column; gap:10px; margin-top:16px; }
+    .login-btn{ display:flex; align-items:center; justify-content:center; gap:10px; border:1px solid var(--stroke);
+      background:var(--glass-2); color:var(--text); border-radius:14px; padding:14px; font-family:inherit;
+      font-size:15px; font-weight:600; cursor:pointer; transition:transform .12s ease, border-color .12s ease; }
+    .login-btn:active{ transform:scale(.98); }
+    .login-btn .lb-ic{ width:26px; height:26px; border-radius:7px; display:flex; align-items:center; justify-content:center;
+      font-weight:800; font-size:15px; color:#fff; }
+    .login-btn.line .lb-ic{ background:#06C755; }
+    .login-btn.google{ background:#fff; color:#1f1f1f; border-color:#dadce0; }
+    .login-btn.google .lb-ic{ background:#fff; color:#4285F4; border:1px solid #dadce0; }
+    .login-btn.fb .lb-ic{ background:#1877F2; }
+    .login-btn.guest{ background:none; color:var(--muted); border-style:dashed; }
+    .lp-row{ display:flex; align-items:center; gap:12px; margin-top:16px; }
+    .lp-row img{ width:52px; height:52px; border-radius:50%; object-fit:cover; border:1px solid var(--stroke); background:var(--glass-2); }
+    .lp-name{ font-weight:700; font-size:17px; } .lp-sub{ font-size:13px; color:var(--muted); }
+    .chat-note .login-link{ color:var(--accent); cursor:pointer; text-decoration:underline; }
   </style>
 </head>
 <body>
@@ -388,12 +496,13 @@
       },
       cloudinary: { cloudName:'qk5q5cys', preset:'pjmfqmmf' },  // ใช้บัญชีเดิมของ Yateem (อัปรูป/PDF ผัง)
       videos: [],  // วิดีโอแนะนำ [{id,title}] — ปกติแอดมินตั้งผ่านหน้าแอดมิน เก็บใน /settings
+      sponsors: [], // สปอนเซอร์ [{img,link}] — แอดมินตั้งผ่านหน้าแอดมิน เก็บใน /settings (สูงสุด 10)
       domain: '',            // โดเมนเว็บ (ไว้ทำลิงก์แชร์) — ว่าง = ใช้ URL ปัจจุบัน
       prayerProvince: 'Bangkok',   // จังหวัดเริ่มต้นสำหรับเวลาละหมาด
       quranPdfUrl: ''        // ลิงก์ไฟล์ PDF อัลกุรอานแปลไทย (แอดมินอัป)
     };
     // ค่าที่แอดมินแก้ได้ (ทับด้วย /settings จาก Firebase ตอนโหลด)
-    const ADMIN_KEYS = ['streamUrl','social','market','donate','videos','theme','labels','logoUrl','domain','prayerProvince','quranPdfUrl'];
+    const ADMIN_KEYS = ['streamUrl','social','market','donate','videos','sponsors','theme','labels','logoUrl','domain','prayerProvince','quranPdfUrl'];
 
     // ---- ชุดธีมสำเร็จ (อิงสีโลโก้ยาตีมทีวี: น้ำเงิน–ทอง) ----
     const THEMES = {
@@ -455,104 +564,147 @@
   <header>
     <img id="brand-logo" src="logo.png" alt="Yateem TV" onerror="this.onerror=null;this.src='icon.jpg'">
     <div class="brand" data-lbl="brandName">Yateem TV</div>
+    <div class="live-cluster">
+      <span class="chip live"><span class="dot"></span><span data-lbl="liveBadge">LIVE</span></span>
+      <span class="chip viewers" id="viewers">👁 <span id="viewer-count">–</span> <span data-lbl="viewersSuffix">กำลังชม</span></span>
+      <button class="profile-btn" id="profile-btn" onclick="openLogin()" aria-label="เข้าสู่ระบบ" title="เข้าสู่ระบบ">👤</button>
+    </div>
   </header>
 
   <div class="wrap">
-    <!-- HERO / LIVE (มีแชทซ้อน + ปุ่มรีแอคชัน) -->
-    <div class="hero" id="hero">
-      <div class="chips">
-        <span class="chip live"><span class="dot"></span><span data-lbl="liveBadge">LIVE</span></span>
-        <span class="chip viewers" id="viewers">👁 <span id="viewer-count">–</span> <span data-lbl="viewersSuffix">กำลังชม</span></span>
+    <!-- ============ แท็บ 1: LIVE สด ============ -->
+    <section class="tab-panel" id="panel-live">
+      <!-- HERO / LIVE -->
+      <div class="hero" id="hero">
+        <video id="player" playsinline autoplay muted controls poster="icon.jpg"></video>
+        <div class="offline">
+          <div class="big">📺</div>
+          <div data-lbl="offlineTitle">ขณะนี้ยังไม่มีการถ่ายทอดสด ค่ะ</div>
+          <div style="font-size:13px" data-lbl="offlineSub">กลับมาอีกครั้งเมื่อช่องเริ่มไลฟ์นะคะ</div>
+        </div>
+        <!-- ปุ่มแตะเพื่อเปิดเสียง (โผล่เมื่อเบราว์เซอร์บล็อกเสียงอัตโนมัติ) -->
+        <button class="unmute-btn" id="unmute-btn" onclick="unmuteNow()" style="display:none">🔊 แตะเพื่อเปิดเสียง</button>
       </div>
-      <video id="player" playsinline autoplay muted controls poster="icon.jpg"></video>
-      <div class="offline">
-        <div class="big">📺</div>
-        <div data-lbl="offlineTitle">ขณะนี้ยังไม่มีการถ่ายทอดสด ค่ะ</div>
-        <div style="font-size:13px" data-lbl="offlineSub">กลับมาอีกครั้งเมื่อช่องเริ่มไลฟ์นะคะ</div>
+
+      <!-- แถบ กำลังออกอากาศ + แชร์ -->
+      <div class="live-bar">
+        <span class="now-chip" id="now-chip" style="display:none">🔴 <b>กำลังออกอากาศ:</b>&nbsp;<span id="now-title"></span></span>
+        <span style="flex:1"></span>
+        <button class="share-btn" onclick="shareSite()">🔗 แชร์</button>
       </div>
-      <!-- อิโมจิลอย -->
-      <div class="react-float" id="react-float"></div>
-      <!-- ปุ่มรีแอคชัน (สร้างด้วย JS) -->
-      <div class="react-bar" id="react-bar"></div>
-    </div>
 
-    <!-- แถบ กำลังออกอากาศ + แชร์ -->
-    <div class="live-bar">
-      <span class="now-chip" id="now-chip" style="display:none">🔴 <b>กำลังออกอากาศ:</b>&nbsp;<span id="now-title"></span></span>
-      <span style="flex:1"></span>
-      <button class="share-btn" onclick="shareSite()">🔗 แชร์</button>
-    </div>
-
-    <!-- ข้อความแชท (ย้ายลงมาจากจอ) -->
-    <div class="chat-list glass" id="chat-list"></div>
-
-    <!-- ช่องพิมพ์แชท -->
-    <div class="chat-input glass" style="padding:8px;border-radius:16px;margin-top:8px">
-      <input id="chat-text" type="text" placeholder="พิมพ์ข้อความ..." data-ph="chatPlaceholder" maxlength="300"
-             autocomplete="off" onkeydown="if(event.key==='Enter')sendMessage()">
-      <button onclick="sendMessage()" data-lbl="chatSend">ส่ง</button>
-    </div>
-    <div class="chat-note" id="chat-note">กำลังเชื่อมต่อแชท...</div>
-
-    <!-- DONATE CTA -->
-    <button class="donate-cta" onclick="openDonate()" data-lbl="donateBtn">💛 ร่วมบริจาค</button>
-
-    <!-- MARKET SPOTLIGHT (วางใกล้ปุ่มบริจาค) -->
-    <div class="sec-title">🛒 <span class="accent" data-lbl="marketTitle">Yateem Market</span></div>
-    <a class="spotlight glass" id="market-card" href="javascript:void(0)" onclick="openMarket()">
-      <div class="ic">🛍️</div>
-      <div>
-        <div class="t" data-lbl="marketCardTitle">สั่งอาหารฮาลาล & สินค้าแห้ง</div>
-        <div class="d" data-lbl="marketCardDesc">เปิดร้าน Yateem Market — สั่งง่าย ส่งทั่วไทย</div>
+      <!-- แชทสด (กล่องข้อความ + อิโมจิลอย + ช่องพิมพ์ + ปุ่มรีแอคชัน) -->
+      <div class="chat-section">
+        <div class="chat-list glass" id="chat-list"></div>
+        <!-- อิโมจิลอย (ลอยจากบริเวณพิมพ์ข้อความขึ้นไปบนช่องแชท) -->
+        <div class="react-float" id="react-float"></div>
+        <!-- ช่องพิมพ์แชท + ปุ่มรีแอคชัน -->
+        <div class="chat-input glass">
+          <input id="chat-text" type="text" placeholder="พิมพ์ข้อความ..." data-ph="chatPlaceholder" maxlength="300"
+                 autocomplete="off" onkeydown="if(event.key==='Enter')sendMessage()">
+          <div class="react-bar" id="react-bar"></div>
+          <button class="chat-send-btn" onclick="sendMessage()" data-lbl="chatSend">ส่ง</button>
+        </div>
+        <div class="chat-note" id="chat-note">กำลังเชื่อมต่อแชท...</div>
       </div>
-      <div class="go">›</div>
-    </a>
 
-    <!-- RECOMMENDED VIDEOS -->
-    <div id="videos-section" style="display:none">
-      <div class="sec-title">▶️ <span class="accent" data-lbl="videosTitle">วิดีโอแนะนำ</span></div>
-      <div class="rail" id="videos-rail"></div>
-    </div>
+      <!-- DONATE CTA -->
+      <button class="donate-cta" onclick="openDonate()" data-lbl="donateBtn">💛 ร่วมบริจาค</button>
 
-    <!-- PRAYER TIMES -->
-    <div class="sec-title">🕌 <span class="accent">เวลาละหมาดวันนี้</span></div>
-    <div class="prayer glass" id="prayer-box">
-      <div class="prayer-head">
-        <select id="prayer-province" onchange="onProvinceChange()"></select>
-        <button class="mini" id="prayer-notify-btn" onclick="togglePrayerNotify()">🔔 เตือน</button>
+      <!-- SPONSORS (แถบเลื่อนโลโก้อัตโนมัติ) -->
+      <div id="sponsor-section" style="display:none">
+        <div class="sec-title">🤝 <span class="accent">สปอนเซอร์</span></div>
+        <div class="sponsor-strip glass" id="sponsor-strip"><div class="sponsor-track" id="sponsor-track"></div></div>
       </div>
-      <div class="prayer-date" id="prayer-date"></div>
-      <div class="prayer-grid" id="prayer-grid"><div class="sched-empty">กำลังโหลดเวลาละหมาด...</div></div>
-      <div class="prayer-next" id="prayer-next"></div>
-    </div>
+    </section>
 
-    <!-- QURAN -->
-    <div class="sec-title">📖 <span class="accent">อัลกุรอาน</span></div>
-    <div class="rail" id="quran-rail">
-      <a class="card glass" href="javascript:void(0)" onclick="openQuran()"><div class="ic" style="background:#0a7d5a">📖</div><div><div class="nm">อ่านออนไลน์</div><div class="sub">แปล+คำอ่าน</div></div></a>
-      <a class="card glass" id="quran-pdf-card" href="javascript:void(0)" onclick="openQuranPdf()" style="display:none"><div class="ic" style="background:#b9860b">📄</div><div><div class="nm">PDF แปลไทย</div><div class="sub">ดาวน์โหลด/อ่าน</div></div></a>
-    </div>
-
-    <!-- LIVE CHAT (แชทซ้อนบนจอ) -->
-
-    <!-- SOCIAL RAIL -->
-    <div class="sec-title">📡 <span data-lbl="socialTitle">โซเชียลของเรา</span></div>
-    <div class="rail" id="social-rail"><!-- filled by JS --></div>
-
-    <!-- PROGRAM SCHEDULE -->
-    <div class="sec-title">📅 <span class="accent" data-lbl="scheduleTitle">ผังรายการ 24 ชม.</span></div>
-    <div class="sched glass">
-      <div class="sched-nav">
-        <button onclick="schedShift(-1)" aria-label="ก่อนหน้า">‹</button>
-        <input type="date" id="sched-date" onchange="renderSchedule()">
-        <button onclick="schedShift(1)" aria-label="ถัดไป">›</button>
-        <button class="today" onclick="schedToday()">วันนี้</button>
-        <button class="mode" id="sched-mode-btn" onclick="schedToggleMode()">ทั้งสัปดาห์</button>
+    <!-- ============ แท็บ 2: YATEEM MARKET ============ -->
+    <section class="tab-panel" id="panel-market" style="display:none">
+      <div class="sec-title">🛒 <span class="accent" data-lbl="marketTitle">Yateem Market</span></div>
+      <div class="market-hero glass">
+        <div class="mh-ic">🛍️</div>
+        <div class="mh-t" data-lbl="marketCardTitle">สั่งอาหารฮาลาล & สินค้าแห้ง</div>
+        <div class="mh-d" data-lbl="marketCardDesc">เปิดร้าน Yateem Market — สั่งง่าย ส่งทั่วไทย</div>
+        <button class="market-open-btn" onclick="openMarket()">เปิดร้าน Yateem Market ›</button>
       </div>
-      <div id="sched-body"><div class="sched-empty">ยังไม่มีผังรายการค่ะ</div></div>
-    </div>
+    </section>
 
-    <footer data-lbl="footer">© Yateem TV · ช่องของทุกคน 💛</footer>
+    <!-- ============ แท็บ 3: ละหมาด + อัลกุรอาน ============ -->
+    <section class="tab-panel" id="panel-faith" style="display:none">
+      <!-- PRAYER TIMES -->
+      <div class="sec-title">🕌 <span class="accent">เวลาละหมาดวันนี้</span></div>
+      <div class="prayer glass" id="prayer-box">
+        <div class="prayer-head">
+          <select id="prayer-province" onchange="onProvinceChange()"></select>
+          <button class="mini" id="prayer-notify-btn" onclick="togglePrayerNotify()">🔔 เตือน</button>
+        </div>
+        <div class="prayer-date" id="prayer-date"></div>
+        <div class="prayer-grid" id="prayer-grid"><div class="sched-empty">กำลังโหลดเวลาละหมาด...</div></div>
+        <div class="prayer-next" id="prayer-next"></div>
+      </div>
+
+      <!-- QURAN -->
+      <div class="sec-title">📖 <span class="accent">อัลกุรอาน</span></div>
+      <div class="rail" id="quran-rail">
+        <a class="card glass" href="javascript:void(0)" onclick="openQuran()"><div class="ic" style="background:#0a7d5a">📖</div><div><div class="nm">อ่านออนไลน์</div><div class="sub">แปล+คำอ่าน</div></div></a>
+        <a class="card glass" id="quran-pdf-card" href="javascript:void(0)" onclick="openQuranPdf()" style="display:none"><div class="ic" style="background:#b9860b">📄</div><div><div class="nm">PDF แปลไทย</div><div class="sub">ดาวน์โหลด/อ่าน</div></div></a>
+      </div>
+    </section>
+
+    <!-- ============ แท็บ 4: ผังรายการ + ช่องทาง ============ -->
+    <section class="tab-panel" id="panel-more" style="display:none">
+      <!-- PROGRAM SCHEDULE -->
+      <div class="sec-title">📅 <span class="accent" data-lbl="scheduleTitle">ผังรายการ 24 ชม.</span></div>
+      <div class="sched glass">
+        <div class="sched-nav">
+          <button onclick="schedShift(-1)" aria-label="ก่อนหน้า">‹</button>
+          <input type="date" id="sched-date" onchange="renderSchedule()">
+          <button onclick="schedShift(1)" aria-label="ถัดไป">›</button>
+          <button class="today" onclick="schedToday()">วันนี้</button>
+          <button class="mode" id="sched-mode-btn" onclick="schedToggleMode()">ทั้งสัปดาห์</button>
+        </div>
+        <div id="sched-body"><div class="sched-empty">ยังไม่มีผังรายการค่ะ</div></div>
+      </div>
+
+      <!-- RECOMMENDED VIDEOS -->
+      <div id="videos-section" style="display:none">
+        <div class="sec-title">▶️ <span class="accent" data-lbl="videosTitle">วิดีโอแนะนำ</span></div>
+        <div class="rail" id="videos-rail"></div>
+      </div>
+
+      <!-- SOCIAL RAIL -->
+      <div class="sec-title">📡 <span data-lbl="socialTitle">ติดตามเราทุกช่องทาง</span></div>
+      <div class="rail" id="social-rail"><!-- filled by JS --></div>
+
+      <footer data-lbl="footer">© Yateem TV · ช่องของทุกคน 💛</footer>
+    </section>
+  </div>
+
+  <!-- ============ แถบแท็บล่างจอ ============ -->
+  <nav class="tabbar" id="tabbar">
+    <button class="tabbtn active" data-tab="live"   onclick="showTab('live')"><span class="ti">📺</span><span class="tl">Live สด</span></button>
+    <button class="tabbtn"        data-tab="market" onclick="showTab('market')"><span class="ti">🛒</span><span class="tl">Market</span></button>
+    <button class="tabbtn"        data-tab="faith"  onclick="showTab('faith')"><span class="ti">🕌</span><span class="tl">ละหมาด</span></button>
+    <button class="tabbtn"        data-tab="more"   onclick="showTab('more')"><span class="ti">📅</span><span class="tl">ผัง·ช่องทาง</span></button>
+  </nav>
+
+  <!-- LOGIN SHEET -->
+  <div class="backdrop" id="login-backdrop" onclick="if(event.target===this)closeLogin()">
+    <div class="sheet glass" style="position:relative">
+      <button class="close" onclick="closeLogin()">×</button>
+      <h2>👤 เข้าสู่ระบบ</h2>
+      <div style="color:var(--muted);font-size:14px">เข้าสู่ระบบเพื่อแชทด้วยชื่อและรูปโปรไฟล์จริง (ไม่บังคับ)</div>
+      <div id="login-choices">
+        <button class="login-btn line"   onclick="loginLine()"><span class="lb-ic">💬</span> เข้าสู่ระบบด้วย LINE</button>
+        <button class="login-btn google" onclick="loginGoogle()"><span class="lb-ic">G</span> เข้าสู่ระบบด้วย Google</button>
+        <button class="login-btn fb"     onclick="loginFacebook()"><span class="lb-ic">f</span> เข้าสู่ระบบด้วย Facebook</button>
+        <button class="login-btn guest"  onclick="closeLogin()">แชทแบบไม่ล็อกอิน</button>
+      </div>
+      <div id="login-profile" style="display:none">
+        <div class="lp-row"><img id="lp-photo" alt=""><div><div class="lp-name" id="lp-name"></div><div class="lp-sub" id="lp-sub"></div></div></div>
+        <button class="login-btn guest" onclick="logoutUser()">ออกจากระบบ</button>
+      </div>
+    </div>
   </div>
 
   <!-- DONATE SHEET -->
@@ -682,6 +834,17 @@
           </div>
           <button class="mini" onclick="saveVideos()" style="margin-top:8px">💾 บันทึกวิดีโอ (แสดงบนหน้าเว็บทันที)</button>
 
+          <div class="grp">🤝 สปอนเซอร์ (สูงสุด 10 — โลโก้เลื่อนในแท็บ Live)</div>
+          <div id="spo-list"></div>
+          <div class="vid-add" style="flex-wrap:wrap">
+            <input type="file" id="f-spo-file" accept="image/*" style="max-width:100%">
+            <input id="f-spourl" placeholder="หรือวาง URL โลโก้">
+            <input id="f-spolink" placeholder="ลิงก์เมื่อคลิก (ไม่บังคับ)">
+            <button onclick="adminAddSponsor()">+ เพิ่ม</button>
+          </div>
+          <div class="filehint">อัปโหลดโลโก้ (ย่ออัตโนมัติ ≤10MB) หรือวาง URL ก็ได้ค่ะ</div>
+          <button class="mini" onclick="saveSponsors()" style="margin-top:8px">💾 บันทึกสปอนเซอร์ (แสดงบนหน้าเว็บทันที)</button>
+
           <div class="grp">📖 อัลกุรอาน (PDF แปลไทย)</div>
           <input id="f-quran" placeholder="วาง URL PDF (แนะนำ) หรืออัปโหลดด้านล่าง">
           <div class="filehint">ไฟล์ใหญ่เกิน 10MB อัปไม่ได้ — อัปขึ้น Google Drive แล้ววางลิงก์ในช่องบนแทนค่ะ</div>
@@ -766,10 +929,8 @@
     try{
       await liff.init({ liffId: CONFIG.liffId });
       liffReady=true; inClient=liff.isInClient();
-      if(inClient){
-        if(!liff.isLoggedIn()){ /* ในแอป LINE จะล็อกอินอัตโนมัติ */ }
-        try{ lineProfile = await liff.getProfile(); }catch(e){}
-      }
+      // ดึงโปรไฟล์เมื่อล็อกอินอยู่ — ทั้งในแอป LINE (อัตโนมัติ) และหลังกดล็อกอิน LINE จากเบราว์เซอร์
+      try{ if(liff.isLoggedIn()){ lineProfile = await liff.getProfile(); } }catch(e){}
     }catch(e){ liffReady=false; }
   }
   function openExternal(url){
@@ -786,7 +947,32 @@
   /* ============================================================
      2) HLS live player
      ============================================================ */
-  let hlsInstance=null, curStream=undefined;
+  let hlsInstance=null, curStream=undefined, wantSound=true;
+  // พยายามเล่นไลฟ์พร้อมเสียงทันที — ถ้าเบราว์เซอร์บล็อก (ต้องมี user gesture) ก็เล่นแบบเงียบ
+  // แล้วโชว์ปุ่ม "แตะเพื่อเปิดเสียง"
+  function tryPlayWithSound(){
+    const video=document.getElementById('player'); if(!video) return;
+    video.muted=false; video.volume=1;
+    const p=video.play();
+    if(p && p.catch){ p.then(()=>hideUnmute()).catch(()=>{
+      // เปิดเสียงไม่ได้ → เล่นเงียบไว้ก่อน + โชว์ปุ่มแตะเปิดเสียง
+      video.muted=true; try{ video.play(); }catch(e){}
+      if(wantSound) showUnmute();
+    }); }
+  }
+  function showUnmute(){ const b=document.getElementById('unmute-btn'); if(b) b.style.display='block'; }
+  function hideUnmute(){ const b=document.getElementById('unmute-btn'); if(b) b.style.display='none'; }
+  function unmuteNow(){
+    const video=document.getElementById('player'); if(!video) return;
+    video.muted=false; video.volume=1; try{ video.play(); }catch(e){}
+    hideUnmute();
+  }
+  // แตะที่ไหนก็ได้ครั้งแรก = ถือเป็น gesture เปิดเสียง (เผื่อ autoplay มีเสียงถูกบล็อก)
+  document.addEventListener('pointerdown', function firstTapUnmute(){
+    const video=document.getElementById('player');
+    if(video && video.muted && wantSound && curStream){ video.muted=false; try{ video.play(); }catch(e){} hideUnmute(); }
+  }, {once:true, passive:true});
+
   function setStream(url){
     const hero=document.getElementById('hero'), video=document.getElementById('player');
     if(CONFIG.posterUrl) video.poster=CONFIG.posterUrl;
@@ -794,14 +980,17 @@
     curStream=url;
     if(hlsInstance){ try{hlsInstance.destroy();}catch(e){} hlsInstance=null; }
     hero.classList.remove('is-offline'); video.removeAttribute('src'); try{video.load();}catch(e){}
-    const goOffline=()=>hero.classList.add('is-offline');
+    hideUnmute();
+    const goOffline=()=>{ hero.classList.add('is-offline'); hideUnmute(); };
     if(!url){ goOffline(); return; }
     if(window.Hls && Hls.isSupported()){
       hlsInstance=new Hls({ lowLatencyMode:true });
       hlsInstance.loadSource(url); hlsInstance.attachMedia(video);
+      hlsInstance.on(Hls.Events.MANIFEST_PARSED, tryPlayWithSound);
       hlsInstance.on(Hls.Events.ERROR,(evt,data)=>{ if(data && data.fatal) goOffline(); });
     }else if(video.canPlayType('application/vnd.apple.mpegurl')){
       video.src=url;                              // iOS/Safari/LINE-iOS native HLS
+      video.addEventListener('loadedmetadata', tryPlayWithSound, {once:true});
       video.addEventListener('error',goOffline);
     }else{ goOffline(); }
   }
@@ -837,6 +1026,11 @@
      4) Firebase — live chat + viewer count
      ============================================================ */
   let db=null, chatRef=null, myUid=null, lastSend=0, chatOn=false;
+  const OWNER_UID='qDOL6lE687ejMumQcpOWtEjAMJ92';   // ต้องตรงกับ database.rules.json
+  // เป็นแอดมินจริงเฉพาะ owner หรือผู้ล็อกอินด้วย email/password เท่านั้น
+  // (ผู้ล็อกอิน social = Google/Facebook เป็น non-anonymous แต่ไม่ใช่แอดมิน)
+  function isAdminUser(u){ return !!u && (u.uid===OWNER_UID ||
+    (u.providerData||[]).some(p=>p && p.providerId==='password')); }
   function fbConfigured(){ return CONFIG.firebase && CONFIG.firebase.apiKey && CONFIG.firebase.databaseURL; }
   function initFirebaseApp(){                      // เรียกได้ครั้งเดียว ใช้ร่วมกันทั้ง settings/schedule/chat
     if(!fbConfigured()) return false;
@@ -849,24 +1043,40 @@
     const note=document.getElementById('chat-note');
     if(!initFirebaseApp()){ note.textContent='แชทยังไม่พร้อม (ผู้ดูแลยังไม่ได้ตั้งค่า Firebase)'; return; }
     try{
+      // รับผลกลับจากการล็อกอิน social (signInWithRedirect) ถ้ามี
+      try{ await firebase.auth().getRedirectResult(); }catch(e){ if(e&&e.code) toast('ล็อกอินไม่สำเร็จ: '+e.code); }
       // รอ Firebase กู้สถานะล็อกอินที่จำไว้ (persistence = LOCAL) ก่อน — จะได้ไม่ทับ session แอดมิน
       await new Promise(res=>{ const off=firebase.auth().onAuthStateChanged(()=>{ off(); res(); }); });
       let user=firebase.auth().currentUser;
       if(!user){ await firebase.auth().signInAnonymously(); user=firebase.auth().currentUser; }
       myUid=user.uid;
-      // มีแต่แอดมินที่ล็อกอินด้วยบัญชี email/pass (ไม่ใช่ anonymous)
-      if(user && !user.isAnonymous){ isAdmin=true; document.body.classList.add('is-mod'); }
+      applyUserState(user);
+      // อัปเดตสถานะเมื่อผู้ใช้ล็อกอิน/ออกภายหลัง (social redirect กลับมา ฯลฯ)
+      firebase.auth().onAuthStateChanged(u=>{ if(u){ myUid=u.uid; } applyUserState(u); });
       chatOn=true; note.textContent='ใส่ชื่อเล่นแล้วพิมพ์ได้เลยค่ะ';
       bindPresence();
       bindMessages();
       handleAdminHash();
+      updateChatNote();
     }catch(e){ note.textContent='เชื่อมต่อแชทไม่สำเร็จค่ะ'; console.error(e); }
   }
-
-  function displayName(){
-    if(lineProfile && lineProfile.displayName) return lineProfile.displayName;
-    return localStorage.getItem('yt_nick') || '';
+  // ตั้งสถานะแอดมิน (is-mod) + ปุ่มโปรไฟล์ ตามผู้ใช้ปัจจุบัน
+  function applyUserState(user){
+    const admin=isAdminUser(user);
+    isAdmin=admin;
+    document.body.classList.toggle('is-mod', admin);
+    updateProfileBtn(user);
+    updateChatNote();
   }
+
+  // ---- identity: ชื่อ/รูป สำหรับแชท (social user → LINE → ชื่อเล่น) ----
+  function currentIdentity(){
+    const u=(typeof firebase!=='undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if(u && !u.isAnonymous && u.displayName) return { name:u.displayName, photo:u.photoURL||'' };
+    if(lineProfile && lineProfile.displayName) return { name:lineProfile.displayName, photo:lineProfile.pictureUrl||'' };
+    return { name:(localStorage.getItem('yt_nick')||''), photo:'' };
+  }
+  function displayName(){ return currentIdentity().name; }
   function ensureName(){
     let n=displayName();
     if(n) return n;
@@ -892,19 +1102,39 @@
   }
 
   function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+  // ---- เส้นคั่นแชทรายชั่วโมง (วัน–เวลาแบบจาง) ----
+  let lastMsgHourKey=null;
+  function hourKey(ts){ const d=ts?new Date(ts):new Date(); return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate()+'-'+d.getHours(); }
+  function hourLabel(ts){
+    const d=ts?new Date(ts):new Date(), now=new Date();
+    const hh=String(d.getHours()).padStart(2,'0');
+    const sameDay=d.toDateString()===now.toDateString();
+    let day; try{ day=sameDay?'วันนี้':d.toLocaleDateString('th-TH',{day:'numeric',month:'short'}); }catch(e){ day=sameDay?'วันนี้':(d.getDate()+'/'+(d.getMonth()+1)); }
+    return day+' '+hh+':00 น.';
+  }
   function bindMessages(){
     chatRef=db.ref(`rooms/${CONFIG.chat.roomId}/messages`).limitToLast(100);
     const list=document.getElementById('chat-list'), empty=document.getElementById('chat-empty');
     chatRef.on('child_added',snap=>{
       const m=snap.val()||{}; if(empty) empty.style.display='none';
       const txt=(m.text||'').trim();
-      if(REACT_SET.has(txt)) spawnFloat(txt);           // ข้อความรีแอคชัน → ลอยขึ้นจอ
+      if(REACT_SET.has(txt)){
+        if(!myUid || m.uid !== myUid || (Date.now() - lastLocalSpawn > 1200)) spawnFloat(txt);
+      }
+      // แทรกเส้นคั่นเมื่อข้ามชั่วโมง
+      const hk=hourKey(m.ts);
+      if(hk!==lastMsgHourKey){
+        lastMsgHourKey=hk;
+        const sep=document.createElement('div'); sep.className='chat-daysep'; sep.textContent=hourLabel(m.ts);
+        list.appendChild(sep);
+      }
       const el=document.createElement('div'); el.className='msg'; el.dataset.key=snap.key;
       const initial=(m.name||'?').trim().charAt(0)||'?';
       const av=m.photo? `<img class="av" src="${esc(m.photo)}" alt="">` : `<div class="av">${esc(initial)}</div>`;
       el.innerHTML=`${av}<div class="body"><div class="nm">${esc(m.name||'ไม่ระบุชื่อ')}<button class="del" onclick="delMsg('${snap.key}')">ลบ</button></div><div class="tx">${esc(m.text||'')}</div></div>`;
       list.appendChild(el);
-      while(list.children.length>60) list.removeChild(list.firstChild);   // ดันแชทเก่าออก กันหน่วง
+      while(list.children.length>80) list.removeChild(list.firstChild);   // ดันแชทเก่าออก กันหน่วง
+      while(list.firstChild && list.firstChild.classList && list.firstChild.classList.contains('chat-daysep')) list.removeChild(list.firstChild);
       list.scrollTop=list.scrollHeight;
     });
     chatRef.on('child_removed',snap=>{
@@ -931,7 +1161,7 @@
     try{
       await db.ref(`rooms/${CONFIG.chat.roomId}/messages`).push({
         uid: myUid, name: name.slice(0,40),
-        photo: (lineProfile && lineProfile.pictureUrl) || '',
+        photo: (currentIdentity().photo||'').slice(0,500),
         text: clean(text).slice(0,CONFIG.chat.maxLen),
         ts: firebase.database.ServerValue.TIMESTAMP
       });
@@ -965,6 +1195,80 @@
     firebase.auth().signOut().then(()=>{ toast('ออกจากระบบแล้ว'); location.hash=''; location.reload(); })
       .catch(()=>toast('ออกจากระบบไม่สำเร็จ'));
   }
+
+  /* ============================================================
+     4b) ล็อกอินผู้ชม (Google / Facebook / LINE) — แชทด้วยชื่อจริง (ไม่บังคับ)
+     ============================================================ */
+  function openLogin(){
+    const u=(typeof firebase!=='undefined'&&firebase.auth)?firebase.auth().currentUser:null;
+    const id=currentIdentity();
+    const loggedIn=(u && !u.isAnonymous) || (lineProfile && lineProfile.displayName);
+    document.getElementById('login-choices').style.display=loggedIn?'none':'flex';
+    const prof=document.getElementById('login-profile'); prof.style.display=loggedIn?'flex':'none';
+    if(loggedIn){
+      const ph=document.getElementById('lp-photo'); ph.src=id.photo||'icon.jpg'; ph.onerror=function(){this.src='icon.jpg';};
+      document.getElementById('lp-name').textContent=id.name||'ผู้ใช้';
+      document.getElementById('lp-sub').textContent=isAdmin?'ผู้ดูแลระบบ':'ผู้ชม Yateem TV';
+    }
+    document.getElementById('login-backdrop').classList.add('open');
+  }
+  function closeLogin(){ document.getElementById('login-backdrop').classList.remove('open'); }
+  function socialLogin(provider){
+    if(!initFirebaseApp()){ toast('ระบบยังไม่พร้อมค่ะ'); return; }
+    try{ firebase.auth().signInWithRedirect(provider); }
+    catch(e){ toast('เริ่มเข้าสู่ระบบไม่สำเร็จค่ะ'); console.error(e); }
+  }
+  function loginGoogle(){ socialLogin(new firebase.auth.GoogleAuthProvider()); }
+  function loginFacebook(){ socialLogin(new firebase.auth.FacebookAuthProvider()); }
+  async function loginLine(){
+    try{
+      if(!liffReady){ toast('LINE ยังไม่พร้อมค่ะ'); return; }
+      if(!liff.isLoggedIn()){ localStorage.setItem('yt_line','1'); liff.login(); return; }  // redirect ไป LINE
+      lineProfile=await liff.getProfile(); localStorage.setItem('yt_line','1');
+      applyUserState((firebase.auth&&firebase.auth().currentUser)||null);
+      closeLogin(); toast('เข้าสู่ระบบ LINE แล้วค่ะ');
+    }catch(e){ toast('เข้าสู่ระบบ LINE ไม่สำเร็จค่ะ'); console.error(e); }
+  }
+  async function logoutUser(){
+    try{
+      if(lineProfile){ lineProfile=null; try{ localStorage.removeItem('yt_line'); }catch(e){}
+        try{ if(liffReady && !inClient && liff.isLoggedIn()) liff.logout(); }catch(e){} }
+      const u=firebase.auth().currentUser;
+      if(u && !u.isAnonymous){ await firebase.auth().signOut(); }
+      toast('ออกจากระบบแล้วค่ะ'); closeLogin(); location.hash=''; location.reload();
+    }catch(e){ toast('ออกจากระบบไม่สำเร็จค่ะ'); console.error(e); }
+  }
+  function updateProfileBtn(user){
+    const btn=document.getElementById('profile-btn'); if(!btn) return;
+    const id=currentIdentity();
+    const loggedIn=(user && !user.isAnonymous) || (lineProfile && lineProfile.displayName);
+    if(loggedIn){
+      btn.classList.add('in');
+      btn.innerHTML = id.photo ? `<img src="${esc(id.photo)}" alt="">` : esc((id.name||'👤').charAt(0));
+      btn.title=id.name||'โปรไฟล์';
+    }else{ btn.classList.remove('in'); btn.textContent='👤'; btn.title='เข้าสู่ระบบ'; }
+  }
+  function updateChatNote(){
+    const note=document.getElementById('chat-note'); if(!note) return;
+    if(!chatOn) return;
+    const id=currentIdentity();
+    if(id.name){ note.innerHTML='กำลังแชทในชื่อ <b>'+esc(id.name)+'</b>'; }
+    else { note.innerHTML='พิมพ์เพื่อแชทได้เลย หรือ <span class="login-link" onclick="openLogin()">เข้าสู่ระบบเพื่อแชทด้วยชื่อจริง</span>'; }
+  }
+
+  /* ============================================================
+     4c) สลับแท็บ (แถบล่างจอ) — ไม่ทำลาย <video> เพื่อให้เสียงไลฟ์เล่นต่อ
+     ============================================================ */
+  function showTab(name){
+    ['live','market','faith','more'].forEach(t=>{
+      const p=document.getElementById('panel-'+t); if(p) p.style.display=(t===name)?'block':'none';
+    });
+    document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+    Array.from(document.body.classList).forEach(c=>{ if(/^tab-/.test(c)) document.body.classList.remove(c); });
+    document.body.classList.add('tab-'+name);
+    window.scrollTo(0,0);
+  }
+
   function delMsg(key){
     if(!document.body.classList.contains('is-mod')) return;
     db.ref(`rooms/${CONFIG.chat.roomId}/messages/${key}`).remove().catch(()=>toast('ลบไม่สำเร็จ'));
@@ -1094,16 +1398,17 @@
       const s=snap.val();
       if(s){ ADMIN_KEYS.forEach(k=>{ if(s[k]===undefined) return;
         if(k==='videos') CONFIG.videos = Array.isArray(s.videos)? s.videos : [];
+        else if(k==='sponsors') CONFIG.sponsors = Array.isArray(s.sponsors)? s.sponsors : [];
         else if(s[k] && typeof s[k]==='object'){ CONFIG[k]=CONFIG[k]||{}; deepMerge(CONFIG[k], s[k]); }
         else CONFIG[k]=s[k];
       }); }
       applySettings(); markSettingsReady();
-      if(document.getElementById('admin-backdrop').classList.contains('open') && !adminEditing){ fillSettingsForm(); renderAdminVideos(); renderThemeTab(); renderLabelsForm(); }
+      if(document.getElementById('admin-backdrop').classList.contains('open') && !adminEditing){ fillSettingsForm(); renderAdminVideos(); renderAdminSponsors(); renderThemeTab(); renderLabelsForm(); }
     }, ()=>{ applySettings(); markSettingsReady(); });
   }
   function applySettings(){
     applyTheme(CONFIG.theme); applyLabels(); setLogo(CONFIG.logoUrl);
-    setStream(CONFIG.streamUrl||''); initSocial(); renderVideos(); renderReactions();
+    setStream(CONFIG.streamUrl||''); initSocial(); renderVideos(); renderSponsors(); renderReactions();
     const qc=document.getElementById('quran-pdf-card'); if(qc) qc.style.display = CONFIG.quranPdfUrl?'flex':'none';
   }
 
@@ -1158,6 +1463,25 @@
       d.innerHTML=`<img class="thumb" loading="lazy" src="https://img.youtube.com/vi/${v.id}/hqdefault.jpg" alt=""><div class="play">▶</div><div class="vtitle">${esc(v.title||'')}</div>`;
       rail.appendChild(d);
     });
+  }
+  // ---- สปอนเซอร์ (แถบเลื่อนโลโก้อัตโนมัติ) ----
+  function renderSponsors(){
+    const sec=document.getElementById('sponsor-section'), track=document.getElementById('sponsor-track');
+    if(!sec||!track) return;
+    const list=(CONFIG.sponsors||[]).filter(s=>s&&s.img).slice(0,10);
+    track.innerHTML='';
+    if(!list.length){ sec.style.display='none'; return; }
+    sec.style.display='block';
+    // ทำ 2 ชุดต่อกันเพื่อลูปเลื่อนแบบเนียน (แต่ถ้ามีน้อยไม่ต้องเลื่อน)
+    const many = list.length>2;
+    const build=(s)=>{
+      const inner=`<img src="${esc(s.img)}" alt="สปอนเซอร์" loading="lazy">`;
+      if(s.link){ const a=document.createElement('a'); a.href='javascript:void(0)'; a.onclick=()=>openExternal(s.link); a.innerHTML=inner; return a; }
+      const sp=document.createElement('span'); sp.className='sp'; sp.innerHTML=inner; return sp;
+    };
+    list.forEach(s=>track.appendChild(build(s)));
+    if(many){ list.forEach(s=>track.appendChild(build(s))); track.style.animation=''; }
+    else { track.style.animation='none'; track.style.justifyContent='center'; track.style.width='100%'; }
   }
   function openVideo(id,title){
     try{ document.getElementById('player').pause(); }catch(e){}
@@ -1273,7 +1597,7 @@
     document.getElementById('admin-backdrop').classList.add('open');
     if(!settingsReady){ toast('กำลังโหลดข้อมูล...'); await waitSettings(); }
     adminEditing=false;
-    fillSettingsForm(); renderAdminVideos(); renderThemeTab(); renderLabelsForm();
+    fillSettingsForm(); renderAdminVideos(); renderAdminSponsors(); renderThemeTab(); renderLabelsForm();
     adminTab('settings'); adminLoadTemplateDay();
   }
   function closeAdmin(){ document.getElementById('admin-backdrop').classList.remove('open'); }
@@ -1389,6 +1713,39 @@
       toast('บันทึกวิดีโอแล้วค่ะ ✅');
     }catch(e){ saveErr(e); }
   }
+  // ---- สปอนเซอร์ (แอดมิน) ----
+  let adminSponsors=[];
+  function renderAdminSponsors(){
+    adminSponsors=(CONFIG.sponsors||[]).slice();
+    const box=document.getElementById('spo-list'); if(!box) return; box.innerHTML='';
+    adminSponsors.forEach((s,i)=>{ const el=document.createElement('div'); el.className='vid-item';
+      el.innerHTML=`<img src="${esc(s.img)}" alt="" style="background:#fff"><input value="${esc(s.link||'')}" placeholder="ลิงก์ (ไม่บังคับ)" onchange="adminSetSponsorLink(${i},this.value)" style="flex:1;min-width:0"><button class="rm" onclick="adminRemoveSponsor(${i})">🗑</button>`;
+      box.appendChild(el);
+    });
+  }
+  function adminSetSponsorLink(i,v){ if(adminSponsors[i]) adminSponsors[i].link=(v||'').trim(); }
+  async function adminAddSponsor(){
+    if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
+    if(adminSponsors.length>=10){ toast('เพิ่มได้สูงสุด 10 รายค่ะ'); return; }
+    let img=val('f-spourl');
+    const f=document.getElementById('f-spo-file').files[0];
+    try{
+      if(f){ toast('กำลังอัปโหลดโลโก้...'); const up=await uploadToCloudinary(f); img=up.url; }
+      if(!img){ toast('เลือกไฟล์หรือวาง URL โลโก้ก่อนค่ะ'); return; }
+      adminSponsors.push({ img, link:val('f-spolink') });
+      setv('f-spourl',''); setv('f-spolink',''); const fe=document.getElementById('f-spo-file'); if(fe) fe.value='';
+      renderAdminSponsors();
+      toast('เพิ่มแล้ว กด "บันทึกสปอนเซอร์" เพื่อแสดงบนเว็บ');
+    }catch(e){ toast('อัปโหลดไม่สำเร็จ'+(e.message?': '+e.message:'')); console.error(e); }
+  }
+  function adminRemoveSponsor(i){ adminSponsors.splice(i,1); renderAdminSponsors(); }
+  async function saveSponsors(){
+    if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
+    try{
+      await db.ref('settings/sponsors').set(adminSponsors.slice(0,10).map(s=>({ img:s.img, link:(s.link||'') })));
+      toast('บันทึกสปอนเซอร์แล้วค่ะ ✅');
+    }catch(e){ saveErr(e); }
+  }
   async function saveSettings(){
     if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
     if(!settingsReady){ toast('ข้อมูลยังโหลดไม่เสร็จ รอสักครู่แล้วลองใหม่ค่ะ'); return; }  // กันเขียนค่าว่างทับ
@@ -1399,6 +1756,7 @@
       market:{ web:val('f-market') },
       donate:{ promptpayId:val('f-ppid'),bankName:val('f-bankname'),accountName:val('f-accname'),accountNumber:val('f-accnum'),qrImageUrl:val('f-qr') },
       videos: adminVideos.map(v=>({id:v.id,title:v.title||''})),
+      sponsors: adminSponsors.slice(0,10).map(s=>({img:s.img,link:s.link||''})),
       quranPdfUrl: val('f-quran'), prayerProvince: val('f-prayer'), domain: val('f-domain')
     };
     try{ await db.ref('settings').update(payload); toast('บันทึกการตั้งค่าแล้วค่ะ ✅'); }
@@ -1455,32 +1813,105 @@
   /* ============================================================
      7) Reactions / Share / Now-playing / Prayer / Quran / Lightbox
      ============================================================ */
-  // ---- รีแอคชัน (ส่งเป็นข้อความอิโมจิในแชท + ลอยขึ้นจอ) ----
-  const REACTIONS=[{e:'👍',t:'ชอบ'},{e:'❤️',t:'หัวใจ'},{e:'🌟',t:'เยี่ยม'},{e:'🫶',t:'ห่วงใย'},{e:'💛',t:'บริจาค'},{e:'🤲',t:'ขอดุอาอ'}];
+  // ---- รีแอคชัน (ส่งเป็นข้อความอิโมจิในแชท + ลอยขึ้นจากแถบพิมพ์แชท) ----
+  const REACTIONS=[
+    {e:'😍',t:'รักเลย'},
+    {e:'❤️',t:'หัวใจ'},
+    {e:'💛',t:'บริจาค'},
+    {e:'👍',t:'ชอบ'},
+    {e:'🌟',t:'เยี่ยม'},
+    {e:'🫶',t:'ห่วงใย'},
+    {e:'🤲',t:'ขอดุอาอ'}
+  ];
   const REACT_SET=new Set(REACTIONS.map(r=>r.e));
-  let lastReact=0;
+  let lastReact=0, lastLocalSpawn=0, reactCloseTimer=null;
+
   function renderReactions(){
     const bar=document.getElementById('react-bar'); if(!bar) return; bar.innerHTML='';
     const pop=document.createElement('div'); pop.id='react-pop';
-    pop.style.cssText='position:absolute;right:52px;bottom:0;display:none;flex-direction:column;gap:8px';
-    REACTIONS.forEach(r=>{ const b=document.createElement('button'); b.textContent=r.e; b.title=r.t;
-      b.onclick=(ev)=>{ ev.stopPropagation(); sendReaction(r.e); }; pop.appendChild(b); });
-    const toggle=document.createElement('button'); toggle.textContent='😍'; toggle.title='ส่งความรู้สึก';
-    toggle.onclick=()=>{ pop.style.display = pop.style.display==='none'?'flex':'none'; };
-    bar.appendChild(pop); bar.appendChild(toggle);
+
+    REACTIONS.forEach(r=>{
+      const b=document.createElement('button');
+      b.type='button';
+      b.textContent=r.e;
+      b.title=r.t;
+      b.setAttribute('aria-label', r.t);
+      b.onclick=(ev)=>{
+        ev.stopPropagation();
+        sendReaction(r.e);
+        clearTimeout(reactCloseTimer);
+        reactCloseTimer=setTimeout(()=>{
+          pop.classList.remove('open');
+          toggle.classList.remove('active');
+        }, 1200);
+      };
+      pop.appendChild(b);
+    });
+
+    const toggle=document.createElement('button');
+    toggle.type='button';
+    toggle.className='react-toggle';
+    toggle.textContent='😍';
+    toggle.title='ส่งความรู้สึก';
+    toggle.setAttribute('aria-label', 'ส่งความรู้สึก');
+    toggle.onclick=(ev)=>{
+      ev.stopPropagation();
+      const isOpen=pop.classList.toggle('open');
+      toggle.classList.toggle('active', isOpen);
+      clearTimeout(reactCloseTimer);
+      if(isOpen){
+        reactCloseTimer=setTimeout(()=>{
+          pop.classList.remove('open');
+          toggle.classList.remove('active');
+        }, 5000);
+      }
+    };
+
+    bar.appendChild(pop);
+    bar.appendChild(toggle);
   }
+
+  // ปิดถาดรีแอคชันเมื่อแตะส่วนอื่นของหน้าจอ
+  document.addEventListener('click', ev=>{
+    const bar=document.getElementById('react-bar');
+    const pop=document.getElementById('react-pop');
+    if(pop && pop.classList.contains('open') && bar && !bar.contains(ev.target)){
+      pop.classList.remove('open');
+      const toggle=bar.querySelector('.react-toggle');
+      if(toggle) toggle.classList.remove('active');
+    }
+  });
+
   function spawnFloat(e){
     const layer=document.getElementById('react-float'); if(!layer) return;
-    const el=document.createElement('div'); el.className='fx'; el.textContent=e;
-    el.style.right=(10+Math.random()*46)+'px'; el.style.bottom=(6+Math.random()*12)+'%';
-    layer.appendChild(el); setTimeout(()=>el.remove(),2700);
+    lastLocalSpawn=Date.now();
+    const el=document.createElement('div');
+    el.className='fx';
+    el.textContent=e;
+    const dx=(Math.random() - 0.5) * 44;
+    const rot=(Math.random() - 0.5) * 30;
+    el.style.setProperty('--dx', dx + 'px');
+    el.style.setProperty('--rot', rot + 'deg');
+    el.style.right=(54 + (Math.random() - 0.5) * 28) + 'px';
+    layer.appendChild(el);
+    setTimeout(()=>el.remove(), 2500);
   }
+
   function sendReaction(e){
-    if(!chatOn || !db){ spawnFloat(e); return; }        // แชทไม่พร้อม → ลอยเฉพาะเครื่องเรา
-    const now=Date.now(); if(now-lastReact<800) return; lastReact=now;
-    const name=(displayName()||'ผู้ชม').slice(0,40);
-    db.ref(`rooms/${CONFIG.chat.roomId}/messages`).push({ uid:myUid, name,
-      photo:(lineProfile&&lineProfile.pictureUrl)||'', text:e, ts:firebase.database.ServerValue.TIMESTAMP }).catch(()=>{});
+    spawnFloat(e);                                       // ลอยขึ้นทันทีให้ตอบสนองทันใจ
+    const now=Date.now();
+    if(now-lastReact < 350) return;                      // ดีบาวน์การบันทึกลง Firebase
+    lastReact=now;
+    if(!chatOn || !db) return;
+    const id=currentIdentity();
+    const name=(id.name||'ผู้ชม').slice(0,40);
+    db.ref(`rooms/${CONFIG.chat.roomId}/messages`).push({
+      uid: myUid,
+      name,
+      photo: (id.photo||'').slice(0,500),
+      text: e,
+      ts: firebase.database.ServerValue.TIMESTAMP
+    }).catch(()=>{});
   }
 
   // ---- แชร์ ----
@@ -1636,6 +2067,7 @@
      ============================================================ */
   (async function(){
     registerSW();
+    showTab('live');       // เริ่มที่แท็บ Live สด
     if(isIOS()) setTimeout(showInstall,2500);   // iOS ไม่มี beforeinstallprompt → โชว์แบนเนอร์วิธีทำ
     const ab=document.getElementById('admin-backdrop'); if(ab) ab.addEventListener('input',()=>{ adminEditing=true; }, true);  // กัน listener รีเฟรชทับตอนกำลังพิมพ์
     initFirebaseApp();
