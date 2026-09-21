@@ -421,14 +421,20 @@
       font-size:17px; font-weight:700; color:#04150E; background:linear-gradient(135deg,var(--accent),var(--accent-2));
       box-shadow:0 12px 34px -10px var(--glow); transition:transform .15s ease; }
     .market-open-btn:active{ transform:scale(.97); }
-    /* ---- market preview (พรีวิวหน้าร้านในแท็บ Market) ---- */
+    /* ---- market preview (พรีวิวหน้าร้านเต็มจอในแท็บ Market) ---- */
     .market-preview{ margin-top:8px; position:relative; border-radius:20px; overflow:hidden;
-      border:1px solid var(--stroke); background:#fff; cursor:pointer; aspect-ratio:16/10; box-shadow:var(--shadow); }
+      border:1px solid var(--stroke); background:#fff; cursor:pointer;
+      height:calc(100dvh - 210px); min-height:440px; box-shadow:var(--shadow); }
     .market-preview iframe{ position:absolute; top:0; left:0; width:200%; height:200%;
       transform:scale(.5); transform-origin:top left; border:0; pointer-events:none; }
-    .market-preview img{ width:100%; height:100%; object-fit:cover; display:block; }
-    .market-preview .mp-tap{ position:absolute; left:0; right:0; bottom:0; padding:10px 14px;
-      font-weight:700; color:#fff; background:linear-gradient(0deg, rgba(0,0,0,.72), transparent); text-align:center; }
+    .market-preview img{ width:100%; height:100%; object-fit:cover; object-position:top; display:block; }
+    /* CTA เด่นกระตุ้นซื้อ (ทอง + เต้นเบา ๆ) */
+    .market-preview .mp-tap{ position:absolute; left:14px; right:14px; bottom:16px;
+      padding:15px 18px; border-radius:16px; font-weight:800; font-size:17px; color:#04150E; text-align:center;
+      background:linear-gradient(135deg,var(--accent),var(--accent-2));
+      box-shadow:0 12px 34px -8px var(--glow), 0 4px 14px rgba(0,0,0,.35);
+      animation:mpPulse 1.8s ease-in-out infinite; }
+    @keyframes mpPulse{ 0%,100%{ transform:translateY(0) scale(1); } 50%{ transform:translateY(-2px) scale(1.02); } }
 
     /* ---- login sheet ---- */
     #login-choices, #login-profile{ display:flex; flex-direction:column; gap:10px; margin-top:16px; }
@@ -632,7 +638,8 @@
     <section class="tab-panel" id="panel-market" style="display:none">
       <div class="sec-title">🛒 <span class="accent" data-lbl="marketTitle">Yateem Market</span></div>
       <div class="market-preview" id="market-preview" style="display:none" onclick="openMarket()"></div>
-      <div class="market-hero glass">
+      <!-- fallback เมื่อยังไม่มีพรีวิว (กันแท็บว่าง) -->
+      <div class="market-hero glass" id="market-fallback" style="display:none">
         <div class="mh-ic">🛍️</div>
         <div class="mh-t" data-lbl="marketCardTitle">สั่งอาหารฮาลาล & สินค้าแห้ง</div>
         <div class="mh-d" data-lbl="marketCardDesc">เปิดร้าน Yateem Market — สั่งง่าย ส่งทั่วไทย</div>
@@ -664,18 +671,9 @@
 
     <!-- ============ แท็บ 4: ผังรายการ + ช่องทาง ============ -->
     <section class="tab-panel" id="panel-more" style="display:none">
-      <!-- PROGRAM SCHEDULE -->
+      <!-- PROGRAM SCHEDULE (โชว์เฉพาะรูปผัง แตะเพื่อ zoom) -->
       <div class="sec-title">📅 <span class="accent" data-lbl="scheduleTitle">ผังรายการ 24 ชม.</span></div>
-      <div class="sched glass">
-        <div class="sched-nav">
-          <button onclick="schedShift(-1)" aria-label="ก่อนหน้า">‹</button>
-          <input type="date" id="sched-date" onchange="renderSchedule()">
-          <button onclick="schedShift(1)" aria-label="ถัดไป">›</button>
-          <button class="today" onclick="schedToday()">วันนี้</button>
-          <button class="mode" id="sched-mode-btn" onclick="schedToggleMode()">ทั้งสัปดาห์</button>
-        </div>
-        <div id="sched-body"><div class="sched-empty">ยังไม่มีผังรายการค่ะ</div></div>
-      </div>
+      <div id="sched-body"></div>
 
       <!-- RECOMMENDED VIDEOS -->
       <div id="videos-section" style="display:none">
@@ -1507,16 +1505,18 @@
   // ---- พรีวิวหน้าร้าน Market ----
   function renderMarketPreview(){
     const box=document.getElementById('market-preview'); if(!box) return;
+    const fb=document.getElementById('market-fallback');
     const web=((CONFIG.market&&CONFIG.market.web)||'').trim();
     const prev=((CONFIG.market&&CONFIG.market.previewImg)||'').trim();
     const isHttp=/^https?:\/\//i.test(web) && !/liff\.line\.me/i.test(web);
+    const cta=`<div class="mp-tap">🛒 แตะเพื่อสั่งซื้อเลย ›</div>`;
     if(isHttp){
-      box.innerHTML=`<iframe src="${esc(web)}" title="Yateem Market" loading="lazy" scrolling="no" sandbox="allow-scripts allow-same-origin"></iframe><div class="mp-tap">แตะเพื่อเปิดร้าน ›</div>`;
-      box.style.display='block';
+      box.innerHTML=`<iframe src="${esc(web)}" title="Yateem Market" loading="lazy" scrolling="no" sandbox="allow-scripts allow-same-origin"></iframe>${cta}`;
+      box.style.display='block'; if(fb) fb.style.display='none';
     }else if(prev){
-      box.innerHTML=`<img src="${esc(prev)}" alt="Yateem Market" loading="lazy"><div class="mp-tap">แตะเพื่อเปิดร้าน ›</div>`;
-      box.style.display='block';
-    }else{ box.style.display='none'; box.innerHTML=''; }
+      box.innerHTML=`<img src="${esc(prev)}" alt="Yateem Market" loading="lazy">${cta}`;
+      box.style.display='block'; if(fb) fb.style.display='none';
+    }else{ box.style.display='none'; box.innerHTML=''; if(fb) fb.style.display='flex'; }
   }
   function openVideo(id,title){
     try{ document.getElementById('player').pause(); }catch(e){}
@@ -1570,19 +1570,18 @@
     return h;
   }
   function renderSchedule(){
-    const body=document.getElementById('sched-body');
-    const dateStr=document.getElementById('sched-date').value || ymd(new Date());
+    const body=document.getElementById('sched-body'); if(!body) return;
+    const dateStr=ymd(new Date());   // อ้างอิงวันนี้ (ไม่มีตัวเลือกวันแล้ว)
     let html='';
-    if(schedWeek){
-      const base=new Date(dateStr+'T00:00:00');
-      for(let i=0;i<7;i++){ const d=new Date(base); d.setDate(base.getDate()+i); const b=renderDayBlock(ymd(d)); if(b) html+=`<div class="sched-day">${b}</div>`; }
-    }else{ const b=renderDayBlock(dateStr); html = b ? `<div class="sched-day">${b}</div>` : '<div class="sched-empty">วันนี้ยังไม่มีผังรายการค่ะ</div>'; }
+    // รูปผังเฉพาะวันนี้ (override) → รูปประจำสัปดาห์ → เดือน → ปี (ไม่มี label, แตะ zoom ได้)
+    const ov=(schedData.overrides||{})[dateStr];
+    if(ov && ov.fileUrl) html+=`<div class="sched-day">${fileHtml('',{url:ov.fileUrl,type:ov.fileType})}</div>`;
     const files=schedData.files||{};
-    if(files.weekly) html+=`<div class="sched-day">${fileHtml('ผังประจำสัปดาห์',files.weekly)}</div>`;
+    if(files.weekly) html+=`<div class="sched-day">${fileHtml('',files.weekly)}</div>`;
     const mk=dateStr.slice(0,7), yk=dateStr.slice(0,4);
-    if(files[mk]) html+=`<div class="sched-day">${fileHtml('ผังประจำเดือน '+mk,files[mk])}</div>`;
-    if(files[yk]) html+=`<div class="sched-day">${fileHtml('ผังประจำปี '+yk,files[yk])}</div>`;
-    body.innerHTML=html || '<div class="sched-empty">ยังไม่มีผังรายการค่ะ</div>';
+    if(files[mk]) html+=`<div class="sched-day">${fileHtml('',files[mk])}</div>`;
+    if(files[yk]) html+=`<div class="sched-day">${fileHtml('',files[yk])}</div>`;
+    body.innerHTML=html;   // ไม่มีข้อความ empty
     updateNowChip();
   }
 
