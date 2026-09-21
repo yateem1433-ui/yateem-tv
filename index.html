@@ -260,14 +260,35 @@
     .save-btn{ width:100%; margin-top:16px; border:none; cursor:pointer; border-radius:12px; padding:14px;
       font-family:inherit; font-weight:700; color:#241A00; background:linear-gradient(135deg,var(--accent),var(--accent-2)); }
     .mini{ margin-top:8px; border:1px solid var(--stroke); background:var(--glass-2); color:var(--text);
-      border-radius:10px; padding:8px 12px; font-family:inherit; cursor:pointer; }
-    .row-edit{ display:flex; gap:6px; margin-top:8px; align-items:center; flex-wrap:wrap; }
-    .row-edit input.t{ max-width:76px; } .row-edit input{ min-width:80px; }
-    .row-edit button.rm{ background:none; border:none; color:#ff6b73; cursor:pointer; font-size:18px; padding:0 4px; }
+      border-radius:10px; padding:8px 12px; font-family:inherit; cursor:pointer; font-size:13px; transition:background .12s; }
+    .mini:hover{ background:rgba(255,255,255,.14); }
+    .mini:active{ transform:scale(.96); }
+    .mini.primary-mini{ background:color-mix(in srgb, var(--accent) 22%, transparent); border-color:var(--accent); color:var(--accent); font-weight:600; }
+    .mini.danger-mini{ background:rgba(255,107,115,.12); border-color:rgba(255,107,115,.35); color:#ff6b73; }
+
+    .copy-box{ background:var(--glass); border:1px solid var(--stroke); border-radius:14px; padding:10px 12px; margin-top:10px; }
+    .copy-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:13px; color:var(--muted); }
+    .copy-row select, .copy-row input[type=date]{ flex:1; min-width:110px; padding:6px 10px; border-radius:8px; font-size:13px; height:34px; }
+    .copy-row .mini{ margin-top:0; padding:6px 12px; height:34px; display:inline-flex; align-items:center; }
+
+    .sched-row-tools{ display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+    .sched-row-tools .mini{ margin-top:0; }
+
+    .row-edit{ display:flex; gap:6px; margin-top:8px; align-items:center; background:rgba(255,255,255,.02);
+      border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:6px 8px; }
+    .row-edit input.t{ width:66px; flex:0 0 66px; text-align:center; font-family:monospace,inherit; font-weight:600; }
+    .row-edit input:not(.t){ flex:1; min-width:80px; }
+    .row-edit .row-btns{ display:flex; gap:3px; align-items:center; flex:0 0 auto; }
     .row-edit .ra{ background:var(--glass-2); border:1px solid var(--stroke); color:var(--text);
-      border-radius:8px; width:30px; height:30px; min-width:30px; cursor:pointer; font-size:14px; padding:0; line-height:1;
-      display:flex; align-items:center; justify-content:center; }
+      border-radius:8px; width:28px; height:28px; min-width:28px; cursor:pointer; font-size:11px; font-weight:700; padding:0; line-height:1;
+      display:flex; align-items:center; justify-content:center; transition:background .12s, transform .1s; }
+    .row-edit .ra:hover{ background:rgba(255,255,255,.16); border-color:var(--accent); }
     .row-edit .ra:active{ transform:scale(.9); }
+    .row-edit .rm{ background:rgba(255,107,115,.12); border:1px solid rgba(255,107,115,.3); color:#ff6b73;
+      border-radius:8px; width:28px; height:28px; min-width:28px; cursor:pointer; font-size:15px; font-weight:700; padding:0;
+      display:flex; align-items:center; justify-content:center; transition:background .12s, transform .1s; }
+    .row-edit .rm:hover{ background:rgba(255,107,115,.26); }
+    .row-edit .rm:active{ transform:scale(.9); }
     .copy-day{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px; font-size:13px; color:var(--muted); }
     .copy-day select{ flex:0 0 auto; width:auto; min-width:96px; }
     .copy-day .mini{ margin-top:0; }
@@ -295,6 +316,7 @@
     .react-toggle{ width:42px; height:42px; min-width:42px; border-radius:12px; border:1px solid var(--stroke); cursor:pointer;
       background:var(--glass-2); font-size:21px; display:flex; align-items:center; justify-content:center;
       transition:transform .15s ease, background .15s ease, border-color .15s ease; padding:0; line-height:1; }
+    .react-toggle img{ width:26px; height:26px; object-fit:contain; pointer-events:none; }
     .react-toggle:hover{ background:rgba(255,255,255,.16); border-color:var(--accent); transform:scale(1.06); }
     .react-toggle:active{ transform:scale(.92); }
     .react-toggle.active{ border-color:var(--accent); box-shadow:0 0 14px -2px var(--glow); }
@@ -310,13 +332,15 @@
     #react-pop button{ width:36px; height:36px; min-width:36px; border-radius:50%; border:none; cursor:pointer;
       background:transparent; font-size:20px; display:flex; align-items:center; justify-content:center;
       transition:transform .15s cubic-bezier(0.2,0,0.2,1), background .15s ease; padding:0; line-height:1; }
+    #react-pop button img{ width:28px; height:28px; object-fit:contain; pointer-events:none; }
     #react-pop button:hover{ background:rgba(255,255,255,.18); transform:scale(1.28); }
     #react-pop button:active{ transform:scale(.92); }
 
     .react-float{ position:absolute; inset:0; z-index:12; pointer-events:none; overflow:hidden; border-radius:var(--radius); }
     .react-float .fx{ position:absolute; bottom:56px; font-size:28px;
       animation:floatUp 2.4s cubic-bezier(0.2,0.6,0.3,1) forwards;
-      pointer-events:none; user-select:none; filter:drop-shadow(0 4px 10px rgba(0,0,0,.6)); }
+      pointer-events:none; user-select:none; filter:drop-shadow(0 4px 10px rgba(0,0,0,.6)); display:flex; align-items:center; justify-content:center; }
+    .react-float .fx img{ width:34px; height:34px; object-fit:contain; filter:drop-shadow(0 4px 8px rgba(0,0,0,.45)); }
     @keyframes floatUp{
       0%{ transform:translate(0,0) scale(.5); opacity:0; }
       12%{ opacity:1; transform:translate(calc(var(--dx, 0px) * .3), -28px) scale(1.2); }
@@ -915,35 +939,67 @@
             <option value="5">ศุกร์</option><option value="6">เสาร์</option>
             <option value="0">อาทิตย์</option>
           </select>
-          <div class="copy-day">
-            <span>📋 คัดลอกจากวัน</span>
-            <select id="tpl-copy-src">
-              <option value="1">จันทร์</option><option value="2">อังคาร</option>
-              <option value="3">พุธ</option><option value="4">พฤหัสบดี</option>
-              <option value="5">ศุกร์</option><option value="6">เสาร์</option>
-              <option value="0">อาทิตย์</option>
-            </select>
-            <button class="mini" onclick="copyDayInto('tpl')">มาวาง</button>
+          <div class="copy-box">
+            <div class="copy-row">
+              <span>📋 คัดลอกจากวัน:</span>
+              <select id="tpl-copy-src">
+                <option value="1">จันทร์</option><option value="2">อังคาร</option>
+                <option value="3">พุธ</option><option value="4">พฤหัสบดี</option>
+                <option value="5">ศุกร์</option><option value="6">เสาร์</option>
+                <option value="0">อาทิตย์</option>
+              </select>
+              <button type="button" class="mini" onclick="copyDayInto('tpl')">มาวาง</button>
+            </div>
+            <div class="copy-row" style="margin-top:6px">
+              <span>🚀 นำผังวันนี้ไปใช้กับ:</span>
+              <select id="tpl-copy-dst">
+                <option value="weekdays">✨ จันทร์ - ศุกร์ (5 วันรวด)</option>
+                <option value="all">🌟 ทุกวัน (จันทร์ - อาทิตย์)</option>
+                <option value="1">จันทร์</option><option value="2">อังคาร</option>
+                <option value="3">พุธ</option><option value="4">พฤหัสบดี</option>
+                <option value="5">ศุกร์</option><option value="6">เสาร์</option>
+                <option value="0">อาทิตย์</option>
+              </select>
+              <button type="button" class="mini primary-mini" onclick="copyDayToDst()">คัดลอกไป</button>
+            </div>
           </div>
           <div id="tpl-rows"></div>
-          <button class="mini" onclick="adminAddRow('tpl-rows')">+ เพิ่มรายการ</button>
+          <div class="sched-row-tools">
+            <button type="button" class="mini" onclick="adminAddRow('tpl-rows')">+ เพิ่มรายการ</button>
+            <button type="button" class="mini" onclick="sortRows('tpl-rows')">⏱️ จัดเรียงตามเวลา</button>
+            <button type="button" class="mini danger-mini" onclick="clearRows('tpl-rows')">🗑️ ล้างทั้งหมด</button>
+          </div>
           <button class="save-btn" onclick="saveTemplateDay()">💾 บันทึกแม่แบบวันนี้</button>
 
           <div class="grp">แก้เฉพาะวัน (override)</div>
           <label>เลือกวันที่</label>
           <input type="date" id="ov-date" onchange="adminLoadOverride()">
-          <div class="copy-day">
-            <span>📋 คัดลอกจากแม่แบบวัน</span>
-            <select id="ov-copy-src">
-              <option value="1">จันทร์</option><option value="2">อังคาร</option>
-              <option value="3">พุธ</option><option value="4">พฤหัสบดี</option>
-              <option value="5">ศุกร์</option><option value="6">เสาร์</option>
-              <option value="0">อาทิตย์</option>
-            </select>
-            <button class="mini" onclick="copyDayInto('ov')">มาวาง</button>
+          <div class="copy-box">
+            <div class="copy-row">
+              <button type="button" class="mini primary-mini" onclick="copyFromDayOfWeek('ov')" style="width:100%">⚡ ดึงผังจากแม่แบบของวันประจำสัปดาห์นี้มาวาง</button>
+            </div>
+            <div class="copy-row" style="margin-top:6px">
+              <span>📋 หรือดึงจากแม่แบบวัน:</span>
+              <select id="ov-copy-src">
+                <option value="1">จันทร์</option><option value="2">อังคาร</option>
+                <option value="3">พุธ</option><option value="4">พฤหัสบดี</option>
+                <option value="5">ศุกร์</option><option value="6">เสาร์</option>
+                <option value="0">อาทิตย์</option>
+              </select>
+              <button type="button" class="mini" onclick="copyDayInto('ov')">มาวาง</button>
+            </div>
+            <div class="copy-row" style="margin-top:6px">
+              <span>📅 หรือคัดลอกจากวันที่อื่น:</span>
+              <input type="date" id="ov-copy-other-date" style="flex:1;min-width:110px">
+              <button type="button" class="mini" onclick="copyFromOtherDate()">ดึงมาวาง</button>
+            </div>
           </div>
           <div id="ov-rows"></div>
-          <button class="mini" onclick="adminAddRow('ov-rows')">+ เพิ่มรายการ</button>
+          <div class="sched-row-tools">
+            <button type="button" class="mini" onclick="adminAddRow('ov-rows')">+ เพิ่มรายการ</button>
+            <button type="button" class="mini" onclick="sortRows('ov-rows')">⏱️ จัดเรียงตามเวลา</button>
+            <button type="button" class="mini danger-mini" onclick="clearRows('ov-rows')">🗑️ ล้างทั้งหมด</button>
+          </div>
           <label>แนบรูป/PDF ผังของวันนี้</label>
           <input type="file" id="ov-file" accept="image/*,application/pdf">
           <div class="filehint" id="ov-filehint"></div>
@@ -1178,7 +1234,8 @@
       const el=document.createElement('div'); el.className='msg'; el.dataset.key=snap.key;
       const initial=(m.name||'?').trim().charAt(0)||'?';
       const av=m.photo? `<img class="av" src="${esc(m.photo)}" alt="">` : `<div class="av">${esc(initial)}</div>`;
-      el.innerHTML=`${av}<div class="body"><div class="nm">${esc(m.name||'ไม่ระบุชื่อ')}<button class="del" onclick="delMsg('${snap.key}')">ลบ</button></div><div class="tx">${esc(m.text||'')}</div></div>`;
+      const txHtml = (typeof REACT_IMG_MAP!=='undefined' && REACT_IMG_MAP[txt]) ? `<img src="${REACT_IMG_MAP[txt]}" alt="${esc(txt)}" style="width:26px;height:26px;vertical-align:middle;display:inline-block">` : esc(m.text||'');
+      el.innerHTML=`${av}<div class="body"><div class="nm">${esc(m.name||'ไม่ระบุชื่อ')}<button class="del" onclick="delMsg('${snap.key}')">ลบ</button></div><div class="tx">${txHtml}</div></div>`;
       list.appendChild(el);
       while(list.children.length>80) list.removeChild(list.firstChild);   // ดันแชทเก่าออก กันหน่วง
       while(list.firstChild && list.firstChild.classList && list.firstChild.classList.contains('chat-daysep')) list.removeChild(list.firstChild);
@@ -1314,6 +1371,7 @@
     Array.from(document.body.classList).forEach(c=>{ if(/^tab-/.test(c)) document.body.classList.remove(c); });
     document.body.classList.add('tab-'+name);
     window.scrollTo(0,0);
+    if(name==='live') updateNowChip();
   }
 
   function delMsg(key){
@@ -1572,11 +1630,29 @@
   function schedToday(){ document.getElementById('sched-date').value=ymd(new Date()); renderSchedule(); }
   function schedShift(n){ const el=document.getElementById('sched-date'); const d=el.value?new Date(el.value+'T00:00:00'):new Date(); d.setDate(d.getDate()+n); el.value=ymd(d); renderSchedule(); }
   function schedToggleMode(){ schedWeek=!schedWeek; document.getElementById('sched-mode-btn').textContent=schedWeek?'รายวัน':'ทั้งสัปดาห์'; renderSchedule(); }
+  function parseDateYMD(str){
+    if(!str) return new Date();
+    const parts = String(str).split('-').map(Number);
+    if(parts.length === 3 && !isNaN(parts[0])) return new Date(parts[0], parts[1]-1, parts[2]);
+    return new Date();
+  }
+  function parseSlotTime(tStr){
+    if(!tStr) return { start: null, end: null, raw: '' };
+    let s = String(tStr).trim();
+    s = s.replace(/[๐-๙]/g, d => '๐๑๒๓๔๕๖๗๘๙'.indexOf(d));
+    const m = [...s.matchAll(/(\d{1,2})[:.](\d{2})/g)];
+    if(!m.length) return { start: null, end: null, raw: s };
+    const toMin = (h, min) => parseInt(h, 10) * 60 + parseInt(min, 10);
+    const start = toMin(m[0][1], m[0][2]);
+    let end = m.length > 1 ? toMin(m[1][1], m[1][2]) : null;
+    if(end !== null && end < start) end += 24 * 60;
+    return { start, end, raw: s };
+  }
   function slotsFor(dateStr){
     const ov=(schedData.overrides||{})[dateStr];
     if(ov && ((ov.items&&ov.items.length)||ov.fileUrl))
       return { items:ov.items||[], file:ov.fileUrl?{url:ov.fileUrl,type:ov.fileType}:null };
-    const dow=new Date(dateStr+'T00:00:00').getDay();
+    const dow=parseDateYMD(dateStr).getDay();
     return { items:((schedData.template||{})[dow])||[], file:null };
   }
   function fileHtml(label,f){
@@ -1653,6 +1729,7 @@
     adminEditing=false;
     fillSettingsForm(); renderAdminVideos(); renderAdminSponsors(); renderThemeTab(); renderLabelsForm();
     adminTab('settings'); adminLoadTemplateDay();
+    const ovD=document.getElementById('ov-date'); if(ovD && !ovD.value){ ovD.value=ymd(new Date()); adminLoadOverride(); }
   }
   function closeAdmin(){ document.getElementById('admin-backdrop').classList.remove('open'); }
   function adminTab(t){
@@ -1660,6 +1737,11 @@
     ['settings','theme','labels','schedule'].forEach(p=>{
       const el=document.getElementById('apane-'+p); if(el) el.style.display=(p===t)?'block':'none';
     });
+    if(t==='schedule'){
+      adminLoadTemplateDay();
+      const ovD=document.getElementById('ov-date'); if(ovD && !ovD.value){ ovD.value=ymd(new Date()); }
+      adminLoadOverride();
+    }
   }
   function val(id){ return (document.getElementById(id).value||'').trim(); }
   function setv(id,v){ document.getElementById(id).value=v||''; }
@@ -1827,15 +1909,73 @@
     catch(e){ saveErr(e); }
   }
   // schedule editors
-  function rowHtml(t,title){ return `<div class="row-edit"><input class="t" placeholder="06:00" value="${esc(t||'')}" inputmode="numeric"><input placeholder="ชื่อรายการ" value="${esc(title||'')}">`+
-    `<button class="ra" title="แทรกด้านบน" onclick="insRow(this,'before')">↑</button>`+
-    `<button class="ra" title="แทรกด้านล่าง" onclick="insRow(this,'after')">↓</button>`+
-    `<button class="ra" title="คัดลอกแถวนี้" onclick="dupRow(this)">⧉</button>`+
-    `<button class="rm" title="ลบแถว" onclick="this.closest('.row-edit').remove()">×</button></div>`; }
+  function rowHtml(t,title){
+    return `<div class="row-edit">`+
+      `<input class="t" placeholder="06:00" value="${esc(t||'')}" inputmode="numeric" title="เวลา (เช่น 06:00)">`+
+      `<input placeholder="ชื่อรายการ" value="${esc(title||'')}" title="ชื่อรายการ">`+
+      `<div class="row-btns">`+
+        `<button type="button" class="ra" title="เลื่อนขึ้น" onclick="moveRow(this,-1)">↑</button>`+
+        `<button type="button" class="ra" title="เลื่อนลง" onclick="moveRow(this,1)">↓</button>`+
+        `<button type="button" class="ra" title="แทรกช่องก่อนหน้านี้" onclick="insRow(this,'before')">+↑</button>`+
+        `<button type="button" class="ra" title="แทรกช่องถัดไป" onclick="insRow(this,'after')">+↓</button>`+
+        `<button type="button" class="ra" title="คัดลอกแถวนี้" onclick="dupRow(this)">⧉</button>`+
+        `<button type="button" class="rm" title="ลบช่องนี้" onclick="delRow(this)">×</button>`+
+      `</div>`+
+    `</div>`;
+  }
   function adminAddRow(id){ adminEditing=true; document.getElementById(id).insertAdjacentHTML('beforeend', rowHtml('','')); }
-  function insRow(btn, where){ adminEditing=true; btn.closest('.row-edit').insertAdjacentHTML(where==='before'?'beforebegin':'afterend', rowHtml('','')); }
-  function dupRow(btn){ adminEditing=true; const row=btn.closest('.row-edit'); const ins=row.querySelectorAll('input');
-    row.insertAdjacentHTML('afterend', rowHtml(ins[0].value, ins[1].value)); }
+  function moveRow(btn, dir){
+    adminEditing=true;
+    const row=btn.closest('.row-edit');
+    if(dir<0 && row.previousElementSibling){
+      row.parentNode.insertBefore(row, row.previousElementSibling);
+    } else if(dir>0 && row.nextElementSibling){
+      row.parentNode.insertBefore(row.nextElementSibling, row);
+    }
+  }
+  function insRow(btn, where){
+    adminEditing=true;
+    const row=btn.closest('.row-edit');
+    row.insertAdjacentHTML(where==='before'?'beforebegin':'afterend', rowHtml('',''));
+    const target=where==='before'?row.previousElementSibling:row.nextElementSibling;
+    if(target){ const inp=target.querySelector('input'); if(inp) inp.focus(); }
+  }
+  function dupRow(btn){
+    adminEditing=true;
+    const row=btn.closest('.row-edit');
+    const ins=row.querySelectorAll('input');
+    row.insertAdjacentHTML('afterend', rowHtml(ins[0].value, ins[1].value));
+    const target=row.nextElementSibling;
+    if(target){ const inp=target.querySelectorAll('input')[1]||target.querySelector('input'); if(inp) inp.focus(); }
+  }
+  function delRow(btn){
+    adminEditing=true;
+    const row=btn.closest('.row-edit');
+    const parent=row.parentNode;
+    row.remove();
+    if(parent && !parent.children.length){
+      parent.insertAdjacentHTML('beforeend', rowHtml('',''));
+    }
+  }
+  function sortRows(boxId){
+    adminEditing=true;
+    const rows=readRows(boxId);
+    if(!rows.length){ toast('ยังไม่มีรายการให้จัดเรียง'); return; }
+    rows.sort((a,b)=>{
+      const pa=parseSlotTime(a.t).start, pb=parseSlotTime(b.t).start;
+      if(pa!==null && pb!==null) return pa - pb;
+      if(pa!==null) return -1;
+      if(pb!==null) return 1;
+      return (a.t||'').localeCompare(b.t||'');
+    });
+    fillRows(boxId, rows);
+    toast('จัดเรียงตามเวลาเรียบร้อยแล้วค่ะ ⏱️');
+  }
+  function clearRows(boxId){
+    if(!confirm('ต้องการล้างรายการทั้งหมดในกล่องนี้ใช่ไหมคะ?')) return;
+    adminEditing=true;
+    fillRows(boxId, []);
+  }
   function readRows(id){ const out=[]; document.querySelectorAll('#'+id+' .row-edit').forEach(r=>{
     const ins=r.querySelectorAll('input'); const t=(ins[0].value||'').trim(), title=(ins[1].value||'').trim();
     if(t||title) out.push({t,title}); }); return out; }
@@ -1854,33 +1994,127 @@
     fillRows(target==='tpl'?'tpl-rows':'ov-rows', rows.map(r=>({t:r.t,title:r.title})));
     toast('คัดลอกมาวางแล้ว — แก้ไขแล้วกดบันทึกเพื่อยืนยันค่ะ');
   }
+  // คัดลอกผังแม่แบบของวันนี้ ไปใส่ในวันเป้าหมาย (หรือ จันทร์-ศุกร์ ทั้งหมด)
+  async function copyDayToDst(){
+    if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
+    const currentRows=readRows('tpl-rows');
+    if(!currentRows.length){ toast('ยังไม่มีรายการในวันนี้ให้คัดลอกค่ะ'); return; }
+    const dst=document.getElementById('tpl-copy-dst').value;
+    const srcDayVal=document.getElementById('tpl-day').value;
+    const srcDayName=DOW_TH[srcDayVal]||'';
+    try{
+      if(dst==='weekdays'){
+        const updates={};
+        for(let d=1; d<=5; d++){
+          updates['schedule/template/'+d]=currentRows;
+          if(!schedData.template) schedData.template={};
+          schedData.template[d]=currentRows;
+        }
+        await db.ref().update(updates);
+        toast(`คัดลอกผังวัน${srcDayName} ไปยัง จันทร์-ศุกร์ (5 วัน) แล้วค่ะ ✅`);
+      } else if(dst==='all'){
+        const updates={};
+        for(let d=0; d<=6; d++){
+          updates['schedule/template/'+d]=currentRows;
+          if(!schedData.template) schedData.template={};
+          schedData.template[d]=currentRows;
+        }
+        await db.ref().update(updates);
+        toast(`คัดลอกผังวัน${srcDayName} ไปยังทุกวันในสัปดาห์แล้วค่ะ ✅`);
+      } else {
+        await db.ref('schedule/template/'+dst).set(currentRows);
+        if(!schedData.template) schedData.template={};
+        schedData.template[dst]=currentRows;
+        const dstName=DOW_TH[dst]||'';
+        toast(`คัดลอกผังวัน${srcDayName} ไปวัน${dstName} แล้วค่ะ ✅`);
+      }
+    }catch(e){ saveErr(e); }
+  }
+  // ดึงผังจากแม่แบบของวันประจำสัปดาห์นั้นมาวางใน override
+  function copyFromDayOfWeek(target){
+    const dateInput=document.getElementById('ov-date');
+    if(!dateInput||!dateInput.value){ toast('เลือกวันที่ก่อนค่ะ'); return; }
+    const dow=new Date(dateInput.value+'T00:00:00').getDay();
+    const rows=((schedData.template||{})[dow])||[];
+    if(!rows.length){ toast(`แม่แบบวัน${DOW_TH[dow]} ยังไม่มีรายการค่ะ`); return; }
+    adminEditing=true;
+    fillRows('ov-rows', rows.map(r=>({t:r.t,title:r.title})));
+    toast(`ดึงผังแม่แบบวัน${DOW_TH[dow]} มาวางแล้วค่ะ ⚡`);
+  }
+  // คัดลอกผังจากวันที่อื่นมาวางใน override
+  function copyFromOtherDate(){
+    const otherDate=document.getElementById('ov-copy-other-date').value;
+    if(!otherDate){ toast('เลือกวันที่ต้นทางก่อนค่ะ'); return; }
+    const ov=(schedData.overrides||{})[otherDate];
+    if(ov && ov.items && ov.items.length){
+      adminEditing=true;
+      fillRows('ov-rows', ov.items.map(r=>({t:r.t,title:r.title})));
+      toast(`ดึงผังจากวันที่ ${otherDate} มาวางแล้วค่ะ 📅`);
+      return;
+    }
+    const dow=new Date(otherDate+'T00:00:00').getDay();
+    const rows=((schedData.template||{})[dow])||[];
+    if(rows.length){
+      adminEditing=true;
+      fillRows('ov-rows', rows.map(r=>({t:r.t,title:r.title})));
+      toast(`ดึงผังแม่แบบวัน${DOW_TH[dow]} ของวันที่ ${otherDate} มาวางแล้วค่ะ 📅`);
+    } else {
+      toast('วันที่ต้นทางไม่มีข้อมูลผังรายการค่ะ');
+    }
+  }
+
   function adminLoadTemplateDay(){
     const d=document.getElementById('tpl-day').value;
-    fillRows('tpl-rows', (schedData.template||{})[d]);
+    const rows=((schedData.template||{})[d])||[];
+    fillRows('tpl-rows', rows.map(r=>({t:r.t,title:r.title})));
   }
   async function saveTemplateDay(){
     if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
     const d=document.getElementById('tpl-day').value;
-    try{ await db.ref('schedule/template/'+d).set(readRows('tpl-rows')); toast('บันทึกแม่แบบแล้วค่ะ ✅'); }
-    catch(e){ saveErr(e); }
+    const rows=readRows('tpl-rows');
+    try{
+      await db.ref('schedule/template/'+d).set(rows);
+      if(!schedData.template) schedData.template={};
+      schedData.template[d]=rows;
+      adminEditing=false;
+      updateNowChip();
+      toast('บันทึกแม่แบบวัน'+(DOW_TH[d]||d)+'แล้วค่ะ ✅');
+    }catch(e){ saveErr(e); }
   }
   function adminLoadOverride(){
-    const date=document.getElementById('ov-date').value; const ov=((schedData.overrides||{})[date])||{};
-    fillRows('ov-rows', ov.items);
-    document.getElementById('ov-filehint').textContent = ov.fileUrl? ('ไฟล์ปัจจุบัน ('+ov.fileType+')') : '';
+    const date=document.getElementById('ov-date').value;
+    if(!date) return;
+    const ov=((schedData.overrides||{})[date])||{};
+    fillRows('ov-rows', (ov.items||[]).map(r=>({t:r.t,title:r.title})));
+    const hint=document.getElementById('ov-filehint');
+    if(hint) hint.textContent = ov.fileUrl ? ('ไฟล์ปัจจุบัน ('+(ov.fileType||'ไฟล์')+')') : '';
   }
   async function saveOverride(){
     if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
-    const date=document.getElementById('ov-date').value; if(!date){ toast('เลือกวันที่ก่อนค่ะ'); return; }
-    const payload={ items:readRows('ov-rows') };
+    const date=document.getElementById('ov-date').value;
+    if(!date){ toast('เลือกวันที่ก่อนค่ะ'); return; }
+    const rows=readRows('ov-rows');
+    const payload={ items:rows };
     const f=document.getElementById('ov-file').files[0];
     try{
-      if(f){ toast('กำลังอัปโหลดไฟล์...'); const up=await uploadToCloudinary(f); payload.fileUrl=up.url; payload.fileType=up.type; }
-      else { const ov=((schedData.overrides||{})[date])||{}; if(ov.fileUrl){ payload.fileUrl=ov.fileUrl; payload.fileType=ov.fileType; } }
-      await db.ref('schedule/overrides/'+date).set(payload); toast('บันทึกผังเฉพาะวันแล้วค่ะ ✅');
-      document.getElementById('ov-file').value='';
+      if(f){
+        toast('กำลังอัปโหลดไฟล์...');
+        const up=await uploadToCloudinary(f);
+        payload.fileUrl=up.url; payload.fileType=up.type;
+      } else {
+        const ov=((schedData.overrides||{})[date])||{};
+        if(ov.fileUrl){ payload.fileUrl=ov.fileUrl; payload.fileType=ov.fileType; }
+      }
+      await db.ref('schedule/overrides/'+date).set(payload);
+      if(!schedData.overrides) schedData.overrides={};
+      schedData.overrides[date]=payload;
+      adminEditing=false;
+      renderSchedule();
+      toast('บันทึกผังเฉพาะวัน '+date+' แล้วค่ะ ✅');
+      const fi=document.getElementById('ov-file'); if(fi) fi.value='';
     }catch(e){ saveErr(e); }
   }
+
   async function saveScopeFile(){
     if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
     const scope=document.getElementById('file-scope').value, dv=document.getElementById('file-scope-date').value;
@@ -1897,17 +2131,19 @@
   /* ============================================================
      7) Reactions / Share / Now-playing / Prayer / Quran / Lightbox
      ============================================================ */
-  // ---- รีแอคชัน (ส่งเป็นข้อความอิโมจิในแชท + ลอยขึ้นจากแถบพิมพ์แชท) ----
+  // ---- รีแอคชัน (ชุดอิโมจิ 3D Facebook + ขอดุอาอ) ----
   const REACTIONS=[
-    {e:'😍',t:'รักเลย'},
-    {e:'❤️',t:'หัวใจ'},
-    {e:'💛',t:'บริจาค'},
-    {e:'👍',t:'ชอบ'},
-    {e:'🌟',t:'เยี่ยม'},
-    {e:'🫶',t:'ห่วงใย'},
-    {e:'🤲',t:'ขอดุอาอ'}
+    {e:'👍', img:'fb_like.png',  t:'ถูกใจ'},
+    {e:'❤️', img:'fb_love.png',  t:'รักเลย'},
+    {e:'🥰', img:'fb_care.png',  t:'ห่วงใย'},
+    {e:'😆', img:'fb_haha.png',  t:'ฮ่าๆ'},
+    {e:'😮', img:'fb_wow.png',   t:'ว้าว'},
+    {e:'😢', img:'fb_sad.png',   t:'เศร้า'},
+    {e:'😡', img:'fb_angry.png', t:'โกรธ'},
+    {e:'🤲', img:'',             t:'ขอดุอาอ'}
   ];
   const REACT_SET=new Set(REACTIONS.map(r=>r.e));
+  const REACT_IMG_MAP=Object.fromEntries(REACTIONS.filter(r=>r.img).map(r=>[r.e,r.img]));
   let lastReact=0, lastLocalSpawn=0, reactCloseTimer=null;
 
   function renderReactions(){
@@ -1917,9 +2153,13 @@
     REACTIONS.forEach(r=>{
       const b=document.createElement('button');
       b.type='button';
-      b.textContent=r.e;
       b.title=r.t;
       b.setAttribute('aria-label', r.t);
+      if(r.img){
+        b.innerHTML=`<img src="${r.img}" alt="${r.e}" class="react-btn-img">`;
+      } else {
+        b.textContent=r.e;
+      }
       b.onclick=(ev)=>{
         ev.stopPropagation();
         sendReaction(r.e);
@@ -1935,7 +2175,7 @@
     const toggle=document.createElement('button');
     toggle.type='button';
     toggle.className='react-toggle';
-    toggle.textContent='😍';
+    toggle.innerHTML='<img src="fb_love.png" alt="❤️" class="react-toggle-img">';
     toggle.title='ส่งความรู้สึก';
     toggle.setAttribute('aria-label', 'ส่งความรู้สึก');
     toggle.onclick=(ev)=>{
@@ -1971,7 +2211,11 @@
     lastLocalSpawn=Date.now();
     const el=document.createElement('div');
     el.className='fx';
-    el.textContent=e;
+    if(REACT_IMG_MAP[e]){
+      el.innerHTML=`<img src="${REACT_IMG_MAP[e]}" alt="${e}">`;
+    } else {
+      el.textContent=e;
+    }
     const dx=(Math.random() - 0.5) * 44;
     const rot=(Math.random() - 0.5) * 30;
     el.style.setProperty('--dx', dx + 'px');
@@ -2018,12 +2262,39 @@
   function updateNowChip(){
     const chip=document.getElementById('now-chip'), tt=document.getElementById('now-title'); if(!chip) return;
     try{
-      const s=slotsFor(ymd(new Date()));
-      const items=(s.items||[]).slice().filter(it=>it&&(it.t||it.title)).sort((a,b)=>String(a.t||'').localeCompare(String(b.t||'')));
-      let cur=null; const now=nowHM();
-      for(const it of items){ if(String(it.t||'')<=now) cur=it; else break; }
-      if(cur&&cur.title){ tt.textContent=cur.title+(cur.t?(' ('+cur.t+')'):''); chip.style.display='inline-flex'; }
-      else chip.style.display='none';
+      const now=new Date();
+      const s=slotsFor(ymd(now));
+      const rawItems=(s.items||[]).filter(it=>it&&(it.t||it.title));
+      if(!rawItems.length){ chip.style.display='none'; return; }
+
+      const valid=rawItems.map(it=>{
+        const pt=parseSlotTime(it.t);
+        return { ...it, start:pt.start, end:pt.end };
+      }).filter(it=>it.start!==null).sort((a,b)=>a.start-b.start);
+
+      if(!valid.length){ chip.style.display='none'; return; }
+
+      const nowMins=now.getHours()*60 + now.getMinutes();
+      let cur=null;
+      for(let i=0; i<valid.length; i++){
+        const it=valid[i];
+        const next=valid[i+1];
+        const end = it.end !== null
+          ? (next && (next.start - it.end <= 5) ? next.start : it.end)
+          : (next ? next.start : it.start + 60);
+
+        if(nowMins >= it.start && nowMins < end){
+          cur = it;
+          break;
+        }
+      }
+
+      if(cur && cur.title){
+        tt.textContent = cur.title + (cur.t ? (' (' + cur.t.trim() + ')') : '');
+        chip.style.display = 'inline-flex';
+      } else {
+        chip.style.display = 'none';
+      }
     }catch(e){ chip.style.display='none'; }
   }
 

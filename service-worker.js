@@ -1,6 +1,9 @@
 /* Yateem TV — service worker (ทำให้ติดตั้งเป็นแอพ + โหลดเร็ว/ออฟไลน์เบื้องต้น) */
-const CACHE = 'yateem-tv-v3';
-const ASSETS = ['./', './index.html', './manifest.json', './icon.jpg', './logo.png'];
+const CACHE = 'yateem-tv-v5';
+const ASSETS = [
+  './', './index.html', './manifest.json', './icon.jpg', './logo.png',
+  './fb_like.png', './fb_love.png', './fb_care.png', './fb_haha.png', './fb_wow.png', './fb_sad.png', './fb_angry.png'
+];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
