@@ -753,6 +753,7 @@
       <div class="rail" id="faith-rail">
         <a class="card glass" href="javascript:void(0)" onclick="openQibla()"><div class="ic" style="background:#1B4FD8">🧭</div><div><div class="nm">ทิศกิบลัต</div><div class="sub">เข็มทิศชี้สู่มักกะฮ์ในเว็บ</div></div></a>
         <a class="card glass" href="javascript:void(0)" onclick="openTasbih()"><div class="ic" style="background:#0D825E">📿</div><div><div class="nm">ดิจิทัลตัสบีฮ์</div><div class="sub">นับซิกิร / สรรเสริญ</div></div></a>
+        <a class="card glass" href="javascript:void(0)" onclick="promptInstallModal(true)"><div class="ic" style="background:#8a4af3">📲</div><div><div class="nm">ติดตั้งเป็นแอพ</div><div class="sub">เพิ่มลงหน้าจอโฮม</div></div></a>
       </div>
 
       <!-- QURAN -->
@@ -970,12 +971,46 @@
     </div>
   </div>
 
+  <!-- INSTALL MODAL (บังคับ/แนะนำติดตั้งเป็นแอพบนหน้าจอโฮม) -->
+  <div class="backdrop" id="install-backdrop" onclick="if(event.target===this)closeInstallModal()" style="align-items:center">
+    <div class="sheet glass install-modal" style="position:relative;max-width:420px;width:92vw;padding:24px 20px;text-align:center">
+      <button type="button" class="close" onclick="closeInstallModal()">×</button>
+      <div style="display:inline-flex;position:relative;margin-bottom:12px">
+        <img src="logo.png" alt="Yateem TV" onerror="this.onerror=null;this.src='icon.jpg'" style="width:72px;height:72px;border-radius:18px;border:2px solid var(--accent);box-shadow:0 8px 24px rgba(0,0,0,.4);object-fit:cover">
+        <span style="position:absolute;bottom:-4px;right:-4px;background:var(--accent);color:#1b1400;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px">APP</span>
+      </div>
+      <div style="font-size:20px;font-weight:700;color:var(--accent);margin-bottom:6px">ติดตั้ง Yateem TV บนหน้าจอโฮม</div>
+      <div style="font-size:13px;color:var(--text);opacity:.9;line-height:1.5;margin-bottom:16px">
+        รับชมไลฟ์สด ดูผังรายการ ฟังบรรยาย และเช็คเวลาละหมาดได้สะดวกรวดเร็ว เหมือนเปิดแอปมือถือโดยตรง
+      </div>
+
+      <!-- กล่องคำแนะนำตามอุปกรณ์ -->
+      <div id="install-guide-box" style="background:var(--glass-2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:left;font-size:13px;line-height:1.6;margin-bottom:16px">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button type="button" id="modal-install-btn" onclick="doInstallFromModal()" style="width:100%;padding:12px 18px;border:none;border-radius:12px;background:linear-gradient(135deg,#ffcf40,#e6a817);color:#1f1600;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(255,207,64,.35)">
+          📲 ติดตั้งแอพลงหน้าจอโฮมทันที
+        </button>
+        <button type="button" class="mini" onclick="closeInstallModal()" style="padding:8px 12px;opacity:.75;background:transparent;border:none;color:var(--muted);font-size:12px">
+          เข้าชมเว็บไซต์ต่อไป
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- SHARE SHEET (fallback เมื่อไม่มี navigator.share) -->
   <div class="backdrop" id="share-backdrop" onclick="if(event.target===this)closeShare()">
-    <div class="sheet glass" style="position:relative">
+    <div class="sheet glass" style="position:relative;max-width:440px;width:92vw">
       <button class="close" onclick="closeShare()">×</button>
       <h2>🔗 แชร์ Yateem TV</h2>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px">แชร์ลิงก์พร้อมชวนเพื่อนติดตั้งแอพลงหน้าจอโฮม</div>
       <div class="rail" id="share-links" style="margin-top:14px"></div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+        <button type="button" class="mini" onclick="closeShare();promptInstallModal(true)" style="width:100%;padding:10px;background:var(--glass-2);border:1px solid var(--accent);color:var(--accent);font-weight:700;border-radius:10px;font-size:13px">
+          📲 ติดตั้ง Yateem TV ลงหน้าจอโฮมเครื่องนี้
+        </button>
+      </div>
     </div>
   </div>
 
@@ -2918,17 +2953,38 @@
   }
 
   // ---- แชร์ ----
-  function shareUrl(){ return (CONFIG.domain&&CONFIG.domain.trim()) ? CONFIG.domain.trim() : location.href.split('#')[0]; }
+  function shareUrl(){
+    let base = (CONFIG.domain && CONFIG.domain.trim()) ? CONFIG.domain.trim() : (location.origin + location.pathname);
+    try {
+      const u = new URL(base, location.href);
+      u.searchParams.set('install', '1');
+      return u.href;
+    } catch(e) {
+      return base + (base.includes('?') ? '&install=1' : '?install=1');
+    }
+  }
   async function shareSite(){
-    const url=shareUrl(), text='ดูไลฟ์สด Yateem TV กันเถอะ 📺💛';
-    if(navigator.share){ try{ await navigator.share({title:'Yateem TV', text, url}); return; }catch(e){ if(e&&e.name==='AbortError') return; } }
+    const url = shareUrl();
+    const text = 'ดูไลฟ์สด Yateem TV พร้อมติดตั้งเป็นแอพบนหน้าจอโฮมได้ทันที 📺📲';
+    // สำหรับคนกดแชร์: หากเครื่องตัวเองยังไม่ได้ติดตั้งแอพ เด้ง modal ชวนติดตั้งด้วย
+    if(!isStandalone()){
+      setTimeout(()=>{ promptInstallModal(false); }, 1500);
+    }
+    if(navigator.share){
+      try{
+        await navigator.share({title:'Yateem TV (ติดตั้งเป็นแอพ)', text, url});
+        return;
+      }catch(e){
+        if(e && e.name==='AbortError') return;
+      }
+    }
     const enc=encodeURIComponent(url), et=encodeURIComponent(text);
     document.getElementById('share-links').innerHTML=
       `<a class="card glass" target="_blank" href="https://social-plugins.line.me/lineit/share?url=${enc}"><div class="ic" style="background:#06c755">💬</div><div class="nm">LINE</div></a>`+
       `<a class="card glass" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=${enc}"><div class="ic" style="background:#1877F2">f</div><div class="nm">Facebook</div></a>`+
       `<a class="card glass" target="_blank" href="https://twitter.com/intent/tweet?text=${et}&url=${enc}"><div class="ic" style="background:#000">𝕏</div><div class="nm">X</div></a>`+
       `<a class="card glass" target="_blank" href="https://wa.me/?text=${et}%20${enc}"><div class="ic" style="background:#25D366">🟢</div><div class="nm">WhatsApp</div></a>`+
-      `<a class="card glass" href="javascript:void(0)" onclick="copyText('${url}').then(()=>toast('คัดลอกลิงก์แล้วค่ะ ✅'))"><div class="ic" style="background:var(--accent);color:#241a00">🔗</div><div class="nm">คัดลอกลิงก์</div></a>`;
+      `<a class="card glass" href="javascript:void(0)" onclick="copyText('${url}').then(()=>toast('คัดลอกลิงก์พร้อมติดตั้งแอพแล้วค่ะ ✅'))"><div class="ic" style="background:var(--accent);color:#241a00">🔗</div><div class="nm">คัดลอกลิงก์</div></a>`;
     document.getElementById('share-backdrop').classList.add('open');
   }
   function closeShare(){ document.getElementById('share-backdrop').classList.remove('open'); }
@@ -3674,21 +3730,123 @@
      ============================================================ */
   function hideSplash(){ const s=document.getElementById('splash'); if(s){ s.classList.add('hide'); setTimeout(()=>{ if(s.parentNode) s.remove(); },600); } }
   let deferredPrompt=null;
-  window.addEventListener('beforeinstallprompt',(e)=>{ e.preventDefault(); deferredPrompt=e; showInstall(); });
-  window.addEventListener('appinstalled',()=>dismissInstall(true));
+  window.addEventListener('beforeinstallprompt',(e)=>{
+    e.preventDefault();
+    deferredPrompt=e;
+    showInstall();
+    try{
+      const p = new URLSearchParams(window.location.search);
+      if((p.get('install')==='1'||p.has('pwa')||p.has('app')) && !isStandalone()){
+        setTimeout(()=>promptInstallModal(true), 600);
+      }
+    }catch(err){}
+  });
+  window.addEventListener('appinstalled',()=>{
+    dismissInstall(true);
+    closeInstallModal();
+    toast('ติดตั้งแอพ Yateem TV เรียบร้อยแล้วค่ะ! 🎉');
+  });
   function isStandalone(){ return (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone===true; }
   function isIOS(){ return /iPhone|iPad|iPod/i.test(navigator.userAgent); }
+  function isInAppBrowser(){ return /Line|FBAN|FBAV|Instagram|TikTok|MicroMessenger/i.test(navigator.userAgent||''); }
+
   function showInstall(){
     try{ if(localStorage.getItem('yt_install_dismiss')==='1') return; }catch(e){}
     if(isStandalone()) return;
     const b=document.getElementById('install-banner'); if(b) b.style.display='flex';
   }
-  function doInstall(){
-    if(deferredPrompt){ deferredPrompt.prompt(); deferredPrompt.userChoice.finally(()=>{ deferredPrompt=null; dismissInstall(); }); }
-    else if(isIOS()){ document.getElementById('install-text').innerHTML='ติดตั้งบน iPhone: กด <b>แชร์</b> ⎋ ด้านล่าง แล้วเลือก <b>เพิ่มไปยังหน้าจอโฮม</b>'; document.getElementById('install-btn').style.display='none'; }
-    else{ toast('เปิดเมนูเบราว์เซอร์ → เพิ่มไปยังหน้าจอโฮม'); }
-  }
   function dismissInstall(perm){ const b=document.getElementById('install-banner'); if(b) b.style.display='none'; if(perm){ try{localStorage.setItem('yt_install_dismiss','1');}catch(e){} } }
+
+  function renderInstallGuide(){
+    const box = document.getElementById('install-guide-box');
+    const btn = document.getElementById('modal-install-btn');
+    if(!box) return;
+
+    if(isInAppBrowser()){
+      box.innerHTML = `
+        <div style="color:var(--accent);font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px">
+          <span>⚠️</span> <span>ท่านกำลังเปิดในแอป LINE / Facebook</span>
+        </div>
+        <div style="color:var(--text);opacity:.9;font-size:12px;line-height:1.6">
+          เบราว์เซอร์ภายในแอปยังไม่อนุญาตให้ติดตั้งแอพลงโฮมสกรีนโดยตรง กรุณากดปุ่มเมนู <b>3 จุด [...]</b> หรือ <b>แชร์</b> ที่มุมบน แล้วเลือก <b>"เปิดด้วยเบราว์เซอร์อื่น (Safari / Chrome)"</b> เพื่อกดติดตั้งเป็นแอพนะคะ
+        </div>
+      `;
+      if(btn) btn.textContent = '🌐 แตะเพื่อเปิดในเบราว์เซอร์หลัก';
+    } else if(isIOS()){
+      box.innerHTML = `
+        <div style="color:var(--accent);font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+          <span>🍎</span> <span>วิธีติดตั้งบน iPhone / iPad (Safari):</span>
+        </div>
+        <ol style="margin:0;padding-left:20px;color:var(--text);opacity:.9;font-size:12.5px;line-height:1.7">
+          <li>แตะปุ่ม <b>แชร์ ⎋</b> ที่แถบเมนูด้านล่างของ Safari</li>
+          <li>เลื่อนลงแล้วแตะ <b>"เพิ่มไปยังหน้าจอโฮม" (Add to Home Screen)</b></li>
+          <li>แตะ <b>"เพิ่ม" (Add)</b> ที่มุมขวาบน</li>
+        </ol>
+      `;
+      if(btn) btn.textContent = '✅ เข้าใจแล้ว (เริ่มขั้นตอนติดตั้ง)';
+    } else {
+      box.innerHTML = `
+        <div style="color:var(--accent);font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px">
+          <span>🤖</span> <span>สำหรับ Android / Google Chrome:</span>
+        </div>
+        <div style="color:var(--text);opacity:.9;font-size:12.5px;line-height:1.6">
+          กดปุ่ม <b>"ติดตั้งแอพลงหน้าจอโฮมทันที"</b> ด้านล่างนี้ แล้วกดยืนยัน <b>"ติดตั้ง" (Install)</b> ไอคอน Yateem TV จะปรากฏบนหน้าจอโฮมของคุณเหมือนแอปทั่วไปทันทีค่ะ
+        </div>
+      `;
+      if(btn) btn.textContent = '📲 ติดตั้งแอพลงหน้าจอโฮมทันที';
+    }
+  }
+
+  function promptInstallModal(force){
+    if(isStandalone()) return;
+    if(!force){
+      try{ if(sessionStorage.getItem('yt_install_prompted')==='1') return; }catch(e){}
+    }
+    try{ sessionStorage.setItem('yt_install_prompted','1'); }catch(e){}
+    renderInstallGuide();
+    const m = document.getElementById('install-backdrop');
+    if(m) m.classList.add('open');
+  }
+
+  function closeInstallModal(){
+    const m = document.getElementById('install-backdrop');
+    if(m) m.classList.remove('open');
+  }
+
+  function doInstallFromModal(){
+    if(isInAppBrowser()){
+      try{
+        if(window.liff && liff.isInClient()){
+          liff.openWindow({ url: shareUrl(), external: true });
+          closeInstallModal();
+          return;
+        }
+      }catch(e){}
+      openExternal(shareUrl());
+      closeInstallModal();
+      return;
+    }
+    if(deferredPrompt){
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((res)=>{
+        if(res && res.outcome === 'accepted'){
+          toast('กำลังติดตั้ง Yateem TV ลงหน้าจอโฮม... 🎉');
+        }
+        deferredPrompt = null;
+        closeInstallModal();
+      }).catch(()=>{ closeInstallModal(); });
+    } else if(isIOS()){
+      toast('แตะปุ่มแชร์ ⎋ ที่ด้านล่าง แล้วเลือก "เพิ่มไปยังหน้าจอโฮม" ค่ะ');
+      closeInstallModal();
+    } else {
+      toast('แตะเมนู 3 จุด [...] ของเบราว์เซอร์ แล้วเลือก "เพิ่มไปยังหน้าจอโฮม"');
+      closeInstallModal();
+    }
+  }
+
+  function doInstall(){
+    promptInstallModal(true);
+  }
   function registerSW(){ if('serviceWorker' in navigator){ navigator.serviceWorker.register('service-worker.js').catch(()=>{}); } }
 
   window.addEventListener('load',hideSplash);
@@ -3700,7 +3858,15 @@
   (async function(){
     registerSW();
     showTab('live');       // เริ่มที่แท็บ Live สด
-    if(isIOS()) setTimeout(showInstall,2500);   // iOS ไม่มี beforeinstallprompt → โชว์แบนเนอร์วิธีทำ
+    // ถ้าผู้ใช้เปิดผ่านลิงก์แชร์ที่มี ?install=1 หรือ ?pwa=1
+    try{
+      const p = new URLSearchParams(window.location.search);
+      if((p.get('install')==='1' || p.has('pwa') || p.has('app')) && !isStandalone()){
+        setTimeout(()=>promptInstallModal(true), 1200);
+      } else if(isIOS()){
+        setTimeout(showInstall, 2500);
+      }
+    }catch(e){}
     const ab=document.getElementById('admin-backdrop'); if(ab) ab.addEventListener('input',()=>{ adminEditing=true; }, true);  // กัน listener รีเฟรชทับตอนกำลังพิมพ์
     initFirebaseApp();
     await initLiff();      // ต้องรู้ชื่อ LINE ก่อนเปิดแชท
