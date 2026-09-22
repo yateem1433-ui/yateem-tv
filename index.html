@@ -383,21 +383,6 @@
     .quran-modal{ width:96vw; height:90vh; max-width:900px; border-radius:18px; padding:8px; position:relative; display:flex; flex-direction:column; }
     .quran-modal iframe{ flex:1; width:100%; border:0; border-radius:12px; background:#fff; }
 
-    /* ---- compass modal ---- */
-    .compass-wrap{ width:210px; height:210px; margin:0 auto; position:relative; display:flex; align-items:center; justify-content:center; }
-    .compass-dial{ width:200px; height:200px; border-radius:50%; border:2px solid var(--stroke); position:relative; background:radial-gradient(circle, rgba(27,79,216,0.18) 0%, rgba(7,11,20,0.9) 75%); box-shadow:0 0 24px -6px color-mix(in srgb,var(--accent) 30%,transparent); transition:transform .2s ease-out; }
-    /* ตอนหมุนตามเซนเซอร์ 60-120 ครั้ง/วิ: ปิด transition + ยกเป็น GPU layer (rasterize เงา/ไล่สีครั้งเดียว) กันค้าง */
-    #compass-dial.sensor-live, #compass-needle.sensor-live{ transition:none; will-change:transform; }
-    .c-point{ position:absolute; font-size:13px; font-weight:700; width:22px; height:22px; display:flex; align-items:center; justify-content:center; color:var(--muted); }
-    .cp-n{ top:6px; left:calc(50% - 11px); color:#ff5555; }
-    .cp-s{ bottom:6px; left:calc(50% - 11px); }
-    .cp-e{ right:6px; top:calc(50% - 11px); }
-    .cp-w{ left:6px; top:calc(50% - 11px); }
-    .compass-kaaba-needle{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; pointer-events:none; transition:transform .3s cubic-bezier(0.2, 0.9, 0.3, 1); }
-    .compass-kaaba-needle .kaaba-icon{ font-size:24px; filter:drop-shadow(0 0 10px rgba(234,185,52,0.9)); margin-top:12px; }
-    .compass-kaaba-needle .needle-body{ width:4px; height:58px; background:linear-gradient(to bottom, var(--accent), transparent); border-radius:2px; margin-top:2px; }
-    .compass-center{ position:absolute; width:12px; height:12px; border-radius:50%; background:var(--accent); top:calc(50% - 6px); left:calc(50% - 6px); box-shadow:0 0 8px var(--accent); }
-
     /* ---- tasbih button active press ---- */
     .tasbih-btn:active{ transform:scale(0.92); box-shadow:0 0 14px color-mix(in srgb,var(--accent) 80%,transparent) !important; }
 
@@ -759,7 +744,7 @@
       <!-- FAITH TOOLS & QURAN -->
       <div class="sec-title">🧭 <span class="accent">ทิศกิบลัต & เครื่องมือศาสนา</span></div>
       <div class="rail" id="faith-rail">
-        <a class="card glass" href="javascript:void(0)" onclick="openQibla()"><div class="ic" style="background:#1B4FD8">🧭</div><div><div class="nm">ทิศกิบลัต</div><div class="sub">เข็มทิศชี้สู่มักกะฮ์ในเว็บ</div></div></a>
+        <a class="card glass" href="javascript:void(0)" onclick="openExternal('https://qiblafinder.withgoogle.com/intl/th/')"><div class="ic" style="background:#1B4FD8">🧭</div><div><div class="nm">ทิศกิบลัต</div><div class="sub">เปิด Google Qibla Finder ↗</div></div></a>
         <a class="card glass" href="javascript:void(0)" onclick="openTasbih()"><div class="ic" style="background:#0D825E">📿</div><div><div class="nm">ดิจิทัลตัสบีฮ์</div><div class="sub">นับซิกิร / สรรเสริญ</div></div></a>
       </div>
 
@@ -869,50 +854,6 @@
     <div class="quran-modal glass">
       <button class="close" style="position:static;align-self:flex-end" onclick="closeQuran()">×</button>
       <iframe id="quran-iframe" title="อัลกุรอาน"></iframe>
-    </div>
-  </div>
-
-  <!-- QIBLA MODAL (เข็มทิศกิบลัตในเว็บ) -->
-  <div class="backdrop" id="qibla-backdrop" onclick="if(event.target===this)closeQibla()" style="align-items:center">
-    <div class="sheet glass qibla-modal" style="position:relative;max-width:440px;width:92vw;padding:22px 18px;text-align:center">
-      <button type="button" class="close" onclick="closeQibla()">×</button>
-      <div style="font-size:18px;font-weight:700;color:var(--accent);margin-bottom:2px">🧭 เข็มทิศกิบลัต</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:16px" id="qibla-location-txt">คำนวณจากพิกัดตำแหน่งของคุณ</div>
-
-      <!-- Compass Graphic -->
-      <div class="compass-wrap">
-        <div class="compass-dial" id="compass-dial">
-          <div class="c-point cp-n">N</div>
-          <div class="c-point cp-e">E</div>
-          <div class="c-point cp-s">S</div>
-          <div class="c-point cp-w">W</div>
-          <div class="compass-kaaba-needle" id="compass-needle">
-            <div class="kaaba-icon" title="กะอ์บะฮ์ (มักกะฮ์)">🕋</div>
-            <div class="needle-body"></div>
-          </div>
-          <div class="compass-center"></div>
-        </div>
-      </div>
-
-      <!-- Qibla Info Details -->
-      <div class="qibla-stat-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px">
-        <div class="stat-box glass" style="padding:10px;border-radius:12px">
-          <div style="font-size:11px;color:var(--muted)">องศาทิศกิบลัต</div>
-          <div style="font-size:22px;font-weight:700;color:var(--accent);margin-top:2px" id="qibla-deg-val">287°</div>
-          <div style="font-size:11px;color:var(--text)" id="qibla-dir-text">ต.ต.เฉียงเหนือ (WNW)</div>
-        </div>
-        <div class="stat-box glass" style="padding:10px;border-radius:12px">
-          <div style="font-size:11px;color:var(--muted)">ระยะห่างสู่กะอ์บะฮ์</div>
-          <div style="font-size:22px;font-weight:700;color:var(--text);margin-top:2px" id="qibla-dist-val">6,451</div>
-          <div style="font-size:11px;color:var(--muted)">กิโลเมตร</div>
-        </div>
-      </div>
-
-      <!-- Compass Controls -->
-      <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
-        <button type="button" class="mini" id="qibla-sensor-btn" onclick="toggleCompassSensor()" style="padding:9px 14px;border-radius:10px;font-size:13px;background:var(--glass-2)">🧭 เปิดเซนเซอร์หมุนตามเครื่อง (มือถือ)</button>
-        <button type="button" class="mini" onclick="openExternal('https://qiblafinder.withgoogle.com/intl/th/desktop')" style="padding:8px 12px;font-size:12px;opacity:.85">📱 เปิดกล้อง AR (Google Qibla Finder) ↗️</button>
-      </div>
     </div>
   </div>
 
@@ -3489,165 +3430,8 @@
     openExternal(getQuranPdfUrl());
   }
 
-  // ---- เข็มทิศกิบลัตในเว็บ (In-Page Qibla Compass) ----
-  let currentQiblaBearing = 287;
-  let compassSensorActive = false;
-  let deviceHeadingHandler = null;
-
-  function calculateQiblaFromCoords(lat, lng){
-    const kLat = 21.422487 * Math.PI / 180;
-    const kLng = 39.826206 * Math.PI / 180;
-    const uLat = lat * Math.PI / 180;
-    const uLng = lng * Math.PI / 180;
-    const dLng = kLng - uLng;
-    const y = Math.sin(dLng);
-    const x = Math.cos(uLat) * Math.tan(kLat) - Math.sin(uLat) * Math.cos(dLng);
-    let q = Math.atan2(y, x) * 180 / Math.PI;
-    return Math.round((q + 360) % 360);
-  }
-
-  function calculateDistanceToKaaba(lat, lng){
-    const R = 6371;
-    const kLat = 21.422487 * Math.PI / 180;
-    const kLng = 39.826206 * Math.PI / 180;
-    const uLat = lat * Math.PI / 180;
-    const uLng = lng * Math.PI / 180;
-    const dLat = kLat - uLat;
-    const dLng = kLng - uLng;
-    const a = Math.sin(dLat/2)**2 + Math.cos(uLat)*Math.cos(kLat)*Math.sin(dLng/2)**2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return Math.round(R * c).toLocaleString('th-TH');
-  }
-
-  function getDirectionNameTh(deg){
-    const dirs = ['ทิศเหนือ (N)', 'ต.อ.เฉียงเหนือ (NE)', 'ทิศตะวันออก (E)', 'ต.อ.เฉียงใต้ (SE)',
-      'ทิศใต้ (S)', 'ต.ต.เฉียงใต้ (SW)', 'ทิศตะวันตก (W)', 'ต.ต.เฉียงเหนือ (WNW)'];
-    const idx = Math.round(deg / 45) % 8;
-    return dirs[idx];
-  }
-
-  function updateQiblaDisplay(){
-    let prov = currentProvince();
-    let coords = PROV_COORDS[prov] || PROV_COORDS['Bangkok'];
-    const match = PROVINCES.find(([th, en])=>en===prov);
-    const provNameTh = match ? match[0] : prov;
-
-    const bearing = calculateQiblaFromCoords(coords[0], coords[1]);
-    const dist = calculateDistanceToKaaba(coords[0], coords[1]);
-    currentQiblaBearing = bearing;
-
-    const degEl = document.getElementById('qibla-deg-val');
-    const dirEl = document.getElementById('qibla-dir-text');
-    const distEl = document.getElementById('qibla-dist-val');
-    const locEl = document.getElementById('qibla-location-txt');
-    const needle = document.getElementById('compass-needle');
-
-    if(degEl) degEl.textContent = bearing + '°';
-    if(dirEl) dirEl.textContent = getDirectionNameTh(bearing);
-    if(distEl) distEl.textContent = dist;
-    if(locEl) locEl.textContent = 'คำนวณอิงจาก: ' + provNameTh;
-    if(needle && !compassSensorActive){
-      needle.style.transform = `rotate(${bearing}deg)`;
-    }
-  }
-
-  function openQibla(){
-    updateQiblaDisplay();
-    document.getElementById('qibla-backdrop').classList.add('open');
-  }
-
-  function closeQibla(){
-    stopCompassSensor();
-    document.getElementById('qibla-backdrop').classList.remove('open');
-  }
-
-  function toggleCompassSensor(){
-    if(compassSensorActive){
-      stopCompassSensor();
-      toast('ปิดเซนเซอร์เข็มทิศแล้ว');
-    } else {
-      startCompassSensor();
-    }
-  }
-
-  // rAF throttle: รวบการหมุนหน้าปัดให้เขียน transform ไม่เกิน 1 ครั้ง/เฟรม (เดิมเขียน 60-120 ครั้ง/วิ จน re-raster เงาทุกเฟรม → ค้าง)
-  let compassRAF = null, compassPendingHeading = null;
-  function applyCompassFrame(){
-    compassRAF = null;
-    if(compassPendingHeading === null) return;
-    const dial = document.getElementById('compass-dial');
-    if(dial) dial.style.transform = `rotate(${-compassPendingHeading}deg)`;   // หมุนเฉพาะหน้าปัด (เข็มคงที่ตามทิศ ตั้งครั้งเดียว)
-  }
-
-  function startCompassSensor(){
-    if(compassSensorActive) return;   // กันเปิดซ้ำ → ผูก deviceorientation listener ซ้อน
-    const btn = document.getElementById('qibla-sensor-btn');
-
-    function onHeading(heading){
-      if(isNaN(heading)) return;
-      compassPendingHeading = heading;
-      if(!compassRAF) compassRAF = requestAnimationFrame(applyCompassFrame);
-    }
-
-    if(typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function'){
-      DeviceOrientationEvent.requestPermission().then(res => {
-        // ถ้าผู้ใช้ปิด modal ไปก่อนตอบอนุญาต อย่าผูก listener ทิ้งไว้วิ่งเบื้องหลัง
-        if(res === 'granted' && document.getElementById('qibla-backdrop').classList.contains('open')){
-          attachOrientationListener(onHeading);
-        } else if(res !== 'granted'){
-          toast('ไม่ได้อนุญาตเข้าถึงเซนเซอร์เข็มทิศค่ะ');
-        }
-      }).catch(e => { toast('อุปกรณ์ไม่รองรับเซนเซอร์เข็มทิศค่ะ'); });
-    } else {
-      attachOrientationListener(onHeading);
-    }
-  }
-
-  function attachOrientationListener(onHeading){
-    const btn = document.getElementById('qibla-sensor-btn');
-    if(deviceHeadingHandler){ window.removeEventListener('deviceorientation', deviceHeadingHandler, true); deviceHeadingHandler = null; }  // กัน listener เก่าค้าง
-    deviceHeadingHandler = function(e){
-      let heading = null;
-      if(e.webkitCompassHeading !== undefined){
-        heading = e.webkitCompassHeading;
-      } else if(e.alpha !== null){
-        heading = 360 - e.alpha;
-      }
-      if(heading !== null) onHeading(heading);
-    };
-    window.addEventListener('deviceorientation', deviceHeadingHandler, true);
-    compassSensorActive = true;
-    // ยกหน้าปัด/เข็มเป็น GPU layer + ปิด transition ระหว่างหมุนตามเซนเซอร์ และตั้งมุมเข็มครั้งเดียว (คงที่)
-    const dialEl = document.getElementById('compass-dial'), needleEl = document.getElementById('compass-needle');
-    if(dialEl) dialEl.classList.add('sensor-live');
-    if(needleEl){ needleEl.classList.add('sensor-live'); needleEl.style.transform = `rotate(${currentQiblaBearing}deg)`; }
-    if(btn){
-      btn.textContent = '🧭 ปิดเซนเซอร์เข็มทิศ (กำลังหมุนตามมือถือ)';
-      btn.classList.add('mini-accent');
-    }
-    toast('เปิดเซนเซอร์เข็มทิศแล้ว หมุนตัวมือถือเพื่อหาทิศกะอ์บะฮ์ได้เลยค่ะ');
-  }
-
-  function stopCompassSensor(){
-    if(deviceHeadingHandler){
-      window.removeEventListener('deviceorientation', deviceHeadingHandler, true);
-      deviceHeadingHandler = null;
-    }
-    if(compassRAF){ cancelAnimationFrame(compassRAF); compassRAF = null; }   // หยุด loop วาดหน้าปัด
-    compassPendingHeading = null;
-    compassSensorActive = false;
-    const btn = document.getElementById('qibla-sensor-btn');
-    const dial = document.getElementById('compass-dial');
-    const needle = document.getElementById('compass-needle');
-    if(btn){
-      btn.textContent = '🧭 เปิดเซนเซอร์หมุนตามเครื่อง (มือถือ)';
-      btn.classList.remove('mini-accent');
-    }
-    if(dial){ dial.classList.remove('sensor-live'); dial.style.transform = 'none'; }         // คืน transition + ปลด will-change
-    if(needle){ needle.classList.remove('sensor-live'); needle.style.transform = `rotate(${currentQiblaBearing}deg)`; }
-  }
-
   // ---- ดิจิทัลตัสบีฮ์ (Digital Tasbih Counter) ----
+  // (เข็มทิศในเว็บถูกถอดออก — การ์ด "ทิศกิบลัต" เปิด Google Qibla Finder ภายนอกแทน)
   const TASBIH_TARGETS = {
     'subhanallah': 33,
     'alhamdulillah': 33,
