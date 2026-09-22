@@ -368,7 +368,7 @@
     .prayer-next{ text-align:center; margin-top:12px; font-size:14px; color:var(--accent); }
     .prayer-date{ text-align:center; margin-bottom:12px; }
     .prayer-date .pd-th{ font-size:14px; color:var(--text); }
-    .prayer-date .pd-ar{ font-size:17px; color:var(--accent); direction:rtl; margin-top:2px; font-weight:600; }
+    .prayer-date .pd-ar{ font-size:16px; color:var(--accent); direction:ltr; margin-top:3px; font-weight:600; }
 
     /* ---- lightbox / quran modal ---- */
     .lb-img{ max-width:96vw; max-height:86vh; border-radius:14px; }
@@ -938,8 +938,8 @@
           <input type="file" id="f-quran-file" accept="application/pdf,image/*" style="margin-top:8px">
           <button class="mini" onclick="adminUploadQuran()">⬆️ อัปโหลด PDF กุรอาน (≤10MB)</button>
 
-          <div class="grp">🕌 เวลาละหมาด — จังหวัดเริ่มต้น</div>
-          <input id="f-prayer" placeholder="เช่น Bangkok, Pattani, Chiang Mai (ภาษาอังกฤษ)">
+          <div class="grp">🕌 เวลาละหมาด — จังหวัดเริ่มต้น (รองรับครบ 77 จังหวัด)</div>
+          <input id="f-prayer" placeholder="เช่น Bangkok, Chon Buri, ชลบุรี, เชียงใหม่">
 
           <div class="grp">🌐 โดเมนเนม (สำหรับลิงก์แชร์/อนาคต)</div>
           <input id="f-domain" placeholder="เช่น https://yateemtv.com (เว้นว่าง = ใช้ URL ปัจจุบัน)">
@@ -2830,45 +2830,249 @@
     }catch(e){ chip.style.display='none'; }
   }
 
-  // ---- เวลาละหมาด (aladhan) ----
-  const PROVINCES=[['กรุงเทพมหานคร','Bangkok'],['กระบี่','Krabi'],['เชียงใหม่','Chiang Mai'],['เชียงราย','Chiang Rai'],
-    ['ชลบุรี','Chonburi'],['นครศรีธรรมราช','Nakhon Si Thammarat'],['นนทบุรี','Nonthaburi'],['นราธิวาส','Narathiwat'],
-    ['ปัตตานี','Pattani'],['ปทุมธานี','Pathum Thani'],['ประจวบคีรีขันธ์','Prachuap Khiri Khan'],['พระนครศรีอยุธยา','Ayutthaya'],
-    ['พังงา','Phang Nga'],['พัทลุง','Phatthalung'],['ภูเก็ต','Phuket'],['ยะลา','Yala'],['ระยอง','Rayong'],
-    ['สงขลา','Songkhla'],['สตูล','Satun'],['สมุทรปราการ','Samut Prakan'],['สุราษฎร์ธานี','Surat Thani'],
-    ['ตรัง','Trang'],['นครราชสีมา','Nakhon Ratchasima'],['ขอนแก่น','Khon Kaen'],['อุดรธานี','Udon Thani'],
-    ['หาดใหญ่','Hat Yai'],['เพชรบุรี','Phetchaburi']];
+  // ---- เวลาละหมาด (aladhan) ครบ 77 จังหวัด ----
+  const PROVINCES = [
+    ['กรุงเทพมหานคร','Bangkok'],
+    ['กระบี่','Krabi'],
+    ['กาญจนบุรี','Kanchanaburi'],
+    ['กาฬสินธุ์','Kalasin'],
+    ['กำแพงเพชร','Kamphaeng Phet'],
+    ['ขอนแก่น','Khon Kaen'],
+    ['จันทบุรี','Chanthaburi'],
+    ['ฉะเชิงเทรา','Chachoengsao'],
+    ['ชลบุรี','Chon Buri'],
+    ['ชัยนาท','Chai Nat'],
+    ['ชัยภูมิ','Chaiyaphum'],
+    ['ชุมพร','Chumphon'],
+    ['เชียงราย','Chiang Rai'],
+    ['เชียงใหม่','Chiang Mai'],
+    ['ตรัง','Trang'],
+    ['ตราด','Trat'],
+    ['ตาก','Tak'],
+    ['นครนายก','Nakhon Nayok'],
+    ['นครปฐม','Nakhon Pathom'],
+    ['นครพนม','Nakhon Phanom'],
+    ['นครราชสีมา','Nakhon Ratchasima'],
+    ['นครศรีธรรมราช','Nakhon Si Thammarat'],
+    ['นครสวรรค์','Nakhon Sawan'],
+    ['นนทบุรี','Nonthaburi'],
+    ['นราธิวาส','Narathiwat'],
+    ['น่าน','Nan'],
+    ['บึงกาฬ','Bueng Kan'],
+    ['บุรีรัมย์','Buri Ram'],
+    ['ปทุมธานี','Pathum Thani'],
+    ['ประจวบคีรีขันธ์','Prachuap Khiri Khan'],
+    ['ปราจีนบุรี','Prachin Buri'],
+    ['ปัตตานี','Pattani'],
+    ['พระนครศรีอยุธยา','Phra Nakhon Si Ayutthaya'],
+    ['พะเยา','Phayao'],
+    ['พังงา','Phang Nga'],
+    ['พัทลุง','Phatthalung'],
+    ['พิจิตร','Phichit'],
+    ['พิษณุโลก','Phitsanulok'],
+    ['เพชรบุรี','Phetchaburi'],
+    ['เพชรบูรณ์','Phetchabun'],
+    ['แพร่','Phrae'],
+    ['ภูเก็ต','Phuket'],
+    ['มหาสารคาม','Maha Sarakham'],
+    ['มุกดาหาร','Mukdahan'],
+    ['แม่ฮ่องสอน','Mae Hong Son'],
+    ['ยโสธร','Yasothon'],
+    ['ยะลา','Yala'],
+    ['ร้อยเอ็ด','Roi Et'],
+    ['ระนอง','Ranong'],
+    ['ระยอง','Rayong'],
+    ['ราชบุรี','Ratchaburi'],
+    ['ลพบุรี','Lop Buri'],
+    ['ลำปาง','Lampang'],
+    ['ลำพูน','Lamphun'],
+    ['เลย','Loei'],
+    ['ศรีสะเกษ','Si Sa Ket'],
+    ['สกลนคร','Sakon Nakhon'],
+    ['สงขลา','Songkhla'],
+    ['สตูล','Satun'],
+    ['สมุทรปราการ','Samut Prakan'],
+    ['สมุทรสงคราม','Samut Songkhram'],
+    ['สมุทรสาคร','Samut Sakhon'],
+    ['สระแก้ว','Sa Kaeo'],
+    ['สระบุรี','Saraburi'],
+    ['สิงห์บุรี','Sing Buri'],
+    ['สุโขทัย','Sukhothai'],
+    ['สุพรรณบุรี','Suphan Buri'],
+    ['สุราษฎร์ธานี','Surat Thani'],
+    ['สุรินทร์','Surin'],
+    ['หนองคาย','Nong Khai'],
+    ['หนองบัวลำภู','Nong Bua Lamphu'],
+    ['อ่างทอง','Ang Thong'],
+    ['อำนาจเจริญ','Amnat Charoen'],
+    ['อุดรธานี','Udon Thani'],
+    ['อุตรดิตถ์','Uttaradit'],
+    ['อุทัยธานี','Uthai Thani'],
+    ['อุบลราชธานี','Ubon Ratchathani'],
+    ['หาดใหญ่','Hat Yai']
+  ];
+
+  // แมปชื่อเดิมหรือสะกดต่าง ให้ตรงกับ Aladhan
+  const PROV_ALIASES = {
+    'Chonburi': 'Chon Buri',
+    'Ayutthaya': 'Phra Nakhon Si Ayutthaya',
+    'Buriram': 'Buri Ram',
+    'Lopburi': 'Lop Buri',
+    'Prachinburi': 'Prachin Buri',
+    'Sisaket': 'Si Sa Ket',
+    'Suphanburi': 'Suphan Buri',
+    'Singburi': 'Sing Buri'
+  };
+
+  // พิกัดสำรอง [lat, lng] เผื่อ Geocoding ขัดข้อง
+  const PROV_COORDS = {
+    'Bangkok':[13.7563,100.5018],'Krabi':[8.0863,98.9063],'Kanchanaburi':[14.0228,99.5328],'Kalasin':[16.4322,103.5063],
+    'Kamphaeng Phet':[16.4828,99.5228],'Khon Kaen':[16.4397,102.8285],'Chanthaburi':[12.6114,102.1039],'Chachoengsao':[13.6904,101.0780],
+    'Chon Buri':[13.3611,100.9847],'Chai Nat':[15.1852,100.1252],'Chaiyaphum':[15.8105,102.0288],'Chumphon':[10.4930,99.1800],
+    'Chiang Rai':[19.9076,99.8325],'Chiang Mai':[18.7883,98.9853],'Trang':[7.5563,99.6114],'Trat':[12.2428,102.5175],
+    'Tak':[16.8839,99.1258],'Nakhon Nayok':[14.2069,101.2131],'Nakhon Pathom':[13.8196,100.0601],'Nakhon Phanom':[17.3920,104.7696],
+    'Nakhon Ratchasima':[14.9799,102.0978],'Nakhon Si Thammarat':[8.4304,99.9631],'Nakhon Sawan':[15.6930,100.1225],'Nonthaburi':[13.8591,100.5217],
+    'Narathiwat':[6.4255,101.8253],'Nan':[18.7831,100.7782],'Bueng Kan':[18.3633,103.6528],'Buri Ram':[14.9930,103.1029],
+    'Pathum Thani':[14.0208,100.5250],'Prachuap Khiri Khan':[11.8124,99.7973],'Prachin Buri':[14.0510,101.3734],'Pattani':[6.8675,101.2501],
+    'Phra Nakhon Si Ayutthaya':[14.3532,100.5684],'Phayao':[19.1664,99.9019],'Phang Nga':[8.4501,98.5255],'Phatthalung':[7.6167,100.0833],
+    'Phichit':[16.4418,100.3488],'Phitsanulok':[16.8211,100.2659],'Phetchaburi':[13.1114,99.9391],'Phetchabun':[16.4190,101.1566],
+    'Phrae':[18.1446,100.1403],'Phuket':[7.8804,98.3923],'Maha Sarakham':[16.1852,103.3007],'Mukdahan':[16.5436,104.7235],
+    'Mae Hong Son':[19.3020,97.9654],'Yasothon':[15.7926,104.1451],'Yala':[6.5411,101.2804],'Roi Et':[16.0538,103.6520],
+    'Ranong':[9.9658,98.6348],'Rayong':[12.6814,101.2816],'Ratchaburi':[13.5283,99.8134],'Lop Buri':[14.7995,100.6534],
+    'Lampang':[18.2888,99.4928],'Lamphun':[18.5744,99.0087],'Loei':[17.4860,101.7223],'Si Sa Ket':[15.1186,104.3220],
+    'Sakon Nakhon':[17.1664,104.1486],'Songkhla':[7.1898,100.5954],'Satun':[6.6238,100.0674],'Samut Prakan':[13.5991,100.5998],
+    'Samut Songkhram':[13.4098,99.9999],'Samut Sakhon':[13.5475,100.2744],'Sa Kaeo':[13.8140,102.0728],'Saraburi':[14.5289,100.9101],
+    'Sing Buri':[14.8936,100.4015],'Sukhothai':[17.0078,99.8235],'Suphan Buri':[14.4745,100.1177],'Surat Thani':[9.1382,99.3217],
+    'Surin':[14.8818,103.4936],'Nong Khai':[17.8783,102.7420],'Nong Bua Lamphu':[17.2044,102.4407],'Ang Thong':[14.5896,100.4550],
+    'Amnat Charoen':[15.8585,104.6258],'Udon Thani':[17.4157,102.7872],'Uttaradit':[17.6201,100.0993],'Uthai Thani':[15.3835,100.0246],
+    'Ubon Ratchathani':[15.2448,104.8473],'Hat Yai':[6.9994,100.4747]
+  };
+
+  const HIJRI_MONTHS_TH = [
+    '',
+    'มุฮัรร็อม',
+    'เศาะฟัร',
+    'เราะบีอุลเอาวัล',
+    'เราะบีอุษษานี',
+    'ญุมาดัลอูลา',
+    'ญุมาดัษษานียะฮ์',
+    'รอญับ',
+    'ชะอ์บาน',
+    'รอมฎอน',
+    'เชาวาล',
+    'ซุลเกาะอ์ดะฮ์',
+    'ซุลฮิจญะฮ์'
+  ];
+
+  const WEEKDAYS_TH = {
+    'Al Ahad': 'วันอาทิตย์', 'Al Ithnayn': 'วันจันทร์', 'Al Thalaata': 'วันอังคาร',
+    'Al Arba\'a': 'วันพุธ', 'Al Khamees': 'วันพฤหัสบดี', 'Al Juma\'a': 'วันศุกร์', 'Al Sabt': 'วันเสาร์',
+    'الأحد': 'วันอาทิตย์', 'الإثنين': 'วันจันทร์', 'الثلاثاء': 'วันอังคาร',
+    'الأربعاء': 'วันพุธ', 'الخميس': 'วันพฤหัสบดี', 'الجمعة': 'วันศุกร์', 'السبต': 'วันเสาร์'
+  };
+
   const PRAYER_NAMES=[['Fajr','ฟัจร์'],['Dhuhr','ซุฮริ'],['Asr','อัศริ'],['Maghrib','มัฆริบ'],['Isha','อิชาอ์']];
   let prayerTimings=null, prayerTimer=null, prayerDate=null;
+
   function renderPrayerDate(){
     const el=document.getElementById('prayer-date'); if(!el) return;
-    let th=''; try{ th=new Date().toLocaleDateString('th-TH-u-ca-buddhist',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }catch(e){ th=new Date().toLocaleDateString('th-TH'); }
-    let ar='';
-    if(prayerDate && prayerDate.hijri){ const h=prayerDate.hijri;
-      const wd=(h.weekday&&h.weekday.ar)?h.weekday.ar+' ':''; const mo=(h.month&&h.month.ar)?h.month.ar:'';
-      ar=`${wd}${h.day||''} ${mo} ${h.year||''} هـ`.trim();
+    let th='';
+    try{
+      th=new Date().toLocaleDateString('th-TH-u-ca-buddhist',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    }catch(e){
+      th=new Date().toLocaleDateString('th-TH');
     }
-    el.innerHTML=`<div class="pd-th">${esc(th)}</div>`+(ar?`<div class="pd-ar">${esc(ar)}</div>`:'');
+    let arOriginal='';
+    let thHijri='';
+    if(prayerDate && prayerDate.hijri){
+      const h=prayerDate.hijri;
+      const wdAr=(h.weekday&&h.weekday.ar)?h.weekday.ar+' ':'';
+      const moAr=(h.month&&h.month.ar)?h.month.ar:'';
+      arOriginal=`${wdAr}${h.day||''} ${moAr} ${h.year||''} هـ`.trim();
+
+      const wd = (h.weekday && (WEEKDAYS_TH[h.weekday.ar] || WEEKDAYS_TH[h.weekday.en])) ||
+        ['วันอาทิตย์','วันจันทร์','วันอังคาร','วันพุธ','วันพฤหัสบดี','วันศุกร์','วันเสาร์'][new Date().getDay()];
+      const mo = (h.month && HIJRI_MONTHS_TH[h.month.number]) || (h.month ? (h.month.ar || h.month.en) : '');
+      const day = h.day || '';
+      const year = h.year || '';
+      thHijri = `${wd}ที่ ${day} ${mo} ฮ.ศ. ${year}`.trim();
+    }
+    el.innerHTML=`<div class="pd-th">${esc(th)}</div>`+(thHijri?`<div class="pd-ar" title="${esc(arOriginal)}">${esc(thHijri)}</div>`:'');
   }
-  function currentProvince(){ try{ return localStorage.getItem('yt_prayer_prov')||CONFIG.prayerProvince||'Bangkok'; }catch(e){ return CONFIG.prayerProvince||'Bangkok'; } }
+
+  function currentProvince(){
+    try{
+      let v = localStorage.getItem('yt_prayer_prov') || CONFIG.prayerProvince || 'Bangkok';
+      if(PROV_ALIASES[v]) v = PROV_ALIASES[v];
+      return v;
+    }catch(e){
+      let v = CONFIG.prayerProvince || 'Bangkok';
+      if(PROV_ALIASES[v]) v = PROV_ALIASES[v];
+      return v;
+    }
+  }
+
   function initPrayerUI(){
     const sel=document.getElementById('prayer-province'); if(!sel) return;
-    if(!sel.options.length){ PROVINCES.forEach(([th,en])=>{ const o=document.createElement('option'); o.value=en; o.textContent=th; sel.appendChild(o); }); }
-    sel.value=currentProvince();
-    if(![...sel.options].some(o=>o.value===sel.value)){ const o=document.createElement('option'); o.value=sel.value; o.textContent=sel.value; sel.appendChild(o); sel.value=sel.value; }
+    if(!sel.options.length){
+      PROVINCES.forEach(([th,en])=>{
+        const o=document.createElement('option');
+        o.value=en;
+        o.textContent=th;
+        sel.appendChild(o);
+      });
+    }
+    let cur = currentProvince();
+    if(PROV_ALIASES[cur]) cur = PROV_ALIASES[cur];
+    const match = PROVINCES.find(([th, en]) => th === cur || en.toLowerCase() === cur.toLowerCase());
+    if(match) cur = match[1];
+
+    sel.value = cur;
+    if(!sel.value || sel.selectedIndex < 0){
+      sel.value = 'Bangkok';
+    }
     updateNotifyBtn();
     loadPrayer(sel.value);
   }
-  function onProvinceChange(){ const v=document.getElementById('prayer-province').value; try{ localStorage.setItem('yt_prayer_prov',v); }catch(e){} loadPrayer(v); }
+
+  function onProvinceChange(){
+    const v=document.getElementById('prayer-province').value;
+    try{ localStorage.setItem('yt_prayer_prov',v); }catch(e){}
+    loadPrayer(v);
+  }
+
   async function loadPrayer(city){
     const grid=document.getElementById('prayer-grid');
+    grid.innerHTML='<div class="sched-empty">กำลังโหลดเวลาละหมาด...</div>';
+
+    let targetCity = PROV_ALIASES[city] || city;
+    const match = PROVINCES.find(([th, en]) => th === targetCity || en.toLowerCase() === targetCity.toLowerCase());
+    if(match) targetCity = match[1];
+
     try{
-      const r=await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=Thailand&method=3`);
-      const j=await r.json();
-      if(!j.data||!j.data.timings) throw new Error('no data');
-      prayerTimings=j.data.timings; prayerDate=j.data.date||null; renderPrayerDate(); renderPrayer(); schedulePrayerNotify();
-    }catch(e){ grid.innerHTML='<div class="sched-empty">โหลดเวลาละหมาดไม่สำเร็จ ลองใหม่ภายหลังค่ะ</div>'; }
+      let res = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(targetCity)}&country=Thailand&method=3`);
+      let j = await res.json();
+      if(!j || j.code !== 200 || !j.data || !j.data.timings){
+        const coords = PROV_COORDS[targetCity] || PROV_COORDS['Bangkok'];
+        if(coords){
+          const [lat, lng] = coords;
+          const d = new Date();
+          const ds = `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
+          res = await fetch(`https://api.aladhan.com/v1/timings/${ds}?latitude=${lat}&longitude=${lng}&method=3`);
+          j = await res.json();
+        }
+      }
+      if(!j || !j.data || !j.data.timings) throw new Error('no data');
+      prayerTimings = j.data.timings;
+      prayerDate = j.data.date || null;
+      renderPrayerDate();
+      renderPrayer();
+      schedulePrayerNotify();
+    }catch(e){
+      grid.innerHTML='<div class="sched-empty">โหลดเวลาละหมาดไม่สำเร็จ ลองใหม่ภายหลังค่ะ</div>';
+    }
   }
+
   function renderPrayer(){
     const grid=document.getElementById('prayer-grid'), nx=document.getElementById('prayer-next'); if(!prayerTimings) return;
     const now=nowHM(); let nextName=null,nextTime=null;
