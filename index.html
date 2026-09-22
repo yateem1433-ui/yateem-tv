@@ -386,6 +386,8 @@
     /* ---- compass modal ---- */
     .compass-wrap{ width:210px; height:210px; margin:0 auto; position:relative; display:flex; align-items:center; justify-content:center; }
     .compass-dial{ width:200px; height:200px; border-radius:50%; border:2px solid var(--stroke); position:relative; background:radial-gradient(circle, rgba(27,79,216,0.18) 0%, rgba(7,11,20,0.9) 75%); box-shadow:0 0 24px -6px color-mix(in srgb,var(--accent) 30%,transparent); transition:transform .2s ease-out; }
+    /* ตอนหมุนตามเซนเซอร์ 60-120 ครั้ง/วิ: ปิด transition + ยกเป็น GPU layer (rasterize เงา/ไล่สีครั้งเดียว) กันค้าง */
+    #compass-dial.sensor-live, #compass-needle.sensor-live{ transition:none; will-change:transform; }
     .c-point{ position:absolute; font-size:13px; font-weight:700; width:22px; height:22px; display:flex; align-items:center; justify-content:center; color:var(--muted); }
     .cp-n{ top:6px; left:calc(50% - 11px); color:#ff5555; }
     .cp-s{ bottom:6px; left:calc(50% - 11px); }
@@ -3568,16 +3570,23 @@
     }
   }
 
+  // rAF throttle: รวบการหมุนหน้าปัดให้เขียน transform ไม่เกิน 1 ครั้ง/เฟรม (เดิมเขียน 60-120 ครั้ง/วิ จน re-raster เงาทุกเฟรม → ค้าง)
+  let compassRAF = null, compassPendingHeading = null;
+  function applyCompassFrame(){
+    compassRAF = null;
+    if(compassPendingHeading === null) return;
+    const dial = document.getElementById('compass-dial');
+    if(dial) dial.style.transform = `rotate(${-compassPendingHeading}deg)`;   // หมุนเฉพาะหน้าปัด (เข็มคงที่ตามทิศ ตั้งครั้งเดียว)
+  }
+
   function startCompassSensor(){
     if(compassSensorActive) return;   // กันเปิดซ้ำ → ผูก deviceorientation listener ซ้อน
     const btn = document.getElementById('qibla-sensor-btn');
-    const dial = document.getElementById('compass-dial');
-    const needle = document.getElementById('compass-needle');
 
     function onHeading(heading){
       if(isNaN(heading)) return;
-      if(dial) dial.style.transform = `rotate(${-heading}deg)`;
-      if(needle) needle.style.transform = `rotate(${currentQiblaBearing}deg)`;
+      compassPendingHeading = heading;
+      if(!compassRAF) compassRAF = requestAnimationFrame(applyCompassFrame);
     }
 
     if(typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function'){
@@ -3608,6 +3617,10 @@
     };
     window.addEventListener('deviceorientation', deviceHeadingHandler, true);
     compassSensorActive = true;
+    // ยกหน้าปัด/เข็มเป็น GPU layer + ปิด transition ระหว่างหมุนตามเซนเซอร์ และตั้งมุมเข็มครั้งเดียว (คงที่)
+    const dialEl = document.getElementById('compass-dial'), needleEl = document.getElementById('compass-needle');
+    if(dialEl) dialEl.classList.add('sensor-live');
+    if(needleEl){ needleEl.classList.add('sensor-live'); needleEl.style.transform = `rotate(${currentQiblaBearing}deg)`; }
     if(btn){
       btn.textContent = '🧭 ปิดเซนเซอร์เข็มทิศ (กำลังหมุนตามมือถือ)';
       btn.classList.add('mini-accent');
@@ -3620,6 +3633,8 @@
       window.removeEventListener('deviceorientation', deviceHeadingHandler, true);
       deviceHeadingHandler = null;
     }
+    if(compassRAF){ cancelAnimationFrame(compassRAF); compassRAF = null; }   // หยุด loop วาดหน้าปัด
+    compassPendingHeading = null;
     compassSensorActive = false;
     const btn = document.getElementById('qibla-sensor-btn');
     const dial = document.getElementById('compass-dial');
@@ -3628,8 +3643,8 @@
       btn.textContent = '🧭 เปิดเซนเซอร์หมุนตามเครื่อง (มือถือ)';
       btn.classList.remove('mini-accent');
     }
-    if(dial) dial.style.transform = 'none';
-    if(needle) needle.style.transform = `rotate(${currentQiblaBearing}deg)`;
+    if(dial){ dial.classList.remove('sensor-live'); dial.style.transform = 'none'; }         // คืน transition + ปลด will-change
+    if(needle){ needle.classList.remove('sensor-live'); needle.style.transform = `rotate(${currentQiblaBearing}deg)`; }
   }
 
   // ---- ดิจิทัลตัสบีฮ์ (Digital Tasbih Counter) ----
