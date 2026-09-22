@@ -753,7 +753,6 @@
       <div class="rail" id="faith-rail">
         <a class="card glass" href="javascript:void(0)" onclick="openQibla()"><div class="ic" style="background:#1B4FD8">🧭</div><div><div class="nm">ทิศกิบลัต</div><div class="sub">เข็มทิศชี้สู่มักกะฮ์ในเว็บ</div></div></a>
         <a class="card glass" href="javascript:void(0)" onclick="openTasbih()"><div class="ic" style="background:#0D825E">📿</div><div><div class="nm">ดิจิทัลตัสบีฮ์</div><div class="sub">นับซิกิร / สรรเสริญ</div></div></a>
-        <a class="card glass" href="javascript:void(0)" onclick="promptInstallModal(true)"><div class="ic" style="background:#8a4af3">📲</div><div><div class="nm">ติดตั้งเป็นแอพ</div><div class="sub">เพิ่มลงหน้าจอโฮม</div></div></a>
       </div>
 
       <!-- QURAN -->
@@ -1441,6 +1440,14 @@
         `<div><div class="nm">${esc(nm)}</div><div class="sub">${esc(sub)}</div></div>`;
       rail.appendChild(a);
     });
+    // การ์ด "📲 ติดตั้งแอพลงหน้าจอโฮมทันที" — วางถัดไปจาก LINE
+    const installCard=document.createElement('a');
+    installCard.className='card glass app-install-card';
+    installCard.href='javascript:void(0)';
+    installCard.onclick=()=>promptInstallModal(true);
+    installCard.innerHTML=`<div class="ic" style="background:linear-gradient(135deg,#ffcf40,#e6a817);color:#1f1600;font-size:22px;box-shadow:0 4px 14px rgba(255,207,64,.4)">📲</div>`+
+      `<div><div class="nm" style="font-size:14px;line-height:1.25">ติดตั้งแอพ</div><div class="sub">ลงหน้าจอโฮมทันที</div></div>`;
+    rail.appendChild(installCard);
     if(!rail.children.length){ rail.innerHTML='<div class="card glass" style="color:var(--muted);font-size:13px">ยังไม่ได้ตั้งค่าโซเชียลค่ะ</div>'; }
   }
 
