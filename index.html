@@ -342,6 +342,27 @@
     #react-pop button:hover{ background:rgba(255,255,255,.18); transform:scale(1.28); }
     #react-pop button:active{ transform:scale(.92); }
 
+    /* ---- ปุ่มอีโมจิ (แทรกลงในข้อความที่พิมพ์) ---- */
+    .emoji-bar{ position:relative; display:flex; align-items:center; flex:0 0 auto; }
+    .emoji-btn{ width:42px; height:42px; min-width:42px; border-radius:12px; border:1px solid var(--stroke); cursor:pointer;
+      background:var(--glass-2); font-size:21px; display:flex; align-items:center; justify-content:center;
+      transition:transform .15s ease, background .15s ease, border-color .15s ease; padding:0; line-height:1; }
+    .emoji-btn:hover{ background:rgba(255,255,255,.16); border-color:var(--accent); transform:scale(1.06); }
+    .emoji-btn:active{ transform:scale(.92); }
+    .emoji-btn.active{ border-color:var(--accent); box-shadow:0 0 14px -2px var(--glow); }
+    #emoji-panel{ position:absolute; bottom:calc(100% + 10px); left:0; z-index:31; display:none;
+      width:min(320px, calc(100vw - 40px)); max-height:210px; overflow-y:auto; padding:8px;
+      grid-template-columns:repeat(8,1fr); gap:2px;
+      background:rgba(12,18,30,.96); border:1px solid var(--stroke); border-radius:16px;
+      -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px);
+      box-shadow:0 16px 36px rgba(0,0,0,.65), 0 0 24px -6px var(--glow); }
+    #emoji-panel.open{ display:grid; animation:popIn .18s cubic-bezier(0.16, 1, 0.3, 1); }
+    #emoji-panel::-webkit-scrollbar{ width:6px; } #emoji-panel::-webkit-scrollbar-thumb{ background:var(--stroke); border-radius:3px; }
+    #emoji-panel button{ width:34px; height:34px; border:none; background:transparent; cursor:pointer; font-size:22px;
+      border-radius:8px; padding:0; line-height:1; transition:transform .12s ease, background .12s ease; }
+    #emoji-panel button:hover{ background:rgba(255,255,255,.14); transform:scale(1.2); }
+    #emoji-panel button:active{ transform:scale(.9); }
+
     .react-float{ position:absolute; inset:0; z-index:12; pointer-events:none; overflow:hidden; border-radius:var(--radius); }
     .react-float .fx{ position:absolute; bottom:56px; font-size:28px;
       animation:floatUp 2.4s cubic-bezier(0.2,0.6,0.3,1) forwards;
@@ -696,6 +717,10 @@
         <div class="react-float" id="react-float"></div>
         <!-- ช่องพิมพ์แชท + ปุ่มรีแอคชัน -->
         <div class="chat-input glass">
+          <div class="emoji-bar" id="emoji-bar">
+            <button type="button" class="emoji-btn" id="emoji-btn" onclick="toggleEmojiPanel(event)" aria-label="แทรกอีโมจิ" title="แทรกอีโมจิ">😊</button>
+            <div id="emoji-panel"></div>
+          </div>
           <input id="chat-text" type="text" placeholder="พิมพ์ข้อความ..." data-ph="chatPlaceholder" maxlength="300"
                  autocomplete="off" onkeydown="if(event.key==='Enter')sendMessage()">
           <div class="react-bar" id="react-bar"></div>
@@ -2906,6 +2931,33 @@
   const REACT_IMG_MAP=Object.fromEntries(REACTIONS.filter(r=>r.img).map(r=>[r.e,r.img]));
   let lastReact=0, lastLocalSpawn=0, reactCloseTimer=null;
 
+  // ---- ปุ่มอีโมจิ: แทรกอีโมจิลงในข้อความที่พิมพ์ (แยกจากรีแอคชันที่ลอยขึ้นจอ) ----
+  const CHAT_EMOJIS = ['😊','😄','😁','😂','🤣','😅','😍','🥰','😘','🙂','🙃','😉','😌','😔','😢','😭','😤','😮','😳','🤔','😴','🥱','👍','👎','👏','🙏','🤲','👌','✌️','🤝','💪','❤️','🧡','💛','💚','💙','💜','🤍','🖤','💖','✨','🔥','🎉','💯','🌙','⭐','🕌','🕋','📿','☪️','🌹','🌸','☀️','💧','📺','🛒'];
+  function renderEmojiPanel(){
+    const panel=document.getElementById('emoji-panel'); if(!panel || panel.dataset.built) return;
+    panel.innerHTML = CHAT_EMOJIS.map(e=>`<button type="button" onclick="insertEmoji('${e}')" aria-label="${e}">${e}</button>`).join('');
+    panel.dataset.built='1';
+  }
+  function toggleEmojiPanel(ev){
+    if(ev) ev.stopPropagation();
+    renderEmojiPanel();
+    const panel=document.getElementById('emoji-panel'), btn=document.getElementById('emoji-btn');
+    const open=panel.classList.toggle('open');
+    if(btn) btn.classList.toggle('active', open);
+  }
+  function insertEmoji(em){
+    const input=document.getElementById('chat-text'); if(!input) return;
+    const max=(CONFIG.chat&&CONFIG.chat.maxLen)||300;
+    let start=input.selectionStart, end=input.selectionEnd;
+    if(start===null||start===undefined){ start=end=input.value.length; }
+    let next = input.value.slice(0,start) + em + input.value.slice(end);
+    if(next.length>max) next = next.slice(0,max);
+    input.value = next;
+    const pos=Math.min(start+em.length, input.value.length);
+    input.focus();
+    try{ input.setSelectionRange(pos,pos); }catch(e){}
+  }
+
   function renderReactions(){
     const bar=document.getElementById('react-bar'); if(!bar) return; bar.innerHTML='';
     const pop=document.createElement('div'); pop.id='react-pop';
@@ -2963,6 +3015,13 @@
       pop.classList.remove('open');
       const toggle=bar.querySelector('.react-toggle');
       if(toggle) toggle.classList.remove('active');
+    }
+    // ปิดถาดอีโมจิเมื่อแตะที่อื่น
+    const ebar=document.getElementById('emoji-bar');
+    const epanel=document.getElementById('emoji-panel');
+    if(epanel && epanel.classList.contains('open') && ebar && !ebar.contains(ev.target)){
+      epanel.classList.remove('open');
+      const eb=document.getElementById('emoji-btn'); if(eb) eb.classList.remove('active');
     }
   });
 
