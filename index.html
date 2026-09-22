@@ -377,6 +377,22 @@
     .quran-modal{ width:96vw; height:90vh; max-width:900px; border-radius:18px; padding:8px; position:relative; display:flex; flex-direction:column; }
     .quran-modal iframe{ flex:1; width:100%; border:0; border-radius:12px; background:#fff; }
 
+    /* ---- compass modal ---- */
+    .compass-wrap{ width:210px; height:210px; margin:0 auto; position:relative; display:flex; align-items:center; justify-content:center; }
+    .compass-dial{ width:200px; height:200px; border-radius:50%; border:2px solid var(--stroke); position:relative; background:radial-gradient(circle, rgba(27,79,216,0.18) 0%, rgba(7,11,20,0.9) 75%); box-shadow:0 0 24px -6px color-mix(in srgb,var(--accent) 30%,transparent); transition:transform .2s ease-out; }
+    .c-point{ position:absolute; font-size:13px; font-weight:700; width:22px; height:22px; display:flex; align-items:center; justify-content:center; color:var(--muted); }
+    .cp-n{ top:6px; left:calc(50% - 11px); color:#ff5555; }
+    .cp-s{ bottom:6px; left:calc(50% - 11px); }
+    .cp-e{ right:6px; top:calc(50% - 11px); }
+    .cp-w{ left:6px; top:calc(50% - 11px); }
+    .compass-kaaba-needle{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; pointer-events:none; transition:transform .3s cubic-bezier(0.2, 0.9, 0.3, 1); }
+    .compass-kaaba-needle .kaaba-icon{ font-size:24px; filter:drop-shadow(0 0 10px rgba(234,185,52,0.9)); margin-top:12px; }
+    .compass-kaaba-needle .needle-body{ width:4px; height:58px; background:linear-gradient(to bottom, var(--accent), transparent); border-radius:2px; margin-top:2px; }
+    .compass-center{ position:absolute; width:12px; height:12px; border-radius:50%; background:var(--accent); top:calc(50% - 6px); left:calc(50% - 6px); box-shadow:0 0 8px var(--accent); }
+
+    /* ---- tasbih button active press ---- */
+    .tasbih-btn:active{ transform:scale(0.92); box-shadow:0 0 14px color-mix(in srgb,var(--accent) 80%,transparent) !important; }
+
     /* ---- splash ก่อนเข้า ---- */
     #splash{ position:fixed; inset:0; z-index:100; background:#ffffff; display:flex; flex-direction:column;
       align-items:center; justify-content:center; gap:18px; transition:opacity .5s; }
@@ -585,7 +601,7 @@
       domain: '',            // โดเมนเว็บ (ไว้ทำลิงก์แชร์) — ว่าง = ใช้ URL ปัจจุบัน
       prayerProvince: 'Bangkok',   // จังหวัดเริ่มต้นสำหรับเวลาละหมาด
       hijriOffset: -1,             // ปรับเทียบวันฮิจเราะห์ในไทย (ชดเชยตามการดูจันทร์เสี้ยว)
-      quranPdfUrl: ''        // ลิงก์ไฟล์ PDF อัลกุรอานแปลไทย (แอดมินอัป)
+      quranPdfUrl: 'ThailandQuranแปลไทย.pdf'        // ลิงก์ไฟล์ PDF อัลกุรอานแปลไทย (มีไฟล์ในเว็บแล้ว หรือแอดมินแก้ URL ได้)
     };
     // ค่าที่แอดมินแก้ได้ (ทับด้วย /settings จาก Firebase ตอนโหลด)
     const ADMIN_KEYS = ['streamUrl','social','market','donate','videos','sponsors','theme','labels','logoUrl','domain','prayerProvince','hijriOffset','quranPdfUrl'];
@@ -732,17 +748,18 @@
         <div class="prayer-next" id="prayer-next"></div>
       </div>
 
-      <!-- QIBLA DIRECTION (ทิศกิบลัต) -->
-      <div class="sec-title">🧭 <span class="accent">ทิศกิบลัต</span></div>
-      <div class="rail" id="qibla-rail">
-        <a class="card glass" href="javascript:void(0)" onclick="openQibla()"><div class="ic" style="background:#1B4FD8">🧭</div><div><div class="nm">ค้นหาทิศกิบลัต</div><div class="sub">เปิดเข็มทิศกิบลัต (Google Qibla Finder)</div></div></a>
+      <!-- FAITH TOOLS & QURAN -->
+      <div class="sec-title">🧭 <span class="accent">ทิศกิบลัต & เครื่องมือศาสนา</span></div>
+      <div class="rail" id="faith-rail">
+        <a class="card glass" href="javascript:void(0)" onclick="openQibla()"><div class="ic" style="background:#1B4FD8">🧭</div><div><div class="nm">ทิศกิบลัต</div><div class="sub">เข็มทิศชี้สู่มักกะฮ์ในเว็บ</div></div></a>
+        <a class="card glass" href="javascript:void(0)" onclick="openTasbih()"><div class="ic" style="background:#0D825E">📿</div><div><div class="nm">ดิจิทัลตัสบีฮ์</div><div class="sub">นับซิกิร / สรรเสริญ</div></div></a>
       </div>
 
       <!-- QURAN -->
       <div class="sec-title">📖 <span class="accent">อัลกุรอาน</span></div>
       <div class="rail" id="quran-rail">
-        <a class="card glass" href="javascript:void(0)" onclick="openQuran()"><div class="ic" style="background:#0a7d5a">📖</div><div><div class="nm">อ่านออนไลน์</div><div class="sub">แปล+คำอ่าน</div></div></a>
-        <a class="card glass" id="quran-pdf-card" href="javascript:void(0)" onclick="openQuranPdf()" style="display:none"><div class="ic" style="background:#b9860b">📄</div><div><div class="nm">PDF แปลไทย</div><div class="sub">ดาวน์โหลด/อ่าน</div></div></a>
+        <a class="card glass" href="javascript:void(0)" onclick="openQuran()"><div class="ic" style="background:#0a7d5a">📖</div><div><div class="nm">อ่านออนไลน์</div><div class="sub">แปล+คำอ่าน (daasee)</div></div></a>
+        <a class="card glass" id="quran-pdf-card" href="javascript:void(0)" onclick="openQuranPdf()"><div class="ic" style="background:#b9860b">📄</div><div><div class="nm">PDF แปลไทย</div><div class="sub">พรีวิวอ่านในเว็บ / โหลด</div></div></a>
       </div>
     </section>
 
@@ -847,22 +864,106 @@
     </div>
   </div>
 
-  <!-- QIBLA MODAL (Google Qibla Finder ในเว็บเรา) -->
+  <!-- QIBLA MODAL (เข็มทิศกิบลัตในเว็บ) -->
   <div class="backdrop" id="qibla-backdrop" onclick="if(event.target===this)closeQibla()" style="align-items:center">
-    <div class="quran-modal glass" style="width:96vw;height:90vh;max-width:960px">
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 6px 10px;gap:8px">
-        <div style="font-weight:600;font-size:15px;color:var(--accent);display:flex;align-items:center;gap:6px">
-          <span>🧭</span> <span>ทิศกิบลัต (Qibla Finder)</span>
-        </div>
-        <div style="display:flex;gap:6px;align-items:center">
-          <button type="button" class="mini" onclick="openExternal('https://qiblafinder.withgoogle.com/intl/th/desktop')" title="เปิดเต็มจอในหน้าต่างใหม่">↗️ เต็มจอ</button>
-          <button type="button" class="close" style="position:static" onclick="closeQibla()">×</button>
+    <div class="sheet glass qibla-modal" style="position:relative;max-width:440px;width:92vw;padding:22px 18px;text-align:center">
+      <button type="button" class="close" onclick="closeQibla()">×</button>
+      <div style="font-size:18px;font-weight:700;color:var(--accent);margin-bottom:2px">🧭 เข็มทิศกิบลัต</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px" id="qibla-location-txt">คำนวณจากพิกัดตำแหน่งของคุณ</div>
+
+      <!-- Compass Graphic -->
+      <div class="compass-wrap">
+        <div class="compass-dial" id="compass-dial">
+          <div class="c-point cp-n">N</div>
+          <div class="c-point cp-e">E</div>
+          <div class="c-point cp-s">S</div>
+          <div class="c-point cp-w">W</div>
+          <div class="compass-kaaba-needle" id="compass-needle">
+            <div class="kaaba-icon" title="กะอ์บะฮ์ (มักกะฮ์)">🕋</div>
+            <div class="needle-body"></div>
+          </div>
+          <div class="compass-center"></div>
         </div>
       </div>
-      <iframe id="qibla-iframe" title="ค้นหาทิศกิบลัต Google Qibla Finder"
-        allow="camera *; geolocation *; accelerometer *; gyroscope *; magnetometer *; device-orientation *"
-        allowfullscreen
-        style="flex:1;width:100%;border:0;border-radius:12px;background:#000"></iframe>
+
+      <!-- Qibla Info Details -->
+      <div class="qibla-stat-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px">
+        <div class="stat-box glass" style="padding:10px;border-radius:12px">
+          <div style="font-size:11px;color:var(--muted)">องศาทิศกิบลัต</div>
+          <div style="font-size:22px;font-weight:700;color:var(--accent);margin-top:2px" id="qibla-deg-val">287°</div>
+          <div style="font-size:11px;color:var(--text)" id="qibla-dir-text">ต.ต.เฉียงเหนือ (WNW)</div>
+        </div>
+        <div class="stat-box glass" style="padding:10px;border-radius:12px">
+          <div style="font-size:11px;color:var(--muted)">ระยะห่างสู่กะอ์บะฮ์</div>
+          <div style="font-size:22px;font-weight:700;color:var(--text);margin-top:2px" id="qibla-dist-val">6,451</div>
+          <div style="font-size:11px;color:var(--muted)">กิโลเมตร</div>
+        </div>
+      </div>
+
+      <!-- Compass Controls -->
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+        <button type="button" class="mini" id="qibla-sensor-btn" onclick="toggleCompassSensor()" style="padding:9px 14px;border-radius:10px;font-size:13px;background:var(--glass-2)">🧭 เปิดเซนเซอร์หมุนตามเครื่อง (มือถือ)</button>
+        <button type="button" class="mini" onclick="openExternal('https://qiblafinder.withgoogle.com/intl/th/desktop')" style="padding:8px 12px;font-size:12px;opacity:.85">📱 เปิดกล้อง AR (Google Qibla Finder) ↗️</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF PREVIEW MODAL (อ่านอัลกุรอานแปลไทย) -->
+  <div class="backdrop" id="pdf-backdrop" onclick="if(event.target===this)closePdf()" style="align-items:center">
+    <div class="quran-modal glass" style="width:96vw;height:92vh;max-width:1050px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px 10px;gap:8px;flex-wrap:wrap">
+        <div style="font-weight:600;font-size:15px;color:var(--accent);display:flex;align-items:center;gap:6px">
+          <span>📖</span> <span>อัลกุรอาน แปลไทย (PDF)</span>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <a id="pdf-download-btn" class="mini" href="ThailandQuranแปลไทย.pdf" download="ThailandQuranแปลไทย.pdf" style="text-decoration:none">⬇️ ดาวน์โหลด PDF</a>
+          <button type="button" class="mini" onclick="openPdfExternal()">↗️ เปิดเต็มจอ</button>
+          <button type="button" class="close" style="position:static" onclick="closePdf()">×</button>
+        </div>
+      </div>
+      <iframe id="pdf-frame" title="พรีวิวอัลกุรอานแปลไทย PDF" style="flex:1;width:100%;border:0;border-radius:12px;background:#1a1d24"></iframe>
+    </div>
+  </div>
+
+  <!-- TASBIH MODAL (ดิจิทัลตัสบีฮ์) -->
+  <div class="backdrop" id="tasbih-backdrop" onclick="if(event.target===this)closeTasbih()" style="align-items:center">
+    <div class="sheet glass tasbih-modal" style="position:relative;max-width:380px;width:92vw;padding:22px 18px;text-align:center">
+      <button type="button" class="close" onclick="closeTasbih()">×</button>
+      <div style="font-size:18px;font-weight:700;color:var(--accent);margin-bottom:2px">📿 ดิจิทัลตัสบีฮ์</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px">นับบทสรรเสริญ / ซิกิร</div>
+
+      <select id="tasbih-dhikr-sel" onchange="onTasbihDhikrChange()" style="width:100%;padding:9px 12px;border-radius:12px;background:var(--glass-2);border:1px solid var(--stroke);color:var(--text);font-family:inherit;font-size:13px;margin-bottom:12px;color-scheme:dark">
+        <option value="subhanallah">سُبْحَانَ اللَّهِ (สุบฮานัลลอฮ์ - 33)</option>
+        <option value="alhamdulillah">الْحَمْدُ لِلَّهِ (อัลฮัมดุลิลลาฮ์ - 33)</option>
+        <option value="allahuakbar">اللَّهُ أَكْبَرُ (อัลลอฮุอักบัร - 34)</option>
+        <option value="astaghfirullah">أَسْتَغْفِرُ اللَّهَ (อัสตัฆฟิรุลลอฮ์ - 100)</option>
+        <option value="lailahaillallah">لَا إِلَهَ إِلَّا اللَّهُ (ลาอิลาฮะอิลลัลลอฮ์ - 100)</option>
+        <option value="custom">กำหนดเอง (ไม่จำกัดเป้าหมาย)</option>
+      </select>
+
+      <div class="tasbih-display glass" style="padding:14px;border-radius:18px;margin-bottom:14px;background:radial-gradient(ellipse at center, rgba(234,185,52,0.12) 0%, rgba(0,0,0,0.45) 100%);border:1px solid color-mix(in srgb,var(--accent) 30%,var(--stroke))">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);margin-bottom:4px">
+          <span>เป้าหมาย: <b id="tasbih-target-txt" style="color:var(--accent)">33</b></span>
+          <span>ครบรอบ: <b id="tasbih-rounds-txt" style="color:var(--text)">0</b> รอบ</span>
+        </div>
+        <div id="tasbih-count-num" class="tasbih-num" style="font-size:64px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1;text-shadow:0 0 24px color-mix(in srgb,var(--accent) 40%,transparent);margin:8px 0">0</div>
+        <div style="height:6px;width:100%;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;margin-top:6px">
+          <div id="tasbih-progress" style="height:100%;width:0%;background:var(--accent);border-radius:3px;transition:width .12s ease"></div>
+        </div>
+      </div>
+
+      <div style="margin:6px 0 14px;display:flex;justify-content:center">
+        <button type="button" class="tasbih-btn" id="tasbih-tap-btn" onclick="tasbihCount()" style="width:130px;height:130px;border-radius:50%;border:4px solid var(--accent);background:radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--accent) 35%, #1B4FD8) 0%, #070B14 80%);color:#fff;font-size:19px;font-weight:700;cursor:pointer;box-shadow:0 0 28px -4px color-mix(in srgb,var(--accent) 45%,transparent);transition:transform .08s, box-shadow .08s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;user-select:none;-webkit-tap-highlight-color:transparent">
+          <span>กดนับ</span>
+          <span style="font-size:11px;opacity:.75">TAP</span>
+        </button>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;padding-top:2px">
+        <button type="button" class="mini" id="tasbih-sound-btn" onclick="toggleTasbihSound()" title="เปิด/ปิดเสียง">🔊 เสียง: เปิด</button>
+        <button type="button" class="mini" id="tasbih-vib-btn" onclick="toggleTasbihVib()" title="เปิด/ปิดการสั่น">📳 สั่น: เปิด</button>
+        <button type="button" class="mini" onclick="resetTasbih()" style="color:#ff6b6b" title="รีเซ็ต">🔄 รีเซ็ต</button>
+      </div>
     </div>
   </div>
 
@@ -1696,7 +1797,7 @@
   function applySettings(){
     applyTheme(CONFIG.theme); applyLabels(); setLogo(CONFIG.logoUrl);
     setStream(CONFIG.streamUrl||''); initSocial(); renderVideos(); renderSponsors(); renderReactions(); renderMarketPreview();
-    const qc=document.getElementById('quran-pdf-card'); if(qc) qc.style.display = CONFIG.quranPdfUrl?'flex':'none';
+    const qc=document.getElementById('quran-pdf-card'); if(qc) qc.style.display = 'flex';
   }
 
   // ---- ธีมสี ----
@@ -3224,23 +3325,314 @@
       renderPrayer(); schedulePrayerNotify(); }, Math.min(target-now, 2147483647));
   }
 
-  // ---- อัลกุรอาน ----
+  // ---- อัลกุรอาน (daasee) & PDF แปลไทย ----
   function openQuran(){ const f=document.getElementById('quran-iframe'); f.src='https://www.daasee.com/quran/quran4.php'; document.getElementById('quran-backdrop').classList.add('open'); }
   function closeQuran(){ document.getElementById('quran-iframe').src='about:blank'; document.getElementById('quran-backdrop').classList.remove('open'); }
-  function openQuranPdf(){ const u=CONFIG.quranPdfUrl; if(!u){ toast('ยังไม่ได้อัปโหลดไฟล์ PDF ค่ะ'); return; } openExternal(u); }
 
-  // ---- ทิศกิบลัต (Google Qibla Finder) ----
-  function openQibla(){
-    const f=document.getElementById('qibla-iframe');
-    if(f && (!f.src || f.src.includes('about:blank'))){
-      f.src='https://qiblafinder.withgoogle.com/intl/th/desktop';
+  function getQuranPdfUrl(){
+    return CONFIG.quranPdfUrl || 'ThailandQuranแปลไทย.pdf';
+  }
+  function openQuranPdf(){
+    const u = getQuranPdfUrl();
+    const frame = document.getElementById('pdf-frame');
+    const dlBtn = document.getElementById('pdf-download-btn');
+    if(dlBtn){
+      dlBtn.href = u;
+      dlBtn.download = u.split('/').pop() || 'ThailandQuranแปลไทย.pdf';
     }
+    if(frame){
+      frame.src = u;
+    }
+    document.getElementById('pdf-backdrop').classList.add('open');
+  }
+  function closePdf(){
+    const frame = document.getElementById('pdf-frame');
+    if(frame) frame.src = 'about:blank';
+    document.getElementById('pdf-backdrop').classList.remove('open');
+  }
+  function openPdfExternal(){
+    openExternal(getQuranPdfUrl());
+  }
+
+  // ---- เข็มทิศกิบลัตในเว็บ (In-Page Qibla Compass) ----
+  let currentQiblaBearing = 287;
+  let compassSensorActive = false;
+  let deviceHeadingHandler = null;
+
+  function calculateQiblaFromCoords(lat, lng){
+    const kLat = 21.422487 * Math.PI / 180;
+    const kLng = 39.826206 * Math.PI / 180;
+    const uLat = lat * Math.PI / 180;
+    const uLng = lng * Math.PI / 180;
+    const dLng = kLng - uLng;
+    const y = Math.sin(dLng);
+    const x = Math.cos(uLat) * Math.tan(kLat) - Math.sin(uLat) * Math.cos(dLng);
+    let q = Math.atan2(y, x) * 180 / Math.PI;
+    return Math.round((q + 360) % 360);
+  }
+
+  function calculateDistanceToKaaba(lat, lng){
+    const R = 6371;
+    const kLat = 21.422487 * Math.PI / 180;
+    const kLng = 39.826206 * Math.PI / 180;
+    const uLat = lat * Math.PI / 180;
+    const uLng = lng * Math.PI / 180;
+    const dLat = kLat - uLat;
+    const dLng = kLng - uLng;
+    const a = Math.sin(dLat/2)**2 + Math.cos(uLat)*Math.cos(kLat)*Math.sin(dLng/2)**2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return Math.round(R * c).toLocaleString('th-TH');
+  }
+
+  function getDirectionNameTh(deg){
+    const dirs = ['ทิศเหนือ (N)', 'ต.อ.เฉียงเหนือ (NE)', 'ทิศตะวันออก (E)', 'ต.อ.เฉียงใต้ (SE)',
+      'ทิศใต้ (S)', 'ต.ต.เฉียงใต้ (SW)', 'ทิศตะวันตก (W)', 'ต.ต.เฉียงเหนือ (WNW)'];
+    const idx = Math.round(deg / 45) % 8;
+    return dirs[idx];
+  }
+
+  function updateQiblaDisplay(){
+    let prov = currentProvince();
+    let coords = PROV_COORDS[prov] || PROV_COORDS['Bangkok'];
+    const match = PROVINCES.find(([th, en])=>en===prov);
+    const provNameTh = match ? match[0] : prov;
+
+    const bearing = calculateQiblaFromCoords(coords[0], coords[1]);
+    const dist = calculateDistanceToKaaba(coords[0], coords[1]);
+    currentQiblaBearing = bearing;
+
+    const degEl = document.getElementById('qibla-deg-val');
+    const dirEl = document.getElementById('qibla-dir-text');
+    const distEl = document.getElementById('qibla-dist-val');
+    const locEl = document.getElementById('qibla-location-txt');
+    const needle = document.getElementById('compass-needle');
+
+    if(degEl) degEl.textContent = bearing + '°';
+    if(dirEl) dirEl.textContent = getDirectionNameTh(bearing);
+    if(distEl) distEl.textContent = dist;
+    if(locEl) locEl.textContent = 'คำนวณอิงจาก: ' + provNameTh;
+    if(needle && !compassSensorActive){
+      needle.style.transform = `rotate(${bearing}deg)`;
+    }
+  }
+
+  function openQibla(){
+    updateQiblaDisplay();
     document.getElementById('qibla-backdrop').classList.add('open');
   }
+
   function closeQibla(){
-    const f=document.getElementById('qibla-iframe');
-    if(f) f.src='about:blank';
+    stopCompassSensor();
     document.getElementById('qibla-backdrop').classList.remove('open');
+  }
+
+  function toggleCompassSensor(){
+    if(compassSensorActive){
+      stopCompassSensor();
+      toast('ปิดเซนเซอร์เข็มทิศแล้ว');
+    } else {
+      startCompassSensor();
+    }
+  }
+
+  function startCompassSensor(){
+    const btn = document.getElementById('qibla-sensor-btn');
+    const dial = document.getElementById('compass-dial');
+    const needle = document.getElementById('compass-needle');
+
+    function onHeading(heading){
+      if(isNaN(heading)) return;
+      if(dial) dial.style.transform = `rotate(${-heading}deg)`;
+      if(needle) needle.style.transform = `rotate(${currentQiblaBearing}deg)`;
+    }
+
+    if(typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function'){
+      DeviceOrientationEvent.requestPermission().then(res => {
+        if(res === 'granted'){
+          attachOrientationListener(onHeading);
+        } else {
+          toast('ไม่ได้อนุญาตเข้าถึงเซนเซอร์เข็มทิศค่ะ');
+        }
+      }).catch(e => { toast('อุปกรณ์ไม่รองรับเซนเซอร์เข็มทิศค่ะ'); });
+    } else {
+      attachOrientationListener(onHeading);
+    }
+  }
+
+  function attachOrientationListener(onHeading){
+    const btn = document.getElementById('qibla-sensor-btn');
+    deviceHeadingHandler = function(e){
+      let heading = null;
+      if(e.webkitCompassHeading !== undefined){
+        heading = e.webkitCompassHeading;
+      } else if(e.alpha !== null){
+        heading = 360 - e.alpha;
+      }
+      if(heading !== null) onHeading(heading);
+    };
+    window.addEventListener('deviceorientation', deviceHeadingHandler, true);
+    compassSensorActive = true;
+    if(btn){
+      btn.textContent = '🧭 ปิดเซนเซอร์เข็มทิศ (กำลังหมุนตามมือถือ)';
+      btn.classList.add('mini-accent');
+    }
+    toast('เปิดเซนเซอร์เข็มทิศแล้ว หมุนตัวมือถือเพื่อหาทิศกะอ์บะฮ์ได้เลยค่ะ');
+  }
+
+  function stopCompassSensor(){
+    if(deviceHeadingHandler){
+      window.removeEventListener('deviceorientation', deviceHeadingHandler, true);
+      deviceHeadingHandler = null;
+    }
+    compassSensorActive = false;
+    const btn = document.getElementById('qibla-sensor-btn');
+    const dial = document.getElementById('compass-dial');
+    const needle = document.getElementById('compass-needle');
+    if(btn){
+      btn.textContent = '🧭 เปิดเซนเซอร์หมุนตามเครื่อง (มือถือ)';
+      btn.classList.remove('mini-accent');
+    }
+    if(dial) dial.style.transform = 'none';
+    if(needle) needle.style.transform = `rotate(${currentQiblaBearing}deg)`;
+  }
+
+  // ---- ดิจิทัลตัสบีฮ์ (Digital Tasbih Counter) ----
+  const TASBIH_TARGETS = {
+    'subhanallah': 33,
+    'alhamdulillah': 33,
+    'allahuakbar': 34,
+    'astaghfirullah': 100,
+    'lailahaillallah': 100,
+    'custom': 0
+  };
+  let tasbihCountVal = 0;
+  let tasbihRounds = 0;
+  let tasbihSound = true;
+  let tasbihVib = true;
+
+  function loadTasbihState(){
+    try{
+      tasbihCountVal = parseInt(localStorage.getItem('yt_tasbih_cnt') || '0', 10);
+      tasbihRounds = parseInt(localStorage.getItem('yt_tasbih_rnd') || '0', 10);
+      tasbihSound = localStorage.getItem('yt_tasbih_snd') !== '0';
+      tasbihVib = localStorage.getItem('yt_tasbih_vib') !== '0';
+      const sel = localStorage.getItem('yt_tasbih_dhikr') || 'subhanallah';
+      const el = document.getElementById('tasbih-dhikr-sel');
+      if(el) el.value = sel;
+    }catch(e){}
+    renderTasbihUI();
+  }
+
+  function saveTasbihState(){
+    try{
+      localStorage.setItem('yt_tasbih_cnt', tasbihCountVal);
+      localStorage.setItem('yt_tasbih_rnd', tasbihRounds);
+      localStorage.setItem('yt_tasbih_snd', tasbihSound ? '1' : '0');
+      localStorage.setItem('yt_tasbih_vib', tasbihVib ? '1' : '0');
+      const el = document.getElementById('tasbih-dhikr-sel');
+      if(el) localStorage.setItem('yt_tasbih_dhikr', el.value);
+    }catch(e){}
+  }
+
+  function getTasbihTarget(){
+    const sel = document.getElementById('tasbih-dhikr-sel');
+    const val = sel ? sel.value : 'subhanallah';
+    return TASBIH_TARGETS[val] || 33;
+  }
+
+  function renderTasbihUI(){
+    const numEl = document.getElementById('tasbih-count-num');
+    const targetEl = document.getElementById('tasbih-target-txt');
+    const roundsEl = document.getElementById('tasbih-rounds-txt');
+    const progEl = document.getElementById('tasbih-progress');
+    const sndBtn = document.getElementById('tasbih-sound-btn');
+    const vibBtn = document.getElementById('tasbih-vib-btn');
+
+    const target = getTasbihTarget();
+    if(numEl) numEl.textContent = tasbihCountVal;
+    if(targetEl) targetEl.textContent = target > 0 ? target : 'ไม่จำกัด';
+    if(roundsEl) roundsEl.textContent = tasbihRounds;
+
+    if(progEl){
+      const pct = target > 0 ? Math.min(100, Math.round((tasbihCountVal / target) * 100)) : 100;
+      progEl.style.width = pct + '%';
+    }
+    if(sndBtn) sndBtn.textContent = tasbihSound ? '🔊 เสียง: เปิด' : '🔇 เสียง: ปิด';
+    if(vibBtn) vibBtn.textContent = tasbihVib ? '📳 สั่น: เปิด' : '📴 สั่น: ปิด';
+  }
+
+  function playTasbihClick(){
+    if(!tasbihSound) return;
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(700, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(250, ctx.currentTime + 0.025);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.025);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.025);
+    }catch(e){}
+  }
+
+  function tasbihCount(){
+    tasbihCountVal++;
+    const target = getTasbihTarget();
+
+    playTasbihClick();
+
+    if(target > 0 && tasbihCountVal >= target){
+      tasbihRounds++;
+      tasbihCountVal = 0;
+      if(tasbihVib && navigator.vibrate) navigator.vibrate([80, 50, 100]);
+      toast('🎉 ครบรอบ ' + target + ' ครั้งแล้วค่ะ! (รอบที่ ' + tasbihRounds + ')');
+    } else {
+      if(tasbihVib && navigator.vibrate) navigator.vibrate(25);
+    }
+
+    renderTasbihUI();
+    saveTasbihState();
+  }
+
+  function resetTasbih(){
+    if(confirm('ต้องการรีเซ็ตจำนวนนับตัสบีฮ์เป็น 0 ใช่ไหมคะ?')){
+      tasbihCountVal = 0;
+      tasbihRounds = 0;
+      renderTasbihUI();
+      saveTasbihState();
+      toast('รีเซ็ตจำนวนนับเป็น 0 เรียบร้อยแล้วค่ะ');
+    }
+  }
+
+  function onTasbihDhikrChange(){
+    tasbihCountVal = 0;
+    renderTasbihUI();
+    saveTasbihState();
+  }
+
+  function toggleTasbihSound(){
+    tasbihSound = !tasbihSound;
+    renderTasbihUI();
+    saveTasbihState();
+  }
+
+  function toggleTasbihVib(){
+    tasbihVib = !tasbihVib;
+    renderTasbihUI();
+    saveTasbihState();
+  }
+
+  function openTasbih(){
+    loadTasbihState();
+    document.getElementById('tasbih-backdrop').classList.add('open');
+  }
+
+  function closeTasbih(){
+    document.getElementById('tasbih-backdrop').classList.remove('open');
   }
 
   // ---- lightbox (ผังรายการกดขยาย) ----
