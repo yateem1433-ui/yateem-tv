@@ -358,17 +358,19 @@
 
     /* ---- เวลาละหมาด ---- */
     .prayer{ margin-top:8px; padding:14px; }
-    .prayer-head{ display:flex; gap:8px; margin-bottom:12px; }
-    .prayer-head select{ flex:1; background:var(--glass-2); border:1px solid var(--stroke); color:var(--text);
+    .prayer-head{ display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+    .prayer-head select{ flex:1; min-width:130px; background:var(--glass-2); border:1px solid var(--stroke); color:var(--text);
       border-radius:12px; padding:9px 12px; font-family:inherit; color-scheme:dark; }
+    .prayer-head button{ white-space:nowrap; }
     .prayer-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
     .pcell{ text-align:center; background:var(--glass); border:1px solid var(--stroke); border-radius:14px; padding:10px 4px; }
     .pcell.next{ border-color:var(--accent); box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent), 0 0 24px -8px var(--glow); }
     .pcell .pn{ font-size:12px; color:var(--muted); } .pcell .pt{ font-size:16px; font-weight:700; margin-top:3px; }
     .prayer-next{ text-align:center; margin-top:12px; font-size:14px; color:var(--accent); }
     .prayer-date{ text-align:center; margin-bottom:12px; }
-    .prayer-date .pd-th{ font-size:14px; color:var(--text); }
-    .prayer-date .pd-ar{ font-size:16px; color:var(--accent); direction:ltr; margin-top:3px; font-weight:600; }
+    .prayer-date .pd-clock{ font-size:26px; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; letter-spacing:1px; line-height:1.2; margin-bottom:4px; text-shadow:0 0 16px color-mix(in srgb,var(--accent) 30%,transparent); }
+    .prayer-date .pd-th{ font-size:13px; color:var(--text); opacity:.9; }
+    .prayer-date .pd-ar{ font-size:15px; color:var(--accent); direction:ltr; margin-top:2px; font-weight:600; }
 
     /* ---- lightbox / quran modal ---- */
     .lb-img{ max-width:96vw; max-height:86vh; border-radius:14px; }
@@ -582,10 +584,11 @@
       sponsors: [], // สปอนเซอร์ [{img,link}] — แอดมินตั้งผ่านหน้าแอดมิน เก็บใน /settings (สูงสุด 10)
       domain: '',            // โดเมนเว็บ (ไว้ทำลิงก์แชร์) — ว่าง = ใช้ URL ปัจจุบัน
       prayerProvince: 'Bangkok',   // จังหวัดเริ่มต้นสำหรับเวลาละหมาด
+      hijriOffset: -1,             // ปรับเทียบวันฮิจเราะห์ในไทย (ชดเชยตามการดูจันทร์เสี้ยว)
       quranPdfUrl: ''        // ลิงก์ไฟล์ PDF อัลกุรอานแปลไทย (แอดมินอัป)
     };
     // ค่าที่แอดมินแก้ได้ (ทับด้วย /settings จาก Firebase ตอนโหลด)
-    const ADMIN_KEYS = ['streamUrl','social','market','donate','videos','sponsors','theme','labels','logoUrl','domain','prayerProvince','quranPdfUrl'];
+    const ADMIN_KEYS = ['streamUrl','social','market','donate','videos','sponsors','theme','labels','logoUrl','domain','prayerProvince','hijriOffset','quranPdfUrl'];
 
     // ---- ชุดธีมสำเร็จ (อิงสีโลโก้ยาตีมทีวี: น้ำเงิน–ทอง) ----
     const THEMES = {
@@ -721,11 +724,18 @@
       <div class="prayer glass" id="prayer-box">
         <div class="prayer-head">
           <select id="prayer-province" onchange="onProvinceChange()"></select>
-          <button class="mini" id="prayer-notify-btn" onclick="togglePrayerNotify()">🔔 เตือน</button>
+          <button type="button" class="mini" id="prayer-gps-btn" onclick="detectCurrentLocation()" title="ค้นหาตำแหน่งอัตโนมัติ (GPS)">📍 ตำแหน่งฉัน</button>
+          <button type="button" class="mini" id="prayer-notify-btn" onclick="togglePrayerNotify()">🔔 เตือน</button>
         </div>
         <div class="prayer-date" id="prayer-date"></div>
         <div class="prayer-grid" id="prayer-grid"><div class="sched-empty">กำลังโหลดเวลาละหมาด...</div></div>
         <div class="prayer-next" id="prayer-next"></div>
+      </div>
+
+      <!-- QIBLA DIRECTION (ทิศกิบลัต) -->
+      <div class="sec-title">🧭 <span class="accent">ทิศกิบลัต</span></div>
+      <div class="rail" id="qibla-rail">
+        <a class="card glass" href="javascript:void(0)" onclick="openQibla()"><div class="ic" style="background:#1B4FD8">🧭</div><div><div class="nm">ค้นหาทิศกิบลัต</div><div class="sub">เปิดเข็มทิศกิบลัต (Google Qibla Finder)</div></div></a>
       </div>
 
       <!-- QURAN -->
@@ -837,6 +847,25 @@
     </div>
   </div>
 
+  <!-- QIBLA MODAL (Google Qibla Finder ในเว็บเรา) -->
+  <div class="backdrop" id="qibla-backdrop" onclick="if(event.target===this)closeQibla()" style="align-items:center">
+    <div class="quran-modal glass" style="width:96vw;height:90vh;max-width:960px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 6px 10px;gap:8px">
+        <div style="font-weight:600;font-size:15px;color:var(--accent);display:flex;align-items:center;gap:6px">
+          <span>🧭</span> <span>ทิศกิบลัต (Qibla Finder)</span>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button type="button" class="mini" onclick="openExternal('https://qiblafinder.withgoogle.com/intl/th/desktop')" title="เปิดเต็มจอในหน้าต่างใหม่">↗️ เต็มจอ</button>
+          <button type="button" class="close" style="position:static" onclick="closeQibla()">×</button>
+        </div>
+      </div>
+      <iframe id="qibla-iframe" title="ค้นหาทิศกิบลัต Google Qibla Finder"
+        allow="camera *; geolocation *; accelerometer *; gyroscope *; magnetometer *; device-orientation *"
+        allowfullscreen
+        style="flex:1;width:100%;border:0;border-radius:12px;background:#000"></iframe>
+    </div>
+  </div>
+
   <!-- SHARE SHEET (fallback เมื่อไม่มี navigator.share) -->
   <div class="backdrop" id="share-backdrop" onclick="if(event.target===this)closeShare()">
     <div class="sheet glass" style="position:relative">
@@ -940,6 +969,14 @@
 
           <div class="grp">🕌 เวลาละหมาด — จังหวัดเริ่มต้น (รองรับครบ 77 จังหวัด)</div>
           <input id="f-prayer" placeholder="เช่น Bangkok, Chon Buri, ชลบุรี, เชียงใหม่">
+
+          <div class="grp">🌙 ปรับเทียบวันฮิจเราะห์ (ชดเชยตามการดูจันทร์เสี้ยวในไทย)</div>
+          <select id="f-hijri-offset" style="width:100%;padding:9px 12px;border-radius:12px;background:var(--glass-2);border:1px solid var(--stroke);color:var(--text);font-family:inherit;color-scheme:dark">
+            <option value="-1">ชดเชย -1 วัน (ค่าเริ่มต้นสำหรับไทย: 22 ก.ย. = 10 รอบิอุลอาเคร)</option>
+            <option value="0">ตรงตามดาราศาสตร์ / ซาอุฯ (0 วัน)</option>
+            <option value="1">+1 วัน</option>
+            <option value="-2">-2 วัน</option>
+          </select>
 
           <div class="grp">🌐 โดเมนเนม (สำหรับลิงก์แชร์/อนาคต)</div>
           <input id="f-domain" placeholder="เช่น https://yateemtv.com (เว้นว่าง = ใช้ URL ปัจจุบัน)">
@@ -1905,7 +1942,7 @@
     setv('f-ppid',CONFIG.donate.promptpayId); setv('f-bankname',CONFIG.donate.bankName);
     setv('f-accname',CONFIG.donate.accountName); setv('f-accnum',CONFIG.donate.accountNumber); setv('f-qr',CONFIG.donate.qrImageUrl);
     const qp=document.getElementById('f-qr-preview'); qp.src=CONFIG.donate.qrImageUrl||''; qp.style.visibility=CONFIG.donate.qrImageUrl?'visible':'hidden';
-    setv('f-quran',CONFIG.quranPdfUrl); setv('f-prayer',CONFIG.prayerProvince); setv('f-domain',CONFIG.domain);
+    setv('f-quran',CONFIG.quranPdfUrl); setv('f-prayer',CONFIG.prayerProvince); setv('f-hijri-offset',CONFIG.hijriOffset !== undefined ? String(CONFIG.hijriOffset) : '-1'); setv('f-domain',CONFIG.domain);
   }
   async function adminUploadQuran(){
     if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
@@ -2051,7 +2088,8 @@
       donate:{ promptpayId:val('f-ppid'),bankName:val('f-bankname'),accountName:val('f-accname'),accountNumber:val('f-accnum'),qrImageUrl:val('f-qr') },
       videos: adminVideos.map(v=>({id:v.id,title:v.title||''})),
       sponsors: adminSponsors.slice(0,10).map(s=>({img:s.img,link:s.link||''})),
-      quranPdfUrl: val('f-quran'), prayerProvince: val('f-prayer'), domain: val('f-domain')
+      quranPdfUrl: val('f-quran'), prayerProvince: val('f-prayer'),
+      hijriOffset: Number(val('f-hijri-offset') || -1), domain: val('f-domain')
     };
     try{ await db.ref('settings').update(payload); toast('บันทึกการตั้งค่าแล้วค่ะ ✅'); }
     catch(e){ saveErr(e); }
@@ -2951,16 +2989,16 @@
   const HIJRI_MONTHS_TH = [
     '',
     'มุฮัรร็อม',
-    'เศาะฟัร',
-    'เราะบีอุลเอาวัล',
-    'เราะบีอุษษานี',
-    'ญุมาดัลอูลา',
-    'ญุมาดัษษานียะฮ์',
+    'ซอฟัร',
+    'รอบิอุลเอาวัล',
+    'รอบิอุลอาเคร',
+    'ญุมาดิลอูลา',
+    'ญุมาดิลอาเคร',
     'รอญับ',
     'ชะอ์บาน',
     'รอมฎอน',
     'เชาวาล',
-    'ซุลเกาะอ์ดะฮ์',
+    'ซุลกอดะฮ์',
     'ซุลฮิจญะฮ์'
   ];
 
@@ -2974,6 +3012,48 @@
   const PRAYER_NAMES=[['Fajr','ฟัจร์'],['Dhuhr','ซุฮริ'],['Asr','อัศริ'],['Maghrib','มัฆริบ'],['Isha','อิชาอ์']];
   let prayerTimings=null, prayerTimer=null, prayerDate=null;
 
+  function getAdjustedHijri(){
+    const offset = (typeof CONFIG.hijriOffset === 'number') ? CONFIG.hijriOffset : -1;
+    try {
+      const d = new Date();
+      d.setDate(d.getDate() + offset);
+      const parts = new Intl.DateTimeFormat('en-u-ca-islamic', {day:'numeric', month:'numeric', year:'numeric'}).formatToParts(d);
+      const m = {};
+      for(const p of parts) m[p.type] = p.value;
+      if (m.day && m.month && m.year) {
+        return {
+          day: parseInt(m.day, 10),
+          month: parseInt(m.month, 10),
+          year: parseInt(m.year, 10)
+        };
+      }
+    } catch(e) {}
+
+    if (prayerDate && prayerDate.hijri) {
+      const h = prayerDate.hijri;
+      let day = parseInt(h.day, 10) + offset;
+      let month = (h.month && h.month.number) ? parseInt(h.month.number, 10) : 4;
+      let year = parseInt(h.year, 10);
+      if (day <= 0) {
+        month = month === 1 ? 12 : month - 1;
+        if (month === 12) year--;
+        day = 30 + day;
+      }
+      return { day, month, year };
+    }
+    return null;
+  }
+
+  function updateLiveClock(){
+    const el = document.getElementById('prayer-clock');
+    if(!el) return;
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    const ss = String(now.getSeconds()).padStart(2, '0');
+    el.textContent = `${hh}:${mm}:${ss} น.`;
+  }
+
   function renderPrayerDate(){
     const el=document.getElementById('prayer-date'); if(!el) return;
     let th='';
@@ -2984,20 +3064,62 @@
     }
     let arOriginal='';
     let thHijri='';
-    if(prayerDate && prayerDate.hijri){
-      const h=prayerDate.hijri;
-      const wdAr=(h.weekday&&h.weekday.ar)?h.weekday.ar+' ':'';
-      const moAr=(h.month&&h.month.ar)?h.month.ar:'';
-      arOriginal=`${wdAr}${h.day||''} ${moAr} ${h.year||''} هـ`.trim();
-
-      const wd = (h.weekday && (WEEKDAYS_TH[h.weekday.ar] || WEEKDAYS_TH[h.weekday.en])) ||
-        ['วันอาทิตย์','วันจันทร์','วันอังคาร','วันพุธ','วันพฤหัสบดี','วันศุกร์','วันเสาร์'][new Date().getDay()];
-      const mo = (h.month && HIJRI_MONTHS_TH[h.month.number]) || (h.month ? (h.month.ar || h.month.en) : '');
-      const day = h.day || '';
-      const year = h.year || '';
-      thHijri = `${wd}ที่ ${day} ${mo} ฮ.ศ. ${year}`.trim();
+    const hijri = getAdjustedHijri();
+    if(hijri){
+      const wd = ['วันอาทิตย์','วันจันทร์','วันอังคาร','วันพุธ','วันพฤหัสบดี','วันศุกร์','วันเสาร์'][new Date().getDay()];
+      const mo = HIJRI_MONTHS_TH[hijri.month] || '';
+      thHijri = `${wd}ที่ ${hijri.day} ${mo} ${hijri.year}`;
+      if(prayerDate && prayerDate.hijri){
+        const h=prayerDate.hijri;
+        const wdAr=(h.weekday&&h.weekday.ar)?h.weekday.ar+' ':'';
+        const moAr=(h.month&&h.month.ar)?h.month.ar:'';
+        arOriginal=`${wdAr}${h.day||''} ${moAr} ${h.year||''} هـ`.trim();
+      }
     }
-    el.innerHTML=`<div class="pd-th">${esc(th)}</div>`+(thHijri?`<div class="pd-ar" title="${esc(arOriginal)}">${esc(thHijri)}</div>`:'');
+    const now = new Date();
+    const curTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')} น.`;
+    el.innerHTML = `<div class="pd-clock" id="prayer-clock">${curTime}</div>` +
+      `<div class="pd-th">${esc(th)}</div>` +
+      (thHijri ? `<div class="pd-ar" title="${esc(arOriginal)}">${esc(thHijri)}</div>` : '');
+  }
+
+  function detectCurrentLocation(){
+    if(!navigator.geolocation){
+      toast('อุปกรณ์นี้ไม่รองรับการระบุตำแหน่ง (GPS) ค่ะ');
+      return;
+    }
+    const btn=document.getElementById('prayer-gps-btn');
+    if(btn) btn.textContent='📍 กำลังหา...';
+    toast('กำลังค้นหาตำแหน่งของคุณ...');
+
+    navigator.geolocation.getCurrentPosition(
+      (pos)=>{
+        if(btn) btn.textContent='📍 ตำแหน่งฉัน';
+        const uLat=pos.coords.latitude, uLng=pos.coords.longitude;
+        let nearestKey='Bangkok', minDist=Infinity;
+        for(const [k, [plat, plng]] of Object.entries(PROV_COORDS)){
+          const dLat = uLat - plat;
+          const dLng = (uLng - plng) * Math.cos(uLat * Math.PI / 180);
+          const d = dLat * dLat + dLng * dLng;
+          if(d < minDist){ minDist = d; nearestKey = k; }
+        }
+        const sel=document.getElementById('prayer-province');
+        if(sel) sel.value = nearestKey;
+        try{ localStorage.setItem('yt_prayer_prov', nearestKey); }catch(e){}
+        loadPrayer(nearestKey);
+        const match = PROVINCES.find(([th, en])=>en===nearestKey);
+        toast('📍 ตำแหน่งของคุณ: '+(match?match[0]:nearestKey));
+      },
+      (err)=>{
+        if(btn) btn.textContent='📍 ตำแหน่งฉัน';
+        if(err.code === 1){
+          toast('กรุณาอนุญาตการเข้าถึงตำแหน่ง (Location) ในเบราว์เซอร์ค่ะ');
+        } else {
+          toast('ไม่สามารถระบุตำแหน่งได้ ลองใหม่อีกครั้งค่ะ');
+        }
+      },
+      { timeout: 10000, maximumAge: 60000, enableHighAccuracy: false }
+    );
   }
 
   function currentProvince(){
@@ -3107,6 +3229,20 @@
   function closeQuran(){ document.getElementById('quran-iframe').src='about:blank'; document.getElementById('quran-backdrop').classList.remove('open'); }
   function openQuranPdf(){ const u=CONFIG.quranPdfUrl; if(!u){ toast('ยังไม่ได้อัปโหลดไฟล์ PDF ค่ะ'); return; } openExternal(u); }
 
+  // ---- ทิศกิบลัต (Google Qibla Finder) ----
+  function openQibla(){
+    const f=document.getElementById('qibla-iframe');
+    if(f && (!f.src || f.src.includes('about:blank'))){
+      f.src='https://qiblafinder.withgoogle.com/intl/th/desktop';
+    }
+    document.getElementById('qibla-backdrop').classList.add('open');
+  }
+  function closeQibla(){
+    const f=document.getElementById('qibla-iframe');
+    if(f) f.src='about:blank';
+    document.getElementById('qibla-backdrop').classList.remove('open');
+  }
+
   // ---- lightbox (ผังรายการกดขยาย) ----
   function openLightbox(url){ const img=document.getElementById('lightbox-img'); img.src=url; document.getElementById('lightbox-backdrop').classList.add('open'); }
   function closeLightbox(){ document.getElementById('lightbox-backdrop').classList.remove('open'); }
@@ -3169,6 +3305,7 @@
     trackVisitor();        // บันทึกสถิติผู้เข้าชม (Pageview & Unique)
     renderReactions();     // ปุ่มรีแอคชันบนจอ
     initPrayerUI();        // เวลาละหมาด
+    setInterval(updateLiveClock, 1000);  // นาฬิกาเวลาปัจจุบันแบบเรียลไทม์
     setInterval(updateNowChip, 60000);   // อัปเดต "กำลังออกอากาศ" ทุกนาที
   })();
   </script>
