@@ -586,6 +586,7 @@
         roomId:'live-2026',            // เปลี่ยนเลขห้องเพื่อเริ่มแชทใหม่สำหรับไลฟ์ครั้งถัดไป
         minSendIntervalMs:3000,        // กันสแปม: เว้นอย่างน้อยกี่มิลลิวินาทีต่อข้อความ
         maxLen:300,
+        keepLast:200,                  // เก็บข้อความล่าสุดกี่ข้อความ (ลบเก่ากว่านี้ทิ้ง กันฐานข้อมูลพอก/รก)
         badWords:['เหี้ย','สัส','ควย','เย็ด','fuck','shit','bitch']  // เติมได้ตามต้องการ
       },
       cloudinary: { cloudName:'qk5q5cys', preset:'pjmfqmmf' },  // ใช้บัญชีเดิมของ Yateem (อัปรูป/PDF ผัง)
@@ -1068,6 +1069,13 @@
           <div class="grp">🌐 โดเมนเนม (สำหรับลิงก์แชร์/อนาคต)</div>
           <input id="f-domain" placeholder="เช่น https://yateemtv.com (เว้นว่าง = ใช้ URL ปัจจุบัน)">
 
+          <div class="grp">💬 จัดการแชทสด</div>
+          <div class="filehint">บนจอผู้ชมโหลดแค่ 100 ข้อความล่าสุดอยู่แล้ว — ล้างเพื่อไม่ให้ฐานข้อมูลพอก (ระบบล้างเก่าให้อัตโนมัติเมื่อแอดมินเปิดหน้าด้วย)</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+            <button type="button" class="mini" onclick="adminPruneChat()">🧹 ล้างแชทเก่า (เก็บ 200 ล่าสุด)</button>
+            <button type="button" class="mini danger-mini" onclick="adminClearChat()">🗑️ ล้างแชททั้งหมด</button>
+          </div>
+
           <button class="save-btn" onclick="saveSettings()">💾 บันทึกการตั้งค่าทั้งหมด</button>
         </div>
 
@@ -1463,6 +1471,9 @@
       bindMessages();
       handleAdminHash();
       updateChatNote();
+      // ล้างแชทเก่าอัตโนมัติเมื่อเป็นแอดมิน (ผู้ชมทั่วไปไม่มีสิทธิ์ลบ — pruneChat กันเองอยู่แล้ว)
+      setTimeout(()=>{ if(isAdmin) pruneChat(CONFIG.chat.keepLast||200, {auto:true}); }, 8000);
+      setInterval(()=>{ if(isAdmin) pruneChat(CONFIG.chat.keepLast||200, {auto:true}); }, 300000);  // ทุก 5 นาที
     }catch(e){ note.textContent='เชื่อมต่อแชทไม่สำเร็จค่ะ'; console.error(e); }
   }
   // ตั้งสถานะแอดมิน (is-mod) + ปุ่มโปรไฟล์ ตามผู้ใช้ปัจจุบัน
@@ -1687,6 +1698,43 @@
     db.ref(`rooms/${CONFIG.chat.roomId}/messages/${key}`).remove().catch(()=>toast('ลบไม่สำเร็จ'));
   }
 
+  // ---- ล้างแชทเก่า (แอดมินเท่านั้น) — เก็บ N ข้อความล่าสุด ที่เหลือลบทิ้ง กันฐานข้อมูลพอก ----
+  let pruningChat=false;
+  async function pruneChat(keepN, opts){
+    opts = opts || {};
+    if(!db || !isAdmin){ if(opts.manual) toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return 0; }
+    if(pruningChat) return 0;                       // กันทำงานซ้อน (auto + manual)
+    pruningChat=true;
+    try{
+      const ref = db.ref(`rooms/${CONFIG.chat.roomId}/messages`);
+      const snap = await ref.orderByKey().once('value');   // push key เรียงตามเวลาอยู่แล้ว
+      const keys = [];
+      snap.forEach(ch=>{ keys.push(ch.key); });
+      const excess = keys.length - keepN;
+      if(excess <= 0){ if(opts.manual) toast('แชทยังไม่เกิน '+keepN+' ข้อความ ไม่ต้องล้างค่ะ'); return 0; }
+      const updates = {};
+      for(let i=0;i<excess;i++){ updates[keys[i]] = null; }  // ลบข้อความเก่าสุด (excess อัน) ทีเดียว
+      await ref.update(updates);
+      if(opts.manual){
+        toast(opts.all ? ('ล้างแชททั้งหมดแล้ว '+excess+' ข้อความ ✅')
+                       : ('ล้างแชทเก่าแล้ว '+excess+' ข้อความ (เก็บ '+keepN+' ล่าสุด) ✅'));
+      }
+      return excess;
+    }catch(e){ if(opts.manual) saveErr(e); else console.warn('pruneChat', e); return 0; }
+    finally{ pruningChat=false; }
+  }
+  function adminPruneChat(){
+    if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
+    const keepN = CONFIG.chat.keepLast || 200;
+    if(!confirm('ล้างข้อความเก่า เก็บไว้ '+keepN+' ข้อความล่าสุด ใช่ไหมคะ?')) return;
+    pruneChat(keepN, {manual:true});
+  }
+  function adminClearChat(){
+    if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
+    if(!confirm('⚠️ ล้างแชททั้งหมดในห้องนี้ (ลบทุกข้อความ) ใช่ไหมคะ? กู้คืนไม่ได้')) return;
+    pruneChat(0, {manual:true, all:true});
+  }
+
   /* ============================================================
      5) Donation
      ============================================================ */
@@ -1816,7 +1864,7 @@
         else CONFIG[k]=s[k];
       }); }
       applySettings(); markSettingsReady();
-      if(document.getElementById('admin-backdrop').classList.contains('open') && !adminEditing){ fillSettingsForm(); renderAdminVideos(); renderAdminSponsors(); renderThemeTab(); renderLabelsForm(); }
+      if(document.getElementById('admin-backdrop').classList.contains('open') && !adminEditing){ fillSettingsForm(); fillAdminVideos(); fillAdminSponsors(); renderThemeTab(); renderLabelsForm(); }
     }, ()=>{ applySettings(); markSettingsReady(); });
   }
   function applySettings(){
@@ -2050,7 +2098,7 @@
     document.getElementById('admin-backdrop').classList.add('open');
     if(!settingsReady){ toast('กำลังโหลดข้อมูล...'); await waitSettings(); }
     adminEditing=false;
-    fillSettingsForm(); renderAdminVideos(); renderAdminSponsors(); renderThemeTab(); renderLabelsForm();
+    fillSettingsForm(); fillAdminVideos(); fillAdminSponsors(); renderThemeTab(); renderLabelsForm();
     adminTab('settings'); adminLoadTemplateDay();
     const ovD=document.getElementById('ov-date'); if(ovD && !ovD.value){ ovD.value=ymd(new Date()); adminLoadOverride(); }
   }
@@ -2166,19 +2214,19 @@
     catch(e){ saveErr(e); }
   }
   let adminVideos=[];
-  function renderAdminVideos(){
-    adminVideos=(CONFIG.videos||[]).slice();
+  function fillAdminVideos(){ adminVideos=(CONFIG.videos||[]).slice(); renderAdminVideos(); }   // โหลดจาก CONFIG (ตอนเปิดแผง/settings เปลี่ยน)
+  function renderAdminVideos(){                                                                  // เรนเดอร์ adminVideos ปัจจุบันเท่านั้น (ไม่รีเซ็ต)
     const box=document.getElementById('vid-list'); box.innerHTML='';
     adminVideos.forEach((v,i)=>{ const el=document.createElement('div'); el.className='vid-item';
       el.innerHTML=`<img src="https://img.youtube.com/vi/${v.id}/default.jpg" alt=""><span>${esc(v.title||v.id)}</span><button class="rm" onclick="adminRemoveVideo(${i})">🗑</button>`;
       box.appendChild(el);
     });
   }
-  function adminAddVideo(){
+  async function adminAddVideo(){
     const id=extractYouTubeId(val('f-vidurl')); if(!id){ toast('ลิงก์ YouTube ไม่ถูกต้อง'); return; }
-    adminVideos.push({id, title:val('f-vidtitle')}); setv('f-vidurl',''); setv('f-vidtitle',''); renderAdminVideos();
+    adminVideos.push({id, title:val('f-vidtitle')}); setv('f-vidurl',''); setv('f-vidtitle',''); renderAdminVideos(); await saveVideos();
   }
-  function adminRemoveVideo(i){ adminVideos.splice(i,1); renderAdminVideos(); }
+  async function adminRemoveVideo(i){ adminVideos.splice(i,1); renderAdminVideos(); await saveVideos(); }
   async function saveVideos(){
     if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
     try{
@@ -2188,8 +2236,8 @@
   }
   // ---- สปอนเซอร์ (แอดมิน) ----
   let adminSponsors=[];
-  function renderAdminSponsors(){
-    adminSponsors=(CONFIG.sponsors||[]).slice();
+  function fillAdminSponsors(){ adminSponsors=(CONFIG.sponsors||[]).slice(); renderAdminSponsors(); }   // โหลดจาก CONFIG
+  function renderAdminSponsors(){                                                                        // เรนเดอร์ adminSponsors ปัจจุบันเท่านั้น (ไม่รีเซ็ต)
     const box=document.getElementById('spo-list'); if(!box) return; box.innerHTML='';
     adminSponsors.forEach((s,i)=>{ const el=document.createElement('div'); el.className='vid-item';
       el.innerHTML=`<img src="${esc(s.img)}" alt="" style="background:#fff"><input value="${esc(s.link||'')}" placeholder="ลิงก์ (ไม่บังคับ)" onchange="adminSetSponsorLink(${i},this.value)" style="flex:1;min-width:0"><button class="rm" onclick="adminRemoveSponsor(${i})">🗑</button>`;
@@ -2208,10 +2256,10 @@
       adminSponsors.push({ img, link:val('f-spolink') });
       setv('f-spourl',''); setv('f-spolink',''); const fe=document.getElementById('f-spo-file'); if(fe) fe.value='';
       renderAdminSponsors();
-      toast('เพิ่มแล้ว กด "บันทึกสปอนเซอร์" เพื่อแสดงบนเว็บ');
+      await saveSponsors();   // บันทึกทันที → โชว์บนเว็บเลย (ไม่ต้องกดบันทึกซ้ำ)
     }catch(e){ toast('อัปโหลดไม่สำเร็จ'+(e.message?': '+e.message:'')); console.error(e); }
   }
-  function adminRemoveSponsor(i){ adminSponsors.splice(i,1); renderAdminSponsors(); }
+  async function adminRemoveSponsor(i){ adminSponsors.splice(i,1); renderAdminSponsors(); await saveSponsors(); }
   async function saveSponsors(){
     if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
     try{
