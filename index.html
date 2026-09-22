@@ -264,6 +264,7 @@
     .mini:hover{ background:rgba(255,255,255,.14); }
     .mini:active{ transform:scale(.96); }
     .mini.primary-mini{ background:color-mix(in srgb, var(--accent) 22%, transparent); border-color:var(--accent); color:var(--accent); font-weight:600; }
+    .mini.mini-accent{ background:color-mix(in srgb, var(--accent) 22%, transparent); border-color:var(--accent); color:var(--accent); font-weight:600; box-shadow:0 0 14px -2px var(--glow); }
     .mini.danger-mini{ background:rgba(255,107,115,.12); border-color:rgba(255,107,115,.35); color:#ff6b73; }
 
     .copy-box{ background:var(--glass); border:1px solid var(--stroke); border-radius:14px; padding:10px 12px; margin-top:10px; }
@@ -984,7 +985,7 @@
       </div>
 
       <!-- กล่องคำแนะนำตามอุปกรณ์ -->
-      <div id="install-guide-box" style="background:var(--glass-2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:left;font-size:13px;line-height:1.6;margin-bottom:16px">
+      <div id="install-guide-box" style="background:var(--glass-2);border:1px solid var(--stroke);border-radius:12px;padding:14px;text-align:left;font-size:13px;line-height:1.6;margin-bottom:16px">
       </div>
 
       <div style="display:flex;flex-direction:column;gap:8px">
@@ -1005,7 +1006,7 @@
       <h2>🔗 แชร์ Yateem TV</h2>
       <div style="font-size:12px;color:var(--muted);margin-top:2px">แชร์ลิงก์พร้อมชวนเพื่อนติดตั้งแอพลงหน้าจอโฮม</div>
       <div class="rail" id="share-links" style="margin-top:14px"></div>
-      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--stroke)">
         <button type="button" class="mini" onclick="closeShare();promptInstallModal(true)" style="width:100%;padding:10px;background:var(--glass-2);border:1px solid var(--accent);color:var(--accent);font-weight:700;border-radius:10px;font-size:13px">
           📲 ติดตั้ง Yateem TV ลงหน้าจอโฮมเครื่องนี้
         </button>
@@ -1405,14 +1406,40 @@
     const goOffline=()=>{ hero.classList.add('is-offline'); hideUnmute(); };
     if(!url){ goOffline(); return; }
     if(window.Hls && Hls.isSupported()){
-      hlsInstance=new Hls({ lowLatencyMode:true });
+      // config แบบทนเน็ตสะดุด: ไม่ไล่ live edge (กันกระตุก) + ให้ hls.js retry เองก่อน
+      hlsInstance=new Hls({
+        lowLatencyMode:false,
+        liveSyncDurationCount:4,          // ถอยจากขอบสด ~4 เซกเมนต์ = บัฟเฟอร์กันสะดุด
+        manifestLoadingMaxRetry:6, manifestLoadingRetryDelay:1000,
+        levelLoadingMaxRetry:6,    levelLoadingRetryDelay:1000,
+        fragLoadingMaxRetry:8,     fragLoadingRetryDelay:1000
+      });
+      let netRetries=0, mediaRetries=0, offlineTimer=null;
+      const scheduleOffline=()=>{ clearTimeout(offlineTimer); offlineTimer=setTimeout(goOffline, 12000); };
+      const cancelOffline=()=>{ clearTimeout(offlineTimer); offlineTimer=null; };
       hlsInstance.loadSource(url); hlsInstance.attachMedia(video);
-      hlsInstance.on(Hls.Events.MANIFEST_PARSED, tryPlayWithSound);
-      hlsInstance.on(Hls.Events.ERROR,(evt,data)=>{ if(data && data.fatal) goOffline(); });
+      hlsInstance.on(Hls.Events.MANIFEST_PARSED, ()=>{ netRetries=0; mediaRetries=0; cancelOffline(); hero.classList.remove('is-offline'); tryPlayWithSound(); });
+      hlsInstance.on(Hls.Events.FRAG_BUFFERED, ()=>{ netRetries=0; mediaRetries=0; cancelOffline(); hero.classList.remove('is-offline'); });
+      hlsInstance.on(Hls.Events.ERROR,(evt,data)=>{
+        if(!data || !data.fatal) return;                       // error ไม่ร้ายแรง hls.js จัดการเอง
+        if(url!==curStream || !hlsInstance) return;             // สตรีมถูกเปลี่ยน/ทำลายไปแล้ว
+        if(data.type===Hls.ErrorTypes.NETWORK_ERROR){
+          if(netRetries++ < 6){ scheduleOffline(); setTimeout(()=>{ try{ hlsInstance && hlsInstance.startLoad(); }catch(e){} }, Math.min(1000*netRetries, 6000)); }
+          else goOffline();
+        }else if(data.type===Hls.ErrorTypes.MEDIA_ERROR){
+          if(mediaRetries++ < 3){ scheduleOffline(); try{ hlsInstance.recoverMediaError(); }catch(e){ goOffline(); } }
+          else goOffline();
+        }else{ goOffline(); }                                   // error อื่นที่กู้ไม่ได้
+      });
     }else if(video.canPlayType('application/vnd.apple.mpegurl')){
       video.src=url;                              // iOS/Safari/LINE-iOS native HLS
-      video.addEventListener('loadedmetadata', tryPlayWithSound, {once:true});
-      video.addEventListener('error',goOffline);
+      video.addEventListener('loadedmetadata', ()=>{ hero.classList.remove('is-offline'); tryPlayWithSound(); }, {once:true});
+      let nativeReloaded=false;                   // ลองรีโหลด 1 ครั้งก่อนขึ้นออฟไลน์
+      video.addEventListener('error',()=>{
+        if(url!==curStream) return;
+        if(!nativeReloaded){ nativeReloaded=true; setTimeout(()=>{ try{ video.load(); video.play().catch(()=>{}); }catch(e){} }, 2500); }
+        else goOffline();
+      });
     }else{ goOffline(); }
   }
 
@@ -1480,6 +1507,7 @@
       if(!user){ await firebase.auth().signInAnonymously(); user=firebase.auth().currentUser; }
       myUid=user.uid;
       applyUserState(user);
+      try{ trackVisitor(); }catch(e){}   // บันทึกสถิติหลัง auth พร้อมแล้ว (กัน PERMISSION_DENIED ตอน anon ยังไม่เสร็จ)
       // อัปเดตสถานะเมื่อผู้ใช้ล็อกอิน/ออกภายหลัง (social redirect กลับมา ฯลฯ)
       firebase.auth().onAuthStateChanged(u=>{ if(u){ myUid=u.uid; } applyUserState(u); });
       chatOn=true; note.textContent='ใส่ชื่อเล่นแล้วพิมพ์ได้เลยค่ะ';
@@ -1955,9 +1983,6 @@
       if(document.getElementById('admin-backdrop').classList.contains('open') && !adminEditing){ try{ adminLoadTemplateDay(); }catch(e){} }
     }, ()=>renderSchedule());
   }
-  function schedToday(){ document.getElementById('sched-date').value=ymd(new Date()); renderSchedule(); }
-  function schedShift(n){ const el=document.getElementById('sched-date'); const d=el.value?new Date(el.value+'T00:00:00'):new Date(); d.setDate(d.getDate()+n); el.value=ymd(d); renderSchedule(); }
-  function schedToggleMode(){ schedWeek=!schedWeek; document.getElementById('sched-mode-btn').textContent=schedWeek?'รายวัน':'ทั้งสัปดาห์'; renderSchedule(); }
   function parseDateYMD(str){
     if(!str) return new Date();
     const parts = String(str).split('-').map(Number);
@@ -3879,8 +3904,7 @@
     await initLiff();      // ต้องรู้ชื่อ LINE ก่อนเปิดแชท
     loadSettings();        // ดึง /settings ทับ CONFIG → setStream/initSocial/renderVideos
     loadSchedule();        // ดึง /schedule → renderSchedule
-    initChat();            // anon auth + presence + messages (+ ตรวจ #admin/#mod)
-    trackVisitor();        // บันทึกสถิติผู้เข้าชม (Pageview & Unique)
+    initChat();            // anon auth + presence + messages (+ ตรวจ #admin/#mod) — เรียก trackVisitor() หลัง auth พร้อม
     renderReactions();     // ปุ่มรีแอคชันบนจอ
     initPrayerUI();        // เวลาละหมาด
     setInterval(updateLiveClock, 1000);  // นาฬิกาเวลาปัจจุบันแบบเรียลไทม์
