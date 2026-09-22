@@ -921,7 +921,10 @@
           <button type="button" class="close" style="position:static" onclick="closePdf()">×</button>
         </div>
       </div>
-      <iframe id="pdf-frame" title="พรีวิวอัลกุรอานแปลไทย PDF" style="flex:1;width:100%;border:0;border-radius:12px;background:#1a1d24"></iframe>
+      <div style="font-size:12px;color:var(--muted);padding:0 10px 8px;display:flex;gap:6px;align-items:center">
+        <span>💡</span> <span>หากต้องการอ่านผ่านแอปในเครื่อง สามารถกด <b>[เปิดเต็มจอ]</b> หรือ <b>[ดาวน์โหลด PDF]</b> ได้ทันทีค่ะ</span>
+      </div>
+      <iframe id="pdf-frame" title="พรีวิวอัลกุรอานแปลไทย PDF" style="flex:1;width:100%;border:0;border-radius:12px;background:#1a1d24" allowfullscreen></iframe>
     </div>
   </div>
 
@@ -2043,7 +2046,8 @@
     setv('f-ppid',CONFIG.donate.promptpayId); setv('f-bankname',CONFIG.donate.bankName);
     setv('f-accname',CONFIG.donate.accountName); setv('f-accnum',CONFIG.donate.accountNumber); setv('f-qr',CONFIG.donate.qrImageUrl);
     const qp=document.getElementById('f-qr-preview'); qp.src=CONFIG.donate.qrImageUrl||''; qp.style.visibility=CONFIG.donate.qrImageUrl?'visible':'hidden';
-    setv('f-quran',CONFIG.quranPdfUrl); setv('f-prayer',CONFIG.prayerProvince); setv('f-hijri-offset',CONFIG.hijriOffset !== undefined ? String(CONFIG.hijriOffset) : '-1'); setv('f-domain',CONFIG.domain);
+    const cleanQuranUrl = (CONFIG.quranPdfUrl && !CONFIG.quranPdfUrl.includes('drive.google.com')) ? CONFIG.quranPdfUrl : 'ThailandQuranแปลไทย.pdf';
+    setv('f-quran',cleanQuranUrl); setv('f-prayer',CONFIG.prayerProvince); setv('f-hijri-offset',CONFIG.hijriOffset !== undefined ? String(CONFIG.hijriOffset) : '-1'); setv('f-domain',CONFIG.domain);
   }
   async function adminUploadQuran(){
     if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
@@ -3330,7 +3334,16 @@
   function closeQuran(){ document.getElementById('quran-iframe').src='about:blank'; document.getElementById('quran-backdrop').classList.remove('open'); }
 
   function getQuranPdfUrl(){
-    return CONFIG.quranPdfUrl || 'ThailandQuranแปลไทย.pdf';
+    let u = (CONFIG.quranPdfUrl || '').trim();
+    // หากไม่มี URL หรือเป็นลิงก์ Google Drive เดิมที่ติดสิทธิ์ ให้ใช้ไฟล์ PDF แปลไทยของเว็บโดยตรง (ไม่ติดสิทธิ์)
+    if(!u || u.includes('drive.google.com') || u.includes('ThailandQuranแปลไทย.pdf') || u.includes('view?usp=')){
+      try{
+        return new URL('ThailandQuranแปลไทย.pdf', window.location.href).href;
+      }catch(e){
+        return 'ThailandQuranแปลไทย.pdf';
+      }
+    }
+    return u;
   }
   function openQuranPdf(){
     const u = getQuranPdfUrl();
