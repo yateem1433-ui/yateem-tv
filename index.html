@@ -49,6 +49,11 @@
       --shadow:0 24px 60px -20px rgba(0,0,0,.7);
     }
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    /* แอปจริง: ปิด double-tap-zoom + ตัดดีเลย์แตะ 300ms และกันการเลือกคำ (เช่น "ค่ะ") เด้งเมนูค้นหาแทนการกดแท็บ */
+    html,body{ touch-action:manipulation; }
+    body{ -webkit-user-select:none; user-select:none; }
+    /* เปิดให้เลือก/คัดลอกได้เฉพาะจุดที่ผู้ใช้ต้องอ่าน/ก็อป */
+    input,textarea,[contenteditable],.msg .tx,.chat-list,.bank,.copy-box,.filehint{ -webkit-user-select:text; user-select:text; }
     html,body{ margin:0; padding:0; background:var(--bg); color:var(--text);
       font-family:'Kanit',system-ui,sans-serif; overflow-x:hidden; }
     body{ min-height:100vh; min-height:100dvh; position:relative; }
@@ -425,7 +430,7 @@
       border-top:1px solid var(--stroke); padding-bottom:env(safe-area-inset-bottom); }
     .tabbtn{ flex:1; border:none; background:none; cursor:pointer; font-family:inherit; color:var(--muted);
       padding:8px 4px 10px; display:flex; flex-direction:column; align-items:center; gap:3px;
-      transition:color .15s ease; position:relative; }
+      transition:color .15s ease; position:relative; touch-action:manipulation; -webkit-user-select:none; user-select:none; }
     .tabbtn .ti{ font-size:22px; line-height:1; filter:grayscale(.4) opacity(.8); transition:.15s ease; }
     .tabbtn .tl{ font-size:11px; font-weight:600; }
     .tabbtn.active{ color:var(--accent); }
@@ -1728,6 +1733,10 @@
     document.body.classList.add('tab-'+name);
     window.scrollTo(0,0);
     if(name==='live') updateNowChip();
+    // Market: ฝัง iframe ตอนเข้า / ถอดตอนออก (lazy)
+    if(name==='market'){ try{ mountMarketPreview(); }catch(e){} } else { try{ unmountMarketPreview(); }catch(e){} }
+    // ละหมาด: ถ้าตอนเปิดหน้าโหลดเวลาไม่สำเร็จ ให้ลองใหม่ตอนเข้าแท็บ (กันต้องรีเฟรช)
+    if(name==='faith' && !prayerTimings){ try{ const sel=document.getElementById('prayer-province'); loadPrayer((sel&&sel.value)||currentProvince()); }catch(e){} }
   }
 
   function delMsg(key){
@@ -1953,12 +1962,30 @@
     const isHttp=/^https?:\/\//i.test(web) && !/liff\.line\.me/i.test(web);
     const cta=`<div class="mp-tap">🛒 แตะเพื่อสั่งซื้อเลย ›</div>`;
     if(isHttp){
-      box.innerHTML=`<iframe src="${esc(web)}" title="Yateem Market" loading="lazy" scrolling="no" sandbox="allow-scripts allow-same-origin"></iframe>${cta}`;
+      // โหลด iframe แบบ lazy — เก็บ URL ไว้ก่อน ค่อยฝังตอนเข้าแท็บ Market (กันแอปร้านทั้งแอปกิน main thread ตั้งแต่เปิดหน้า)
+      box.dataset.iframeSrc = web;
+      box.innerHTML = cta;
       box.style.display='block'; if(fb) fb.style.display='none';
+      if(document.body.classList.contains('tab-market')) mountMarketPreview();
     }else if(prev){
+      delete box.dataset.iframeSrc;
       box.innerHTML=`<img src="${esc(prev)}" alt="Yateem Market" loading="lazy">${cta}`;
       box.style.display='block'; if(fb) fb.style.display='none';
-    }else{ box.style.display='none'; box.innerHTML=''; if(fb) fb.style.display='flex'; }
+    }else{ delete box.dataset.iframeSrc; box.style.display='none'; box.innerHTML=''; if(fb) fb.style.display='flex'; }
+  }
+  // ฝัง/ถอด iframe พรีวิว Market ตามการเข้า-ออกแท็บ (เฉพาะโหมด iframe)
+  function mountMarketPreview(){
+    const box=document.getElementById('market-preview'); if(!box) return;
+    const src=box.dataset.iframeSrc; if(!src) return;              // ไม่ใช่โหมด iframe (รูป/ไม่มี)
+    if(box.querySelector('iframe')) return;                        // ฝังแล้ว
+    const cta=`<div class="mp-tap">🛒 แตะเพื่อสั่งซื้อเลย ›</div>`;
+    box.innerHTML=`<iframe src="${esc(src)}" title="Yateem Market" loading="lazy" scrolling="no" sandbox="allow-scripts allow-same-origin"></iframe>${cta}`;
+  }
+  function unmountMarketPreview(){
+    const box=document.getElementById('market-preview'); if(!box) return;
+    if(!box.dataset.iframeSrc) return;                             // โหมดรูป/ไม่มี iframe — ไม่ต้องยุ่ง
+    if(!box.querySelector('iframe')) return;
+    box.innerHTML=`<div class="mp-tap">🛒 แตะเพื่อสั่งซื้อเลย ›</div>`;  // ถอด iframe คืน main thread
   }
   function openVideo(id,title){
     try{ document.getElementById('player').pause(); }catch(e){}
