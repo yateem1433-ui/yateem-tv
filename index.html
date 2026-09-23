@@ -176,6 +176,8 @@
     .msg .tx{ font-size:15px; line-height:1.4; word-break:break-word; }
     .msg .del{ margin-left:6px; background:none; border:none; color:#ff6b73; font-size:12px; cursor:pointer; display:none; }
     body.is-mod .msg .del{ display:inline; }
+    .legal-links{ text-align:center; font-size:12px; color:var(--muted); margin:10px 0 4px; }
+    .legal-links a{ color:var(--muted); }
     .chat-empty{ margin:auto; text-align:center; color:var(--muted); font-size:14px; }
     .lbl-group{ border:1px solid var(--stroke); border-radius:12px; padding:8px 10px; margin-bottom:8px; }
     .lbl-group summary{ cursor:pointer; font-weight:700; color:var(--accent); }
@@ -959,6 +961,7 @@
       <div class="rail" id="social-rail"><!-- filled by JS --></div>
 
       <footer data-lbl="footer">© Yateem TV · ช่องของทุกคน 💛</footer>
+      <div class="legal-links"><a href="privacy.html">นโยบายความเป็นส่วนตัว</a> · <a href="terms.html">ข้อกำหนดการใช้บริการ</a> · <a href="data-deletion.html">ขอลบข้อมูล</a></div>
     </section>
   </div>
 
@@ -982,6 +985,7 @@
         <button class="login-btn fb"     onclick="loginFacebook()"><span class="lb-ic">f</span> <span data-lbl="loginFbBtn">เข้าสู่ระบบด้วย Facebook</span></button>
         <button class="login-btn guest"  onclick="closeLogin()" data-lbl="loginGuestBtn">แชทแบบไม่ล็อกอิน</button>
       </div>
+      <div class="legal-links">การเข้าสู่ระบบถือว่ายอมรับ <a href="terms.html">ข้อกำหนด</a> และ <a href="privacy.html">นโยบายความเป็นส่วนตัว</a></div>
       <div id="login-profile" style="display:none">
         <div class="lp-row"><img id="lp-photo" alt=""><div><div class="lp-name" id="lp-name"></div><div class="lp-sub" id="lp-sub"></div></div></div>
         <button class="login-btn guest" onclick="logoutUser()" data-lbl="logoutBtn">ออกจากระบบ</button>

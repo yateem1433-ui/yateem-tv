@@ -1,0 +1,15 @@
+/* หน้านโยบาย/ข้อกำหนด (privacy.html, terms.html, data-deletion.html) */
+:root{ --bg:#ffffff; --text:#0E2036; --muted:#5b6472; --accent:#B9860B; --line:#ececec; }
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#070B14; --text:#EEF1F6; --muted:#9aa3b2; --accent:#EAB934; --line:#1d2433; }
+}
+*{ box-sizing:border-box; }
+body{ margin:0; background:var(--bg); color:var(--text); font-family:'Kanit',sans-serif; line-height:1.75; }
+main{ max-width:720px; margin:0 auto; padding:24px 16px 56px; }
+h1{ font-size:26px; margin:14px 0 2px; }
+h2{ font-size:18px; margin:28px 0 6px; padding-top:14px; border-top:1px solid var(--line); color:var(--accent); }
+a{ color:var(--accent); }
+.back{ text-decoration:none; font-size:14px; }
+.muted{ color:var(--muted); font-size:14px; }
+ul,ol{ padding-left:22px; }
+li{ margin:4px 0; }
