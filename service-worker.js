@@ -1,7 +1,7 @@
 /* Yateem TV — service worker (ทำให้ติดตั้งเป็นแอพ + โหลดเร็ว/ออฟไลน์เบื้องต้น) */
-const CACHE = 'yateem-tv-v8';
+const CACHE = 'yateem-tv-v9';
 const ASSETS = [
-  './', './index.html', './manifest.json', './icon.jpg', './logo.png',
+  './', './index.html', './manifest.json', './icon.jpg', './logo.png', './icon-192.png', './icon-512.png',
   './fb_like.png', './fb_love.png', './fb_care.png', './fb_haha.png', './fb_wow.png', './fb_sad.png'
 ];
 

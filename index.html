@@ -5,10 +5,42 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
   <title>Yateem TV — ดูสด · โซเชียล · ร่วมบริจาค</title>
 
+  <!-- บังคับเปิดในเบราว์เซอร์หลัก (Chrome/Safari) เมื่อลิงก์ถูกเปิดในแอป LINE / Facebook / IG / TikTok
+       ยกเว้นเปิดผ่าน LIFF (ใช้งานในแอป LINE ได้ตามปกติ) — เด้งอัตโนมัติครั้งเดียวต่อ session กันวนลูป -->
+  <script>
+  (function(){
+    try{
+      var ua = navigator.userAgent || '', href = location.href;
+      var isLine = /\bLine\//i.test(ua);
+      var isLiff = /LIFF/.test(ua) || /[?&#](liff\.state|liffClientId|liffRedirectUri|access_token)=/.test(href)
+                   || (document.referrer || '').indexOf('liff.line.me') > -1;
+      var isSocial = /FBAN|FBAV|FB_IAB|FBIOS|Instagram|TikTok|musical_ly|BytedanceWebview|MicroMessenger/i.test(ua);
+      if(isLiff || (!isLine && !isSocial) || window.self !== window.top) return;
+      window.__ytInApp = { line: isLine };
+      var isAndroid = /Android/i.test(ua), isIOS = /iPhone|iPad|iPod/i.test(ua);
+      window.ytEscape = function(){
+        var u = new URL(location.href);
+        u.searchParams.delete('openExternalBrowser');
+        if(isLine){ u.searchParams.set('openExternalBrowser', '1'); location.replace(u.href); return; }
+        var clean = u.href;
+        if(isAndroid){
+          location.href = 'intent://' + clean.replace(/^https?:\/\//, '') +
+            '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(clean) + ';end';
+        } else if(isIOS){
+          location.href = 'x-safari-' + clean;
+        }
+      };
+      var done = false;
+      try{ done = sessionStorage.getItem('yt_esc') === '1'; sessionStorage.setItem('yt_esc', '1'); }catch(e){}
+      if(!done) window.ytEscape();
+    }catch(e){}
+  })();
+  </script>
+
   <!-- PWA -->
   <meta name="theme-color" content="#07090F">
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="app-icon.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -145,6 +177,10 @@
     .msg .del{ margin-left:6px; background:none; border:none; color:#ff6b73; font-size:12px; cursor:pointer; display:none; }
     body.is-mod .msg .del{ display:inline; }
     .chat-empty{ margin:auto; text-align:center; color:var(--muted); font-size:14px; }
+    .lbl-group{ border:1px solid var(--stroke); border-radius:12px; padding:8px 10px; margin-bottom:8px; }
+    .lbl-group summary{ cursor:pointer; font-weight:700; color:var(--accent); }
+    .lbl-group textarea{ width:100%; box-sizing:border-box; background:var(--glass-2); border:1px solid var(--stroke);
+      color:var(--text); border-radius:10px; padding:8px; font-family:inherit; font-size:14px; resize:vertical; }
     .chat-section{ position:relative; margin-top:8px; }
     .chat-input{ display:flex; align-items:center; gap:8px; margin-top:8px; padding:8px; border-radius:16px; position:relative; z-index:15; }
     .chat-input input{ flex:1; min-width:0; height:42px; background:var(--glass-2); border:1px solid var(--stroke); color:var(--text);
@@ -210,7 +246,7 @@
     /* ---- toast ---- */
     .toast{ position:fixed; left:50%; bottom:32px; transform:translateX(-50%) translateY(20px);
       background:rgba(20,24,32,.9); border:1px solid var(--stroke); color:var(--text); padding:12px 20px;
-      border-radius:14px; z-index:80; opacity:0; transition:.25s; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
+      border-radius:14px; z-index:80; opacity:0; transition:opacity .25s, transform .25s; pointer-events:none; }
     .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
     footer{ text-align:center; color:var(--muted); font-size:12px; margin-top:32px; }
@@ -394,6 +430,8 @@
     .pcell.next{ border-color:var(--accent); box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent), 0 0 24px -8px var(--glow); }
     .pcell .pn{ font-size:12px; color:var(--muted); } .pcell .pt{ font-size:16px; font-weight:700; margin-top:3px; }
     .prayer-next{ text-align:center; margin-top:12px; font-size:14px; color:var(--accent); }
+    .prayer-loc{ font-size:12px; color:var(--muted); text-align:center; margin:-4px 0 10px; line-height:1.6; }
+    .prayer-loc a{ color:var(--accent); text-decoration:none; }
     .prayer-date{ text-align:center; margin-bottom:12px; }
     .prayer-date .pd-clock{ font-size:26px; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; letter-spacing:1px; line-height:1.2; margin-bottom:4px; text-shadow:0 0 16px color-mix(in srgb,var(--accent) 30%,transparent); }
     .prayer-date .pd-th{ font-size:13px; color:var(--text); opacity:.9; }
@@ -406,6 +444,13 @@
 
     /* ---- tasbih button active press ---- */
     .tasbih-btn:active{ transform:scale(0.92); box-shadow:0 0 14px color-mix(in srgb,var(--accent) 80%,transparent) !important; }
+    .tasbih-btn{ touch-action:manipulation; -webkit-user-select:none; }
+    /* โมดัลตัสบีฮ์: ปิด blur ทุกชั้น — blur ซ้อนกัน 3-4 ชั้นทำให้มือถือวาดไม่ทันจนค้างตอนครบรอบ */
+    #tasbih-backdrop{ -webkit-backdrop-filter:none; backdrop-filter:none; background:rgba(3,5,10,.88); }
+    #tasbih-backdrop .glass{ -webkit-backdrop-filter:none; backdrop-filter:none; }
+    #tasbih-backdrop .tasbih-modal{ background:#0f131b; }
+    .tasbih-done{ font-size:13px; font-weight:700; color:var(--accent); height:18px; opacity:0; transition:opacity .3s; }
+    .tasbih-done.show{ opacity:1; }
 
     /* ---- splash ก่อนเข้า ---- */
     #splash{ position:fixed; inset:0; z-index:100; background:#ffffff; display:flex; flex-direction:column;
@@ -425,6 +470,11 @@
     #install-banner .ib-x{ background:none; color:var(--muted); font-size:20px; padding:4px 8px; }
 
     /* ---- profile / login button (หัวจอ) ---- */
+    .hdr-install{ height:34px; border-radius:17px; border:none; padding:0 12px; font-family:inherit; font-size:13px; font-weight:700;
+      color:#1f1600; background:linear-gradient(135deg,#ffcf40,#e6a817); cursor:pointer; white-space:nowrap; }
+    .ios-arrow{ position:fixed; left:50%; bottom:calc(8px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:60;
+      font-size:34px; color:#ffcf40; animation:iosbounce 1s ease-in-out infinite; pointer-events:none; display:none; }
+    @keyframes iosbounce{ 0%,100%{ transform:translate(-50%,0) } 50%{ transform:translate(-50%,8px) } }
     .profile-btn{ width:34px; height:34px; min-width:34px; border-radius:50%; border:1px solid var(--stroke);
       background:var(--glass-2); color:var(--text); font-size:16px; cursor:pointer; display:flex; align-items:center;
       justify-content:center; padding:0; overflow:hidden; }
@@ -565,8 +615,8 @@
   <!-- INSTALL BANNER (เพิ่มเป็นแอพ) -->
   <div id="install-banner" class="glass">
     <img src="logo.png" alt="" onerror="this.onerror=null;this.src='icon.jpg'">
-    <div class="ib-t" id="install-text">ติดตั้ง <b>Yateem TV</b> เป็นแอพบนหน้าจอโฮม</div>
-    <button id="install-btn" onclick="doInstall()">ติดตั้ง</button>
+    <div class="ib-t" id="install-text" data-lbl="installBannerText">ติดตั้ง Yateem TV เป็นแอพบนหน้าจอโฮม</div>
+    <button id="install-btn" onclick="doInstall()" data-lbl="installBannerBtn">ติดตั้ง</button>
     <button class="ib-x" onclick="dismissInstall()">×</button>
   </div>
 
@@ -631,40 +681,133 @@
     };
 
     // ---- ข้อความ/ปุ่มเริ่มต้น (แอดมินแก้ทับได้ที่ /settings.labels) ----
-    const LABELS = {
-      brandName:'Yateem TV', liveBadge:'LIVE', viewersSuffix:'กำลังชม',
-      offlineTitle:'ขณะนี้ยังไม่มีการถ่ายทอดสด ค่ะ', offlineSub:'กลับมาอีกครั้งเมื่อช่องเริ่มไลฟ์นะคะ',
-      donateBtn:'💛 ร่วมบริจาค', videosTitle:'วิดีโอแนะนำ',
-      chatTitle:'💬 แชทสด', chatPlaceholder:'พิมพ์ข้อความ...', chatSend:'ส่ง',
-      chatEmpty:'ยังไม่มีข้อความ — มาเป็นคนแรกที่ทักทายกันเลยค่ะ 👋',
-      socialTitle:'โซเชียลของเรา', marketTitle:'Yateem Market',
-      marketCardTitle:'สั่งอาหารฮาลาล & สินค้าแห้ง', marketCardDesc:'เปิดร้าน Yateem Market — สั่งง่าย ส่งทั่วไทย',
-      scheduleTitle:'ผังรายการ 24 ชม.', footer:'© Yateem TV · ช่องของทุกคน 💛',
-      donateTitle:'💛 ร่วมบริจาค', donateHint:'สแกน QR ด้วยแอปธนาคารใดก็ได้ หรือคัดลอกเลขบัญชี',
-      donateCopyBtn:'📋 คัดลอกเลขบัญชี', donateSaveBtn:'💾 บันทึกรูป QR',
-      soc_youtube_name:'YouTube',   soc_youtube_sub:'คลิปย้อนหลัง',
-      soc_facebook_name:'Facebook', soc_facebook_sub:'เพจข่าวสาร',
-      soc_tiktok_name:'TikTok',     soc_tiktok_sub:'คลิปสั้น',
-      soc_instagram_name:'Instagram', soc_instagram_sub:'ภาพกิจกรรม',
-      soc_lineOA_name:'LINE',       soc_lineOA_sub:'แอดเป็นเพื่อน'
-    };
-    // คำอธิบายไทยของแต่ละคีย์ (ใช้สร้างฟอร์มในหน้าแอดมิน)
-    const LABEL_DESC = {
-      brandName:'ชื่อแบรนด์ (หัวเว็บ)', liveBadge:'ป้ายไลฟ์', viewersSuffix:'ข้อความต่อท้ายจำนวนผู้ชม',
-      offlineTitle:'ข้อความเมื่อไม่มีไลฟ์', offlineSub:'คำอธิบายเมื่อไม่มีไลฟ์',
-      donateBtn:'ปุ่มบริจาค (ใต้จอ)', videosTitle:'หัวข้อวิดีโอแนะนำ',
-      chatTitle:'หัวข้อแชท', chatPlaceholder:'ข้อความในช่องพิมพ์แชท', chatSend:'ปุ่มส่งแชท', chatEmpty:'ข้อความเมื่อยังไม่มีแชท',
-      socialTitle:'หัวข้อโซเชียล', marketTitle:'หัวข้อ Market',
-      marketCardTitle:'การ์ด Market: หัวข้อ', marketCardDesc:'การ์ด Market: คำโปรย',
-      scheduleTitle:'หัวข้อผังรายการ', footer:'ข้อความท้ายเว็บ',
-      donateTitle:'หัวข้อกล่องบริจาค', donateHint:'คำอธิบายกล่องบริจาค',
-      donateCopyBtn:'ปุ่มคัดลอกเลขบัญชี', donateSaveBtn:'ปุ่มบันทึก QR',
-      soc_youtube_name:'ชื่อการ์ด YouTube', soc_youtube_sub:'คำโปรย YouTube',
-      soc_facebook_name:'ชื่อการ์ด Facebook', soc_facebook_sub:'คำโปรย Facebook',
-      soc_tiktok_name:'ชื่อการ์ด TikTok', soc_tiktok_sub:'คำโปรย TikTok',
-      soc_instagram_name:'ชื่อการ์ด Instagram', soc_instagram_sub:'คำโปรย Instagram',
-      soc_lineOA_name:'ชื่อการ์ด LINE', soc_lineOA_sub:'คำโปรย LINE'
-    };
+    // [หมวด, คีย์, ค่าเริ่มต้น, คำอธิบายในหน้าแอดมิน] — เพิ่มข้อความใหม่ที่นี่ + ใส่ data-lbl="คีย์" ที่ element
+    // ข้อความหลายบรรทัด (ขึ้นบรรทัดใหม่ด้วย Enter) ใช้ data-lbl-ml แทน data-lbl
+    const LABEL_DEFS = [
+      ['หัวเว็บ & ทั่วไป','brandName','Yateem TV','ชื่อแบรนด์ (หัวเว็บ)'],
+      ['หัวเว็บ & ทั่วไป','pageTitle','Yateem TV — ดูสด · โซเชียล · ร่วมบริจาค','ชื่อแท็บเบราว์เซอร์ (title)'],
+      ['หัวเว็บ & ทั่วไป','viewersSuffix','กำลังชม','ข้อความต่อท้ายจำนวนผู้ชม'],
+      ['หัวเว็บ & ทั่วไป','hdrInstallBtn','📲 ติดตั้ง','ปุ่มติดตั้งบนหัวเว็บ'],
+      ['หัวเว็บ & ทั่วไป','footer','© Yateem TV · ช่องของทุกคน 💛','ข้อความท้ายเว็บ'],
+      ['แถบแท็บล่างจอ','tabLive','Live สด','แท็บ 1'],
+      ['แถบแท็บล่างจอ','tabMarket','Market','แท็บ 2'],
+      ['แถบแท็บล่างจอ','tabFaith','ละหมาด','แท็บ 3'],
+      ['แถบแท็บล่างจอ','tabMore','ผัง·ช่องทาง','แท็บ 4'],
+      ['ไลฟ์สด','liveBadge','LIVE','ป้ายไลฟ์'],
+      ['ไลฟ์สด','offlineTitle','ขณะนี้ยังไม่มีการถ่ายทอดสด ค่ะ','ข้อความเมื่อไม่มีไลฟ์'],
+      ['ไลฟ์สด','offlineSub','กลับมาอีกครั้งเมื่อช่องเริ่มไลฟ์นะคะ','คำอธิบายเมื่อไม่มีไลฟ์'],
+      ['ไลฟ์สด','unmuteBtn','🔊 แตะเพื่อเปิดเสียง','ปุ่มเปิดเสียง'],
+      ['ไลฟ์สด','nowWatching','กำลังชม:','ป้ายรายการที่กำลังออกอากาศ'],
+      ['ไลฟ์สด','shareBtn','🔗 แชร์','ปุ่มแชร์'],
+      ['ไลฟ์สด','donateBtn','💛 ร่วมบริจาค','ปุ่มบริจาค (ใต้จอ)'],
+      ['ไลฟ์สด','sponsorTitle','สปอนเซอร์','หัวข้อสปอนเซอร์'],
+      ['แชท','chatPlaceholder','พิมพ์ข้อความ...','ข้อความในช่องพิมพ์แชท'],
+      ['แชท','chatSend','ส่ง','ปุ่มส่งแชท'],
+      ['แชท','chatEmpty','ยังไม่มีข้อความ — มาเป็นคนแรกที่ทักทายกันเลยค่ะ 👋','ข้อความเมื่อยังไม่มีแชท'],
+      ['แชท','chatConnecting','กำลังเชื่อมต่อแชท...','สถานะกำลังเชื่อมต่อ'],
+      ['แชท','chatAs','กำลังแชทในชื่อ','ข้อความหน้าชื่อผู้แชท'],
+      ['แชท','chatGuestHint','พิมพ์เพื่อแชทได้เลย หรือ','ข้อความชวนล็อกอิน'],
+      ['แชท','chatLoginLink','เข้าสู่ระบบเพื่อแชทด้วยชื่อจริง','ลิงก์ล็อกอินใต้แชท'],
+      ['Market','marketTitle','Yateem Market','หัวข้อ Market'],
+      ['Market','marketCardTitle','สั่งอาหารฮาลาล & สินค้าแห้ง','การ์ด Market: หัวข้อ'],
+      ['Market','marketCardDesc','เปิดร้าน Yateem Market — สั่งง่าย ส่งทั่วไทย','การ์ด Market: คำโปรย'],
+      ['Market','marketOpenBtn','เปิดร้าน Yateem Market ›','ปุ่มเปิดร้าน'],
+      ['Market','marketTapCta','🛒 แตะเพื่อสั่งซื้อเลย ›','ข้อความทับรูปพรีวิวร้าน'],
+      ['ละหมาด & ศาสนา','prayerTitle','เวลาละหมาดวันนี้','หัวข้อเวลาละหมาด'],
+      ['ละหมาด & ศาสนา','prayerGpsBtn','📍 ตำแหน่งฉัน','ปุ่มหาตำแหน่ง'],
+      ['ละหมาด & ศาสนา','prayerLocNearest','จังหวัดใกล้สุด:','ข้อความหน้าชื่อจังหวัด (GPS)'],
+      ['ละหมาด & ศาสนา','prayerLocByGps','คำนวณจากพิกัดจริง','ข้อความบอกว่าใช้พิกัด GPS'],
+      ['ละหมาด & ศาสนา','prayerLocMap','ดูบน Google Maps','ลิงก์เปิดแผนที่'],
+      ['ละหมาด & ศาสนา','prayerNext','⏳ ละหมาดถัดไป:','ข้อความละหมาดถัดไป'],
+      ['ละหมาด & ศาสนา','prayerDone','ครบเวลาละหมาดของวันนี้แล้ว 🌙','ข้อความเมื่อครบทุกเวลา'],
+      ['ละหมาด & ศาสนา','prayer_Fajr','ฟัจร์','ชื่อเวลา Fajr'],
+      ['ละหมาด & ศาสนา','prayer_Dhuhr','ซุฮริ','ชื่อเวลา Dhuhr'],
+      ['ละหมาด & ศาสนา','prayer_Asr','อัศริ','ชื่อเวลา Asr'],
+      ['ละหมาด & ศาสนา','prayer_Maghrib','มัฆริบ','ชื่อเวลา Maghrib'],
+      ['ละหมาด & ศาสนา','prayer_Isha','อิชาอ์','ชื่อเวลา Isha'],
+      ['ละหมาด & ศาสนา','faithToolsTitle','ทิศกิบลัต & เครื่องมือศาสนา','หัวข้อเครื่องมือศาสนา'],
+      ['ละหมาด & ศาสนา','qiblaName','ทิศกิบลัต','การ์ดกิบลัต: ชื่อ'],
+      ['ละหมาด & ศาสนา','qiblaSub','เปิด Google Qibla Finder ↗','การ์ดกิบลัต: คำโปรย'],
+      ['ละหมาด & ศาสนา','tasbihName','ดิจิทัลตัสบีฮ์','การ์ดตัสบีฮ์: ชื่อ'],
+      ['ละหมาด & ศาสนา','tasbihSub','นับซิกิร / สรรเสริญ','การ์ดตัสบีฮ์: คำโปรย'],
+      ['ละหมาด & ศาสนา','quranTitle','อัลกุรอาน','หัวข้ออัลกุรอาน'],
+      ['ละหมาด & ศาสนา','quranOnlineName','อ่านออนไลน์','การ์ดอ่านออนไลน์: ชื่อ'],
+      ['ละหมาด & ศาสนา','quranOnlineSub','แปล+คำอ่าน (daasee)','การ์ดอ่านออนไลน์: คำโปรย'],
+      ['ละหมาด & ศาสนา','quranPdfName','PDF แปลไทย','การ์ด PDF: ชื่อ'],
+      ['ละหมาด & ศาสนา','quranPdfSub','พรีวิวอ่านในเว็บ / โหลด','การ์ด PDF: คำโปรย'],
+      ['ตัสบีฮ์ & อัลกุรอาน PDF','tasbihTitle','📿 ดิจิทัลตัสบีฮ์','หัวข้อหน้าตัสบีฮ์'],
+      ['ตัสบีฮ์ & อัลกุรอาน PDF','tasbihSubtitle','นับบทสรรเสริญ / ซิกิร','คำอธิบายหน้าตัสบีฮ์'],
+      ['ตัสบีฮ์ & อัลกุรอาน PDF','tasbihTapBtn','กดนับ','ปุ่มกดนับ'],
+      ['ตัสบีฮ์ & อัลกุรอาน PDF','tasbihRoundDone','🎉 ครบ {n} ครั้ง (รอบที่ {r})','ข้อความครบรอบ ({n}=จำนวน {r}=รอบ)'],
+      ['ตัสบีฮ์ & อัลกุรอาน PDF','pdfTitle','อัลกุรอาน แปลไทย (PDF)','หัวข้อหน้า PDF'],
+      ['ตัสบีฮ์ & อัลกุรอาน PDF','pdfDownloadBtn','⬇️ ดาวน์โหลด PDF','ปุ่มดาวน์โหลด PDF'],
+      ['ตัสบีฮ์ & อัลกุรอาน PDF','pdfOpenBtn','↗️ เปิดเต็มจอ','ปุ่มเปิด PDF เต็มจอ'],
+      ['ตัสบีฮ์ & อัลกุรอาน PDF','pdfTip','💡 หากต้องการอ่านผ่านแอปในเครื่อง กด [เปิดเต็มจอ] หรือ [ดาวน์โหลด PDF] ได้ทันทีค่ะ','คำแนะนำหน้า PDF'],
+      ['ผังรายการ & โซเชียล','scheduleTitle','ผังรายการ 24 ชม.','หัวข้อผังรายการ'],
+      ['ผังรายการ & โซเชียล','schedPdfBtn','📄 เปิดผัง (PDF)','ปุ่มเปิดผัง PDF'],
+      ['ผังรายการ & โซเชียล','schedToday','วันนี้','ป้าย "วันนี้" (ผัง/แชท)'],
+      ['ผังรายการ & โซเชียล','videosTitle','วิดีโอแนะนำ','หัวข้อวิดีโอแนะนำ'],
+      ['ผังรายการ & โซเชียล','socialTitle','ติดตามเราทุกช่องทาง','หัวข้อโซเชียล'],
+      ['ผังรายการ & โซเชียล','socialInstallName','ติดตั้งแอพ','การ์ดติดตั้งแอพ: ชื่อ'],
+      ['ผังรายการ & โซเชียล','socialInstallSub','ลงหน้าจอโฮมทันที','การ์ดติดตั้งแอพ: คำโปรย'],
+      ['ผังรายการ & โซเชียล','soc_youtube_name','YouTube','ชื่อการ์ด YouTube'],
+      ['ผังรายการ & โซเชียล','soc_youtube_sub','คลิปย้อนหลัง','คำโปรย YouTube'],
+      ['ผังรายการ & โซเชียล','soc_facebook_name','Facebook','ชื่อการ์ด Facebook'],
+      ['ผังรายการ & โซเชียล','soc_facebook_sub','เพจข่าวสาร','คำโปรย Facebook'],
+      ['ผังรายการ & โซเชียล','soc_tiktok_name','TikTok','ชื่อการ์ด TikTok'],
+      ['ผังรายการ & โซเชียล','soc_tiktok_sub','คลิปสั้น','คำโปรย TikTok'],
+      ['ผังรายการ & โซเชียล','soc_instagram_name','Instagram','ชื่อการ์ด Instagram'],
+      ['ผังรายการ & โซเชียล','soc_instagram_sub','ภาพกิจกรรม','คำโปรย Instagram'],
+      ['ผังรายการ & โซเชียล','soc_lineOA_name','LINE','ชื่อการ์ด LINE'],
+      ['ผังรายการ & โซเชียล','soc_lineOA_sub','แอดเป็นเพื่อน','คำโปรย LINE'],
+      ['เข้าสู่ระบบ','loginTitle','👤 เข้าสู่ระบบ','หัวข้อหน้าล็อกอิน'],
+      ['เข้าสู่ระบบ','loginDesc','เข้าสู่ระบบเพื่อแชทและสั่งซื้อด้วยชื่อจริง (ไม่บังคับ)','คำอธิบายหน้าล็อกอิน'],
+      ['เข้าสู่ระบบ','loginLineBtn','เข้าสู่ระบบด้วย LINE','ปุ่ม LINE'],
+      ['เข้าสู่ระบบ','loginGoogleBtn','เข้าสู่ระบบด้วย Google','ปุ่ม Google'],
+      ['เข้าสู่ระบบ','loginFbBtn','เข้าสู่ระบบด้วย Facebook','ปุ่ม Facebook'],
+      ['เข้าสู่ระบบ','loginGuestBtn','แชทแบบไม่ล็อกอิน','ปุ่มไม่ล็อกอิน'],
+      ['เข้าสู่ระบบ','logoutBtn','ออกจากระบบ','ปุ่มออกจากระบบ'],
+      ['เข้าสู่ระบบ','viewerRole','ผู้ชม Yateem TV','ป้ายใต้ชื่อผู้ใช้'],
+      ['บริจาค','donateTitle','💛 ร่วมบริจาค','หัวข้อกล่องบริจาค'],
+      ['บริจาค','donateHint','สแกน QR ด้วยแอปธนาคารใดก็ได้ หรือคัดลอกเลขบัญชี','คำอธิบายกล่องบริจาค'],
+      ['บริจาค','donateCustomAmt','กรอกเอง','ปุ่มกรอกยอดเอง'],
+      ['บริจาค','donateAccName','ชื่อบัญชี:','ข้อความหน้าชื่อบัญชี'],
+      ['บริจาค','donateCopyBtn','📋 คัดลอกเลขบัญชี','ปุ่มคัดลอกเลขบัญชี'],
+      ['บริจาค','donateSaveBtn','💾 บันทึกรูป QR','ปุ่มบันทึก QR'],
+      ['ติดตั้งแอป','installBannerText','ติดตั้ง Yateem TV เป็นแอพบนหน้าจอโฮม','แบนเนอร์ติดตั้ง: ข้อความ'],
+      ['ติดตั้งแอป','installBannerBtn','ติดตั้ง','แบนเนอร์ติดตั้ง: ปุ่ม'],
+      ['ติดตั้งแอป','installTitle','ติดตั้ง Yateem TV บนหน้าจอโฮม','หน้าติดตั้ง: หัวข้อ'],
+      ['ติดตั้งแอป','installDesc','รับชมไลฟ์สด ดูผังรายการ ฟังบรรยาย และเช็คเวลาละหมาดได้สะดวกรวดเร็ว เหมือนเปิดแอปมือถือโดยตรง','หน้าติดตั้ง: คำอธิบาย'],
+      ['ติดตั้งแอป','installBtn','📲 ติดตั้งแอพลงหน้าจอโฮมทันที','หน้าติดตั้ง: ปุ่มติดตั้ง (Android)'],
+      ['ติดตั้งแอป','installIosBtn','✅ เข้าใจแล้ว (เริ่มขั้นตอนติดตั้ง)','หน้าติดตั้ง: ปุ่ม (iPhone)'],
+      ['ติดตั้งแอป','installInappBtn','🌐 แตะเพื่อเปิดในเบราว์เซอร์หลัก','หน้าติดตั้ง: ปุ่ม (ในแอป LINE/FB)'],
+      ['ติดตั้งแอป','installSkip','เข้าชมเว็บไซต์ต่อไป','หน้าติดตั้ง: ปุ่มข้าม'],
+      ['ติดตั้งแอป','installGuideAndroidTitle','🤖 สำหรับ Android / Google Chrome:','คำแนะนำ Android: หัวข้อ'],
+      ['ติดตั้งแอป','installGuideAndroid','กดปุ่มติดตั้งด้านล่าง แล้วกดยืนยัน "ติดตั้ง" (Install) ไอคอน Yateem TV จะปรากฏบนหน้าจอโฮมทันทีค่ะ','คำแนะนำ Android'],
+      ['ติดตั้งแอป','installGuideIosTitle','🍎 วิธีติดตั้งบน iPhone / iPad (Safari):','คำแนะนำ iPhone: หัวข้อ'],
+      ['ติดตั้งแอป','installGuideIos','1. แตะปุ่มแชร์ ⎋ ที่แถบด้านล่างของ Safari\n2. เลื่อนลงแล้วแตะ "เพิ่มไปยังหน้าจอโฮม"\n3. แตะ "เพิ่ม" ที่มุมขวาบน','คำแนะนำ iPhone (หลายบรรทัด)'],
+      ['ติดตั้งแอป','installGuideInappTitle','⚠️ ท่านกำลังเปิดในแอป LINE / Facebook','คำแนะนำในแอป: หัวข้อ'],
+      ['ติดตั้งแอป','installGuideInapp','กดปุ่มด้านล่างเพื่อเปิดใน Chrome / Safari แล้วจึงติดตั้งเป็นแอพได้ค่ะ','คำแนะนำในแอป'],
+      ['ติดตั้งแอป','installIosToast','แตะปุ่มแชร์ ⎋ ด้านล่าง แล้วเลือก "เพิ่มไปยังหน้าจอโฮม" ค่ะ','แจ้งเตือนวิธีติดตั้ง iPhone'],
+      ['ติดตั้งแอป','installAndroidToast','แตะเมนู ⋮ ของเบราว์เซอร์ แล้วเลือก "ติดตั้งแอป" หรือ "เพิ่มไปยังหน้าจอโฮม"','แจ้งเตือนวิธีติดตั้ง Android'],
+      ['ติดตั้งแอป','installingToast','กำลังติดตั้ง Yateem TV ลงหน้าจอโฮม... 🎉','แจ้งเตือนกำลังติดตั้ง'],
+      ['เปิดในเบราว์เซอร์','inappTitle','เปิดใน Chrome / Safari','หัวข้อ'],
+      ['เปิดในเบราว์เซอร์','inappDesc','เพื่อดูไลฟ์ลื่น ๆ และติดตั้งแอปลงหน้าจอได้ กรุณาเปิดในเบราว์เซอร์หลักของเครื่องค่ะ','คำอธิบาย'],
+      ['เปิดในเบราว์เซอร์','inappHintIos','แตะปุ่ม ⋯ มุมขวาบน แล้วเลือก "เปิดในเบราว์เซอร์" (Open in Safari)','คำแนะนำ iPhone'],
+      ['เปิดในเบราว์เซอร์','inappOpenBtn','🌐 เปิดในเบราว์เซอร์','ปุ่มเปิดเบราว์เซอร์'],
+      ['เปิดในเบราว์เซอร์','inappCopyBtn','🔗 คัดลอกลิงก์ไปวางในเบราว์เซอร์','ปุ่มคัดลอกลิงก์'],
+      ['เปิดในเบราว์เซอร์','inappCopied','คัดลอกลิงก์แล้ว นำไปวางใน Chrome / Safari ได้เลยค่ะ ✅','แจ้งเตือนคัดลอกแล้ว'],
+      ['เปิดในเบราว์เซอร์','inappStayBtn','ใช้งานต่อในแอปนี้','ปุ่มใช้งานต่อ'],
+      ['แชร์','shareTitle','🔗 แชร์ Yateem TV','หัวข้อหน้าแชร์'],
+      ['แชร์','shareDesc','แชร์ลิงก์พร้อมชวนเพื่อนติดตั้งแอพลงหน้าจอโฮม','คำอธิบายหน้าแชร์'],
+      ['แชร์','shareSubject','Yateem TV (ติดตั้งเป็นแอพ)','หัวเรื่องตอนแชร์'],
+      ['แชร์','shareText','ดูไลฟ์สด Yateem TV พร้อมติดตั้งเป็นแอพบนหน้าจอโฮมได้ทันที 📺📲','ข้อความที่แชร์ไป'],
+      ['แชร์','shareCopyLink','คัดลอกลิงก์','ปุ่มคัดลอกลิงก์'],
+      ['แชร์','shareCopied','คัดลอกลิงก์พร้อมติดตั้งแอพแล้วค่ะ ✅','แจ้งเตือนคัดลอกแล้ว'],
+      ['แชร์','shareInstallBtn','📲 ติดตั้ง Yateem TV ลงหน้าจอโฮมเครื่องนี้','ปุ่มติดตั้งในหน้าแชร์']
+    ];
+    const LABELS = {}, LABEL_DESC = {}, LABEL_GROUP = {};
+    LABEL_DEFS.forEach(([g,k,v,d])=>{ LABELS[k]=v; LABEL_DESC[k]=d; LABEL_GROUP[k]=g; });
 
     // ---- โลโก้แอปโซเชียลจริง (glyph ขาว + ไทล์สีแบรนด์) ----
     const SVG_ICONS = {
@@ -683,6 +826,7 @@
     <div class="brand" data-lbl="brandName">Yateem TV</div>
     <div class="live-cluster">
       <span class="chip viewers" id="viewers">👁 <span id="viewer-count">–</span> <span data-lbl="viewersSuffix">กำลังชม</span></span>
+      <button class="hdr-install" id="hdr-install-btn" onclick="doInstall()" style="display:none" data-lbl="hdrInstallBtn">📲 ติดตั้ง</button>
       <button class="profile-btn" id="profile-btn" onclick="openLogin()" aria-label="เข้าสู่ระบบ" title="เข้าสู่ระบบ">👤</button>
     </div>
   </header>
@@ -700,19 +844,19 @@
           <div style="font-size:13px" data-lbl="offlineSub">กลับมาอีกครั้งเมื่อช่องเริ่มไลฟ์นะคะ</div>
         </div>
         <!-- ปุ่มแตะเพื่อเปิดเสียง (โผล่เมื่อเบราว์เซอร์บล็อกเสียงอัตโนมัติ) -->
-        <button class="unmute-btn" id="unmute-btn" onclick="unmuteNow()" style="display:none">🔊 แตะเพื่อเปิดเสียง</button>
+        <button class="unmute-btn" id="unmute-btn" onclick="unmuteNow()" style="display:none" data-lbl="unmuteBtn">🔊 แตะเพื่อเปิดเสียง</button>
       </div>
 
       <!-- แถบ กำลังชม + แชร์ -->
       <div class="live-bar">
-        <span class="now-chip" id="now-chip" style="display:none">🔴 <b>กำลังชม:</b>&nbsp;<span id="now-title"></span></span>
+        <span class="now-chip" id="now-chip" style="display:none">🔴 <b data-lbl="nowWatching">กำลังชม:</b>&nbsp;<span id="now-title"></span></span>
         <span style="flex:1"></span>
-        <button class="share-btn" onclick="shareSite()">🔗 แชร์</button>
+        <button class="share-btn" onclick="shareSite()" data-lbl="shareBtn">🔗 แชร์</button>
       </div>
 
       <!-- แชทสด (กล่องข้อความ + อิโมจิลอย + ช่องพิมพ์ + ปุ่มรีแอคชัน) -->
       <div class="chat-section">
-        <div class="chat-list glass" id="chat-list"></div>
+        <div class="chat-list glass" id="chat-list"><div class="chat-empty" id="chat-empty" data-lbl="chatEmpty">ยังไม่มีข้อความ — มาเป็นคนแรกที่ทักทายกันเลยค่ะ 👋</div></div>
         <!-- อิโมจิลอย (ลอยจากบริเวณพิมพ์ข้อความขึ้นไปบนช่องแชท) -->
         <div class="react-float" id="react-float"></div>
         <!-- ช่องพิมพ์แชท + ปุ่มรีแอคชัน -->
@@ -734,7 +878,7 @@
 
       <!-- SPONSORS (แถบเลื่อนโลโก้อัตโนมัติ) -->
       <div id="sponsor-section" style="display:none">
-        <div class="sec-title">🤝 <span class="accent">สปอนเซอร์</span></div>
+        <div class="sec-title">🤝 <span class="accent" data-lbl="sponsorTitle">สปอนเซอร์</span></div>
         <div class="sponsor-strip glass" id="sponsor-strip"><div class="sponsor-track" id="sponsor-track"></div></div>
       </div>
     </section>
@@ -748,37 +892,38 @@
         <div class="mh-ic">🛍️</div>
         <div class="mh-t" data-lbl="marketCardTitle">สั่งอาหารฮาลาล & สินค้าแห้ง</div>
         <div class="mh-d" data-lbl="marketCardDesc">เปิดร้าน Yateem Market — สั่งง่าย ส่งทั่วไทย</div>
-        <button class="market-open-btn" onclick="openMarket()">เปิดร้าน Yateem Market ›</button>
+        <button class="market-open-btn" onclick="openMarket()" data-lbl="marketOpenBtn">เปิดร้าน Yateem Market ›</button>
       </div>
     </section>
 
     <!-- ============ แท็บ 3: ละหมาด + อัลกุรอาน ============ -->
     <section class="tab-panel" id="panel-faith" style="display:none">
       <!-- PRAYER TIMES -->
-      <div class="sec-title">🕌 <span class="accent">เวลาละหมาดวันนี้</span></div>
+      <div class="sec-title">🕌 <span class="accent" data-lbl="prayerTitle">เวลาละหมาดวันนี้</span></div>
       <div class="prayer glass" id="prayer-box">
         <div class="prayer-head">
           <select id="prayer-province" onchange="onProvinceChange()"></select>
-          <button type="button" class="mini" id="prayer-gps-btn" onclick="detectCurrentLocation()" title="ค้นหาตำแหน่งอัตโนมัติ (GPS)">📍 ตำแหน่งฉัน</button>
+          <button type="button" class="mini" id="prayer-gps-btn" onclick="detectCurrentLocation()" title="ค้นหาตำแหน่งอัตโนมัติ (GPS)" data-lbl="prayerGpsBtn">📍 ตำแหน่งฉัน</button>
           <button type="button" class="mini" id="prayer-notify-btn" onclick="togglePrayerNotify()">🔔 เตือน</button>
         </div>
+        <div class="prayer-loc" id="prayer-loc" style="display:none"></div>
         <div class="prayer-date" id="prayer-date"></div>
         <div class="prayer-grid" id="prayer-grid"><div class="sched-empty">กำลังโหลดเวลาละหมาด...</div></div>
         <div class="prayer-next" id="prayer-next"></div>
       </div>
 
       <!-- FAITH TOOLS & QURAN -->
-      <div class="sec-title">🧭 <span class="accent">ทิศกิบลัต & เครื่องมือศาสนา</span></div>
+      <div class="sec-title">🧭 <span class="accent" data-lbl="faithToolsTitle">ทิศกิบลัต & เครื่องมือศาสนา</span></div>
       <div class="rail" id="faith-rail">
-        <a class="card glass" href="javascript:void(0)" onclick="openExternal('https://qiblafinder.withgoogle.com/intl/th/')"><div class="ic" style="background:#1B4FD8">🧭</div><div><div class="nm">ทิศกิบลัต</div><div class="sub">เปิด Google Qibla Finder ↗</div></div></a>
-        <a class="card glass" href="javascript:void(0)" onclick="openTasbih()"><div class="ic" style="background:#0D825E">📿</div><div><div class="nm">ดิจิทัลตัสบีฮ์</div><div class="sub">นับซิกิร / สรรเสริญ</div></div></a>
+        <a class="card glass" href="javascript:void(0)" onclick="openExternal('https://qiblafinder.withgoogle.com/intl/th/')"><div class="ic" style="background:#1B4FD8">🧭</div><div><div class="nm" data-lbl="qiblaName">ทิศกิบลัต</div><div class="sub" data-lbl="qiblaSub">เปิด Google Qibla Finder ↗</div></div></a>
+        <a class="card glass" href="javascript:void(0)" onclick="openTasbih()"><div class="ic" style="background:#0D825E">📿</div><div><div class="nm" data-lbl="tasbihName">ดิจิทัลตัสบีฮ์</div><div class="sub" data-lbl="tasbihSub">นับซิกิร / สรรเสริญ</div></div></a>
       </div>
 
       <!-- QURAN -->
-      <div class="sec-title">📖 <span class="accent">อัลกุรอาน</span></div>
+      <div class="sec-title">📖 <span class="accent" data-lbl="quranTitle">อัลกุรอาน</span></div>
       <div class="rail" id="quran-rail">
-        <a class="card glass" href="javascript:void(0)" onclick="openQuran()"><div class="ic" style="background:#0a7d5a">📖</div><div><div class="nm">อ่านออนไลน์</div><div class="sub">แปล+คำอ่าน (daasee)</div></div></a>
-        <a class="card glass" id="quran-pdf-card" href="javascript:void(0)" onclick="openQuranPdf()"><div class="ic" style="background:#b9860b">📄</div><div><div class="nm">PDF แปลไทย</div><div class="sub">พรีวิวอ่านในเว็บ / โหลด</div></div></a>
+        <a class="card glass" href="javascript:void(0)" onclick="openQuran()"><div class="ic" style="background:#0a7d5a">📖</div><div><div class="nm" data-lbl="quranOnlineName">อ่านออนไลน์</div><div class="sub" data-lbl="quranOnlineSub">แปล+คำอ่าน (daasee)</div></div></a>
+        <a class="card glass" id="quran-pdf-card" href="javascript:void(0)" onclick="openQuranPdf()"><div class="ic" style="background:#b9860b">📄</div><div><div class="nm" data-lbl="quranPdfName">PDF แปลไทย</div><div class="sub" data-lbl="quranPdfSub">พรีวิวอ่านในเว็บ / โหลด</div></div></a>
       </div>
     </section>
 
@@ -804,27 +949,27 @@
 
   <!-- ============ แถบแท็บล่างจอ ============ -->
   <nav class="tabbar" id="tabbar">
-    <button class="tabbtn active" data-tab="live"   onclick="showTab('live')"><span class="ti">📺</span><span class="tl">Live สด</span></button>
-    <button class="tabbtn"        data-tab="market" onclick="showTab('market')"><span class="ti">🛒</span><span class="tl">Market</span></button>
-    <button class="tabbtn"        data-tab="faith"  onclick="showTab('faith')"><span class="ti">🕌</span><span class="tl">ละหมาด</span></button>
-    <button class="tabbtn"        data-tab="more"   onclick="showTab('more')"><span class="ti">📅</span><span class="tl">ผัง·ช่องทาง</span></button>
+    <button class="tabbtn active" data-tab="live"   onclick="showTab('live')"><span class="ti">📺</span><span class="tl" data-lbl="tabLive">Live สด</span></button>
+    <button class="tabbtn"        data-tab="market" onclick="showTab('market')"><span class="ti">🛒</span><span class="tl" data-lbl="tabMarket">Market</span></button>
+    <button class="tabbtn"        data-tab="faith"  onclick="showTab('faith')"><span class="ti">🕌</span><span class="tl" data-lbl="tabFaith">ละหมาด</span></button>
+    <button class="tabbtn"        data-tab="more"   onclick="showTab('more')"><span class="ti">📅</span><span class="tl" data-lbl="tabMore">ผัง·ช่องทาง</span></button>
   </nav>
 
   <!-- LOGIN SHEET -->
   <div class="backdrop" id="login-backdrop" onclick="if(event.target===this)closeLogin()">
     <div class="sheet glass" style="position:relative">
       <button class="close" onclick="closeLogin()">×</button>
-      <h2>👤 เข้าสู่ระบบ</h2>
-      <div style="color:var(--muted);font-size:14px">เข้าสู่ระบบเพื่อแชทด้วยชื่อและรูปโปรไฟล์จริง (ไม่บังคับ)</div>
+      <h2 data-lbl="loginTitle">👤 เข้าสู่ระบบ</h2>
+      <div style="color:var(--muted);font-size:14px" data-lbl="loginDesc">เข้าสู่ระบบเพื่อแชทและสั่งซื้อด้วยชื่อจริง (ไม่บังคับ)</div>
       <div id="login-choices">
-        <button class="login-btn line"   onclick="loginLine()"><span class="lb-ic">💬</span> เข้าสู่ระบบด้วย LINE</button>
-        <button class="login-btn google" onclick="loginGoogle()"><span class="lb-ic">G</span> เข้าสู่ระบบด้วย Google</button>
-        <button class="login-btn fb"     onclick="loginFacebook()"><span class="lb-ic">f</span> เข้าสู่ระบบด้วย Facebook</button>
-        <button class="login-btn guest"  onclick="closeLogin()">แชทแบบไม่ล็อกอิน</button>
+        <button class="login-btn line"   onclick="loginLine()"><span class="lb-ic">💬</span> <span data-lbl="loginLineBtn">เข้าสู่ระบบด้วย LINE</span></button>
+        <button class="login-btn google" onclick="loginGoogle()"><span class="lb-ic">G</span> <span data-lbl="loginGoogleBtn">เข้าสู่ระบบด้วย Google</span></button>
+        <button class="login-btn fb"     onclick="loginFacebook()"><span class="lb-ic">f</span> <span data-lbl="loginFbBtn">เข้าสู่ระบบด้วย Facebook</span></button>
+        <button class="login-btn guest"  onclick="closeLogin()" data-lbl="loginGuestBtn">แชทแบบไม่ล็อกอิน</button>
       </div>
       <div id="login-profile" style="display:none">
         <div class="lp-row"><img id="lp-photo" alt=""><div><div class="lp-name" id="lp-name"></div><div class="lp-sub" id="lp-sub"></div></div></div>
-        <button class="login-btn guest" onclick="logoutUser()">ออกจากระบบ</button>
+        <button class="login-btn guest" onclick="logoutUser()" data-lbl="logoutBtn">ออกจากระบบ</button>
       </div>
     </div>
   </div>
@@ -840,7 +985,7 @@
         <button class="amt" data-amt="20">฿20</button>
         <button class="amt" data-amt="100">฿100</button>
         <button class="amt" data-amt="500">฿500</button>
-        <button class="amt" data-amt="0">กรอกเอง</button>
+        <button class="amt" data-amt="0" data-lbl="donateCustomAmt">กรอกเอง</button>
         <input class="amt-input" id="amt-input" type="number" inputmode="numeric" placeholder="บาท" style="display:none">
       </div>
 
@@ -848,7 +993,7 @@
 
       <div class="bank">
         <div id="bank-name">-</div>
-        <div>ชื่อบัญชี: <b id="acc-name">-</b></div>
+        <div><span data-lbl="donateAccName">ชื่อบัญชี:</span> <b id="acc-name">-</b></div>
         <div class="num" id="acc-num">-</div>
       </div>
 
@@ -888,16 +1033,16 @@
     <div class="quran-modal glass" style="width:96vw;height:92vh;max-width:1050px">
       <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px 10px;gap:8px;flex-wrap:wrap">
         <div style="font-weight:600;font-size:15px;color:var(--accent);display:flex;align-items:center;gap:6px">
-          <span>📖</span> <span>อัลกุรอาน แปลไทย (PDF)</span>
+          <span>📖</span> <span data-lbl="pdfTitle">อัลกุรอาน แปลไทย (PDF)</span>
         </div>
         <div style="display:flex;gap:6px;align-items:center">
-          <a id="pdf-download-btn" class="mini" href="ThailandQuranแปลไทย.pdf" download="ThailandQuranแปลไทย.pdf" style="text-decoration:none">⬇️ ดาวน์โหลด PDF</a>
-          <button type="button" class="mini" onclick="openPdfExternal()">↗️ เปิดเต็มจอ</button>
+          <a id="pdf-download-btn" class="mini" href="ThailandQuranแปลไทย.pdf" download="ThailandQuranแปลไทย.pdf" style="text-decoration:none" data-lbl="pdfDownloadBtn">⬇️ ดาวน์โหลด PDF</a>
+          <button type="button" class="mini" onclick="openPdfExternal()" data-lbl="pdfOpenBtn">↗️ เปิดเต็มจอ</button>
           <button type="button" class="close" style="position:static" onclick="closePdf()">×</button>
         </div>
       </div>
       <div style="font-size:12px;color:var(--muted);padding:0 10px 8px;display:flex;gap:6px;align-items:center">
-        <span>💡</span> <span>หากต้องการอ่านผ่านแอปในเครื่อง สามารถกด <b>[เปิดเต็มจอ]</b> หรือ <b>[ดาวน์โหลด PDF]</b> ได้ทันทีค่ะ</span>
+        <span data-lbl="pdfTip">💡 หากต้องการอ่านผ่านแอปในเครื่อง กด [เปิดเต็มจอ] หรือ [ดาวน์โหลด PDF] ได้ทันทีค่ะ</span>
       </div>
       <iframe id="pdf-frame" title="พรีวิวอัลกุรอานแปลไทย PDF" style="flex:1;width:100%;border:0;border-radius:12px;background:#1a1d24" allowfullscreen></iframe>
     </div>
@@ -907,8 +1052,8 @@
   <div class="backdrop" id="tasbih-backdrop" onclick="if(event.target===this)closeTasbih()" style="align-items:center">
     <div class="sheet glass tasbih-modal" style="position:relative;max-width:380px;width:92vw;padding:22px 18px;text-align:center">
       <button type="button" class="close" onclick="closeTasbih()">×</button>
-      <div style="font-size:18px;font-weight:700;color:var(--accent);margin-bottom:2px">📿 ดิจิทัลตัสบีฮ์</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:14px">นับบทสรรเสริญ / ซิกิร</div>
+      <div style="font-size:18px;font-weight:700;color:var(--accent);margin-bottom:2px" data-lbl="tasbihTitle">📿 ดิจิทัลตัสบีฮ์</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px" data-lbl="tasbihSubtitle">นับบทสรรเสริญ / ซิกิร</div>
 
       <select id="tasbih-dhikr-sel" onchange="onTasbihDhikrChange()" style="width:100%;padding:9px 12px;border-radius:12px;background:var(--glass-2);border:1px solid var(--stroke);color:var(--text);font-family:inherit;font-size:13px;margin-bottom:12px;color-scheme:dark">
         <option value="subhanallah">سُبْحَانَ اللَّهِ (สุบฮานัลลอฮ์ - 33)</option>
@@ -924,15 +1069,16 @@
           <span>เป้าหมาย: <b id="tasbih-target-txt" style="color:var(--accent)">33</b></span>
           <span>ครบรอบ: <b id="tasbih-rounds-txt" style="color:var(--text)">0</b> รอบ</span>
         </div>
-        <div id="tasbih-count-num" class="tasbih-num" style="font-size:64px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1;text-shadow:0 0 24px color-mix(in srgb,var(--accent) 40%,transparent);margin:8px 0">0</div>
+        <div id="tasbih-count-num" class="tasbih-num" style="font-size:64px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1;margin:8px 0">0</div>
+        <div id="tasbih-done" class="tasbih-done"></div>
         <div style="height:6px;width:100%;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;margin-top:6px">
-          <div id="tasbih-progress" style="height:100%;width:0%;background:var(--accent);border-radius:3px;transition:width .12s ease"></div>
+          <div id="tasbih-progress" style="height:100%;width:0%;background:var(--accent);border-radius:3px"></div>
         </div>
       </div>
 
       <div style="margin:6px 0 14px;display:flex;justify-content:center">
-        <button type="button" class="tasbih-btn" id="tasbih-tap-btn" onclick="tasbihCount()" style="width:130px;height:130px;border-radius:50%;border:4px solid var(--accent);background:radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--accent) 35%, #1B4FD8) 0%, #070B14 80%);color:#fff;font-size:19px;font-weight:700;cursor:pointer;box-shadow:0 0 28px -4px color-mix(in srgb,var(--accent) 45%,transparent);transition:transform .08s, box-shadow .08s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;user-select:none;-webkit-tap-highlight-color:transparent">
-          <span>กดนับ</span>
+        <button type="button" class="tasbih-btn" id="tasbih-tap-btn" onpointerdown="tasbihTap(event)" onclick="tasbihClick()" style="width:130px;height:130px;border-radius:50%;border:4px solid var(--accent);background:radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--accent) 35%, #1B4FD8) 0%, #070B14 80%);color:#fff;font-size:19px;font-weight:700;cursor:pointer;box-shadow:0 0 28px -4px color-mix(in srgb,var(--accent) 45%,transparent);transition:transform .08s, box-shadow .08s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;user-select:none;-webkit-tap-highlight-color:transparent">
+          <span data-lbl="tasbihTapBtn">กดนับ</span>
           <span style="font-size:11px;opacity:.75">TAP</span>
         </button>
       </div>
@@ -945,6 +1091,8 @@
     </div>
   </div>
 
+  <div class="ios-arrow" id="ios-arrow">⬇</div>
+
   <!-- INSTALL MODAL (บังคับ/แนะนำติดตั้งเป็นแอพบนหน้าจอโฮม) -->
   <div class="backdrop" id="install-backdrop" onclick="if(event.target===this)closeInstallModal()" style="align-items:center">
     <div class="sheet glass install-modal" style="position:relative;max-width:420px;width:92vw;padding:24px 20px;text-align:center">
@@ -953,10 +1101,8 @@
         <img src="logo.png" alt="Yateem TV" onerror="this.onerror=null;this.src='icon.jpg'" style="width:72px;height:72px;border-radius:18px;border:2px solid var(--accent);box-shadow:0 8px 24px rgba(0,0,0,.4);object-fit:cover">
         <span style="position:absolute;bottom:-4px;right:-4px;background:var(--accent);color:#1b1400;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px">APP</span>
       </div>
-      <div style="font-size:20px;font-weight:700;color:var(--accent);margin-bottom:6px">ติดตั้ง Yateem TV บนหน้าจอโฮม</div>
-      <div style="font-size:13px;color:var(--text);opacity:.9;line-height:1.5;margin-bottom:16px">
-        รับชมไลฟ์สด ดูผังรายการ ฟังบรรยาย และเช็คเวลาละหมาดได้สะดวกรวดเร็ว เหมือนเปิดแอปมือถือโดยตรง
-      </div>
+      <div style="font-size:20px;font-weight:700;color:var(--accent);margin-bottom:6px" data-lbl="installTitle">ติดตั้ง Yateem TV บนหน้าจอโฮม</div>
+      <div style="font-size:13px;color:var(--text);opacity:.9;line-height:1.5;margin-bottom:16px" data-lbl="installDesc">รับชมไลฟ์สด ดูผังรายการ ฟังบรรยาย และเช็คเวลาละหมาดได้สะดวกรวดเร็ว เหมือนเปิดแอปมือถือโดยตรง</div>
 
       <!-- กล่องคำแนะนำตามอุปกรณ์ -->
       <div id="install-guide-box" style="background:var(--glass-2);border:1px solid var(--stroke);border-radius:12px;padding:14px;text-align:left;font-size:13px;line-height:1.6;margin-bottom:16px">
@@ -966,9 +1112,22 @@
         <button type="button" id="modal-install-btn" onclick="doInstallFromModal()" style="width:100%;padding:12px 18px;border:none;border-radius:12px;background:linear-gradient(135deg,#ffcf40,#e6a817);color:#1f1600;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(255,207,64,.35)">
           📲 ติดตั้งแอพลงหน้าจอโฮมทันที
         </button>
-        <button type="button" class="mini" onclick="closeInstallModal()" style="padding:8px 12px;opacity:.75;background:transparent;border:none;color:var(--muted);font-size:12px">
-          เข้าชมเว็บไซต์ต่อไป
-        </button>
+        <button type="button" class="mini" onclick="closeInstallModal()" style="padding:8px 12px;opacity:.75;background:transparent;border:none;color:var(--muted);font-size:12px" data-lbl="installSkip">เข้าชมเว็บไซต์ต่อไป</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- IN-APP BROWSER (ยังค้างอยู่ในแอป LINE/Facebook — ชวนเปิดใน Chrome/Safari) -->
+  <div class="backdrop" id="inapp-backdrop" style="align-items:center">
+    <div class="sheet glass" style="position:relative;max-width:400px;width:92vw;text-align:center">
+      <div style="font-size:40px">🌐</div>
+      <h2 data-lbl="inappTitle">เปิดใน Chrome / Safari</h2>
+      <div style="color:var(--muted);font-size:14px;line-height:1.6;margin:6px 0 14px" data-lbl="inappDesc">เพื่อดูไลฟ์ลื่น ๆ และติดตั้งแอปลงหน้าจอได้ กรุณาเปิดในเบราว์เซอร์หลักของเครื่องค่ะ</div>
+      <div id="inapp-hint" style="font-size:13px;line-height:1.6;background:var(--glass-2);border:1px solid var(--stroke);border-radius:12px;padding:10px;margin-bottom:14px;display:none" data-lbl="inappHintIos">แตะปุ่ม ⋯ มุมขวาบน แล้วเลือก "เปิดในเบราว์เซอร์" (Open in Safari)</div>
+      <div class="sheet-btns" style="flex-direction:column">
+        <button class="primary" onclick="window.ytEscape&&window.ytEscape()" data-lbl="inappOpenBtn">🌐 เปิดในเบราว์เซอร์</button>
+        <button onclick="copyText(location.href.split('#')[0]).then(()=>toast(lbl('inappCopied')))" data-lbl="inappCopyBtn">🔗 คัดลอกลิงก์ไปวางในเบราว์เซอร์</button>
+        <button onclick="document.getElementById('inapp-backdrop').classList.remove('open')" style="background:transparent;border:none;color:var(--muted);font-weight:400" data-lbl="inappStayBtn">ใช้งานต่อในแอปนี้</button>
       </div>
     </div>
   </div>
@@ -977,13 +1136,11 @@
   <div class="backdrop" id="share-backdrop" onclick="if(event.target===this)closeShare()">
     <div class="sheet glass" style="position:relative;max-width:440px;width:92vw">
       <button class="close" onclick="closeShare()">×</button>
-      <h2>🔗 แชร์ Yateem TV</h2>
-      <div style="font-size:12px;color:var(--muted);margin-top:2px">แชร์ลิงก์พร้อมชวนเพื่อนติดตั้งแอพลงหน้าจอโฮม</div>
+      <h2 data-lbl="shareTitle">🔗 แชร์ Yateem TV</h2>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px" data-lbl="shareDesc">แชร์ลิงก์พร้อมชวนเพื่อนติดตั้งแอพลงหน้าจอโฮม</div>
       <div class="rail" id="share-links" style="margin-top:14px"></div>
       <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--stroke)">
-        <button type="button" class="mini" onclick="closeShare();promptInstallModal(true)" style="width:100%;padding:10px;background:var(--glass-2);border:1px solid var(--accent);color:var(--accent);font-weight:700;border-radius:10px;font-size:13px">
-          📲 ติดตั้ง Yateem TV ลงหน้าจอโฮมเครื่องนี้
-        </button>
+        <button type="button" class="mini" onclick="closeShare();promptInstallModal(true)" style="width:100%;padding:10px;background:var(--glass-2);border:1px solid var(--accent);color:var(--accent);font-weight:700;border-radius:10px;font-size:13px" data-lbl="shareInstallBtn">📲 ติดตั้ง Yateem TV ลงหน้าจอโฮมเครื่องนี้</button>
       </div>
     </div>
   </div>
@@ -1454,7 +1611,7 @@
     installCard.href='javascript:void(0)';
     installCard.onclick=()=>promptInstallModal(true);
     installCard.innerHTML=`<div class="ic" style="background:linear-gradient(135deg,#ffcf40,#e6a817);color:#1f1600;font-size:22px;box-shadow:0 4px 14px rgba(255,207,64,.4)">📲</div>`+
-      `<div><div class="nm" style="font-size:14px;line-height:1.25">ติดตั้งแอพ</div><div class="sub">ลงหน้าจอโฮมทันที</div></div>`;
+      `<div><div class="nm" style="font-size:14px;line-height:1.25">${esc(lbl('socialInstallName'))}</div><div class="sub">${esc(lbl('socialInstallSub'))}</div></div>`;
     rail.appendChild(installCard);
     if(!rail.children.length){ rail.innerHTML='<div class="card glass" style="color:var(--muted);font-size:13px">ยังไม่ได้ตั้งค่าโซเชียลค่ะ</div>'; }
   }
@@ -1478,6 +1635,7 @@
 
   async function initChat(){
     const note=document.getElementById('chat-note');
+    note.textContent=lbl('chatConnecting');
     if(!initFirebaseApp()){ note.textContent='แชทยังไม่พร้อม (ผู้ดูแลยังไม่ได้ตั้งค่า Firebase)'; return; }
     try{
       // รับผลกลับจากการล็อกอิน social (signInWithRedirect) ถ้ามี
@@ -1552,7 +1710,8 @@
     const d=ts?new Date(ts):new Date(), now=new Date();
     const hh=String(d.getHours()).padStart(2,'0');
     const sameDay=d.toDateString()===now.toDateString();
-    let day; try{ day=sameDay?'วันนี้':d.toLocaleDateString('th-TH',{day:'numeric',month:'short'}); }catch(e){ day=sameDay?'วันนี้':(d.getDate()+'/'+(d.getMonth()+1)); }
+    const todayTxt=lbl('schedToday')||'วันนี้';
+    let day; try{ day=sameDay?todayTxt:d.toLocaleDateString('th-TH',{day:'numeric',month:'short'}); }catch(e){ day=sameDay?todayTxt:(d.getDate()+'/'+(d.getMonth()+1)); }
     return day+' '+hh+':00 น.';
   }
   function bindMessages(){
@@ -1652,7 +1811,7 @@
     if(loggedIn){
       const ph=document.getElementById('lp-photo'); ph.src=id.photo||'icon.jpg'; ph.onerror=function(){this.src='icon.jpg';};
       document.getElementById('lp-name').textContent=id.name||'ผู้ใช้';
-      document.getElementById('lp-sub').textContent=isAdmin?'ผู้ดูแลระบบ':'ผู้ชม Yateem TV';
+      document.getElementById('lp-sub').textContent=isAdmin?'ผู้ดูแลระบบ':lbl('viewerRole');
     }
     document.getElementById('login-backdrop').classList.add('open');
   }
@@ -1696,8 +1855,8 @@
     const note=document.getElementById('chat-note'); if(!note) return;
     if(!chatOn) return;
     const id=currentIdentity();
-    if(id.name){ note.innerHTML='กำลังแชทในชื่อ <b>'+esc(id.name)+'</b>'; }
-    else { note.innerHTML='พิมพ์เพื่อแชทได้เลย หรือ <span class="login-link" onclick="openLogin()">เข้าสู่ระบบเพื่อแชทด้วยชื่อจริง</span>'; }
+    if(id.name){ note.innerHTML=esc(lbl('chatAs'))+' <b>'+esc(id.name)+'</b>'; }
+    else { note.innerHTML=esc(lbl('chatGuestHint'))+' <span class="login-link" onclick="openLogin()">'+esc(lbl('chatLoginLink'))+'</span>'; }
   }
 
   /* ============================================================
@@ -1913,9 +2072,17 @@
     const meta=document.querySelector('meta[name=theme-color]'); if(meta) meta.setAttribute('content', th.bg);
   }
   // ---- ข้อความ/ปุ่ม ----
+  // ใส่ข้อความหลายบรรทัดแบบปลอดภัย (textContent + <br>) ไม่ใช้ innerHTML ดิบ
+  function setMultiline(el, text){
+    el.textContent='';
+    String(text).split('\n').forEach((line,i)=>{ if(i) el.appendChild(document.createElement('br')); el.append(line); });
+  }
   function applyLabels(){
     document.querySelectorAll('[data-lbl]').forEach(el=>{ const k=el.getAttribute('data-lbl');
       const v=lbl(k); if(v!==undefined && v!==null) el.textContent=v; });
+    document.querySelectorAll('[data-lbl-ml]').forEach(el=>{ const k=el.getAttribute('data-lbl-ml');
+      const v=lbl(k); if(v!==undefined && v!==null) setMultiline(el, v); });
+    document.title = lbl('pageTitle');
     document.querySelectorAll('[data-ph]').forEach(el=>{ const k=el.getAttribute('data-ph');
       const v=lbl(k); if(v!==undefined && v!==null) el.setAttribute('placeholder', v); });
   }
@@ -1976,7 +2143,7 @@
     const web=((CONFIG.market&&CONFIG.market.web)||'').trim();
     const prev=((CONFIG.market&&CONFIG.market.previewImg)||'').trim();
     const isHttp=/^https?:\/\//i.test(web) && !/liff\.line\.me/i.test(web);
-    const cta=`<div class="mp-tap">🛒 แตะเพื่อสั่งซื้อเลย ›</div>`;
+    const cta=`<div class="mp-tap">${esc(lbl('marketTapCta'))}</div>`;
     if(isHttp){
       // โหลด iframe แบบ lazy — เก็บ URL ไว้ก่อน ค่อยฝังตอนเข้าแท็บ Market (กันแอปร้านทั้งแอปกิน main thread ตั้งแต่เปิดหน้า)
       box.dataset.iframeSrc = web;
@@ -1994,14 +2161,14 @@
     const box=document.getElementById('market-preview'); if(!box) return;
     const src=box.dataset.iframeSrc; if(!src) return;              // ไม่ใช่โหมด iframe (รูป/ไม่มี)
     if(box.querySelector('iframe')) return;                        // ฝังแล้ว
-    const cta=`<div class="mp-tap">🛒 แตะเพื่อสั่งซื้อเลย ›</div>`;
+    const cta=`<div class="mp-tap">${esc(lbl('marketTapCta'))}</div>`;
     box.innerHTML=`<iframe src="${esc(src)}" title="Yateem Market" loading="lazy" scrolling="no" sandbox="allow-scripts allow-same-origin"></iframe>${cta}`;
   }
   function unmountMarketPreview(){
     const box=document.getElementById('market-preview'); if(!box) return;
     if(!box.dataset.iframeSrc) return;                             // โหมดรูป/ไม่มี iframe — ไม่ต้องยุ่ง
     if(!box.querySelector('iframe')) return;
-    box.innerHTML=`<div class="mp-tap">🛒 แตะเพื่อสั่งซื้อเลย ›</div>`;  // ถอด iframe คืน main thread
+    box.innerHTML=`<div class="mp-tap">${esc(lbl('marketTapCta'))}</div>`;  // ถอด iframe คืน main thread
   }
   function openVideo(id,title){
     try{ document.getElementById('player').pause(); }catch(e){}
@@ -2054,7 +2221,7 @@
   function fileHtml(label,f){
     if(!f||!f.url) return '';
     const inner = (f.type==='pdf')
-      ? `<a href="javascript:void(0)" onclick="openExternal('${esc(f.url)}')">📄 เปิดผัง (PDF)</a>`
+      ? `<a href="javascript:void(0)" onclick="openExternal('${esc(f.url)}')">${esc(lbl('schedPdfBtn'))}</a>`
       : `<img src="${esc(f.url)}" alt="ผังรายการ" style="cursor:zoom-in" onclick="openLightbox('${esc(f.url)}')">`;
     return `<div class="sched-file">${label?('<h4>'+esc(label)+'</h4>'):''}${inner}</div>`;
   }
@@ -2226,10 +2393,34 @@
   // ---- ข้อความ (แอดมิน) ----
   function renderLabelsForm(){
     const box=document.getElementById('labels-form'); box.innerHTML='';
+    // ช่องค้นหา + แยกหมวดแบบพับได้ (ข้อความเยอะ หาง่ายขึ้น)
+    const search=document.createElement('input');
+    search.type='search'; search.placeholder='🔎 ค้นหาข้อความที่ต้องการแก้...'; search.style.marginBottom='10px';
+    box.appendChild(search);
+    const groups={};
     Object.keys(LABELS).forEach(k=>{
-      const wrap=document.createElement('div');
-      wrap.innerHTML=`<label>${esc(LABEL_DESC[k]||k)}</label><input id="lbl-${k}" value="${esc(lbl(k))}">`;
-      box.appendChild(wrap);
+      const g=LABEL_GROUP[k]||'อื่น ๆ';
+      if(!groups[g]){
+        const det=document.createElement('details'); det.className='lbl-group';
+        det.innerHTML=`<summary>${esc(g)}</summary>`;
+        box.appendChild(det); groups[g]=det;
+      }
+      const wrap=document.createElement('div'); wrap.className='lbl-row';
+      const multi=String(LABELS[k]).indexOf('\n')>-1 || String(lbl(k)).length>60;
+      wrap.innerHTML=`<label>${esc(LABEL_DESC[k]||k)}</label>`+
+        (multi ? `<textarea id="lbl-${k}" rows="3"></textarea>` : `<input id="lbl-${k}">`);
+      wrap.querySelector('#lbl-'+k).value=lbl(k);
+      wrap.dataset.q=(LABEL_DESC[k]+' '+lbl(k)+' '+k).toLowerCase();
+      groups[g].appendChild(wrap);
+    });
+    search.addEventListener('input',()=>{
+      const q=search.value.trim().toLowerCase();
+      box.querySelectorAll('.lbl-group').forEach(det=>{
+        let any=false;
+        det.querySelectorAll('.lbl-row').forEach(r=>{ const hit=!q||r.dataset.q.indexOf(q)>-1; r.style.display=hit?'':'none'; if(hit) any=true; });
+        det.style.display=any?'':'none';
+        if(q) det.open=any;
+      });
     });
   }
   async function saveLabels(){
@@ -3067,21 +3258,22 @@
     try {
       const u = new URL(base, location.href);
       u.searchParams.set('install', '1');
+      u.searchParams.set('openExternalBrowser', '1');   // LINE จะเปิดลิงก์นี้ในเบราว์เซอร์หลักเอง
       return u.href;
     } catch(e) {
-      return base + (base.includes('?') ? '&install=1' : '?install=1');
+      return base + (base.includes('?') ? '&' : '?') + 'install=1&openExternalBrowser=1';
     }
   }
   async function shareSite(){
     const url = shareUrl();
-    const text = 'ดูไลฟ์สด Yateem TV พร้อมติดตั้งเป็นแอพบนหน้าจอโฮมได้ทันที 📺📲';
+    const text = lbl('shareText');
     // สำหรับคนกดแชร์: หากเครื่องตัวเองยังไม่ได้ติดตั้งแอพ เด้ง modal ชวนติดตั้งด้วย
     if(!isStandalone()){
       setTimeout(()=>{ promptInstallModal(false); }, 1500);
     }
     if(navigator.share){
       try{
-        await navigator.share({title:'Yateem TV (ติดตั้งเป็นแอพ)', text, url});
+        await navigator.share({title:lbl('shareSubject'), text, url});
         return;
       }catch(e){
         if(e && e.name==='AbortError') return;
@@ -3093,7 +3285,7 @@
       `<a class="card glass" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=${enc}"><div class="ic" style="background:#1877F2">f</div><div class="nm">Facebook</div></a>`+
       `<a class="card glass" target="_blank" href="https://twitter.com/intent/tweet?text=${et}&url=${enc}"><div class="ic" style="background:#000">𝕏</div><div class="nm">X</div></a>`+
       `<a class="card glass" target="_blank" href="https://wa.me/?text=${et}%20${enc}"><div class="ic" style="background:#25D366">🟢</div><div class="nm">WhatsApp</div></a>`+
-      `<a class="card glass" href="javascript:void(0)" onclick="copyText('${url}').then(()=>toast('คัดลอกลิงก์พร้อมติดตั้งแอพแล้วค่ะ ✅'))"><div class="ic" style="background:var(--accent);color:#241a00">🔗</div><div class="nm">คัดลอกลิงก์</div></a>`;
+      `<a class="card glass" href="javascript:void(0)" onclick="copyText('${url}').then(()=>toast(lbl('shareCopied')))"><div class="ic" style="background:var(--accent);color:#241a00">🔗</div><div class="nm">${esc(lbl('shareCopyLink'))}</div></a>`;
     document.getElementById('share-backdrop').classList.add('open');
   }
   function closeShare(){ document.getElementById('share-backdrop').classList.remove('open'); }
@@ -3353,42 +3545,76 @@
       (thHijri ? `<div class="pd-ar" title="${esc(arOriginal)}">${esc(thHijri)}</div>` : '');
   }
 
+  // ระยะทางจริงบนผิวโลก (กม.) — สูตร haversine
+  function distKm(lat1,lng1,lat2,lng2){
+    const R=6371, toR=Math.PI/180;
+    const dLat=(lat2-lat1)*toR, dLng=(lng2-lng1)*toR;
+    const a=Math.sin(dLat/2)**2 + Math.cos(lat1*toR)*Math.cos(lat2*toR)*Math.sin(dLng/2)**2;
+    return 2*R*Math.asin(Math.sqrt(a));
+  }
+  // ตำแหน่ง GPS จริงที่บันทึกไว้ (ใช้คำนวณเวลาละหมาดตามพิกัดจริง แทนพิกัดกลางจังหวัด)
+  function savedGps(){
+    try{ const g=JSON.parse(localStorage.getItem('yt_prayer_gps')||'null'); return (g && isFinite(g.lat) && isFinite(g.lng)) ? g : null; }catch(e){ return null; }
+  }
+  function renderPrayerLoc(){
+    const el=document.getElementById('prayer-loc'); if(!el) return;
+    const g=savedGps();
+    const sel=document.getElementById('prayer-province');
+    if(!g || !sel || g.prov!==sel.value){ el.style.display='none'; el.textContent=''; return; }
+    const match=PROVINCES.find(([th,en])=>en===g.prov);
+    el.textContent='';
+    el.append('📍 ' + g.lat.toFixed(5) + ', ' + g.lng.toFixed(5) + ' (±' + Math.round(g.acc||0) + ' ม.)');
+    el.appendChild(document.createElement('br'));
+    el.append(lbl('prayerLocNearest') + ' ' + (match?match[0]:g.prov) + ' · ' + lbl('prayerLocByGps') + ' · ');
+    const a=document.createElement('a');
+    a.href='https://www.google.com/maps?q='+g.lat+','+g.lng; a.target='_blank'; a.rel='noopener';
+    a.textContent=lbl('prayerLocMap');
+    el.appendChild(a);
+    el.style.display='';
+  }
+
   function detectCurrentLocation(){
     if(!navigator.geolocation){
       toast('อุปกรณ์นี้ไม่รองรับการระบุตำแหน่ง (GPS) ค่ะ');
       return;
     }
     const btn=document.getElementById('prayer-gps-btn');
+    const btnTxt=lbl('prayerGpsBtn');
     if(btn) btn.textContent='📍 กำลังหา...';
     toast('กำลังค้นหาตำแหน่งของคุณ...');
 
     navigator.geolocation.getCurrentPosition(
       (pos)=>{
-        if(btn) btn.textContent='📍 ตำแหน่งฉัน';
-        const uLat=pos.coords.latitude, uLng=pos.coords.longitude;
-        let nearestKey='Bangkok', minDist=Infinity;
+        if(btn) btn.textContent=btnTxt;
+        const uLat=pos.coords.latitude, uLng=pos.coords.longitude, acc=pos.coords.accuracy;
+        let nearestKey=null, minDist=Infinity;
         for(const [k, [plat, plng]] of Object.entries(PROV_COORDS)){
-          const dLat = uLat - plat;
-          const dLng = (uLng - plng) * Math.cos(uLat * Math.PI / 180);
-          const d = dLat * dLat + dLng * dLng;
+          const d = distKm(uLat, uLng, plat, plng);
           if(d < minDist){ minDist = d; nearestKey = k; }
         }
+        if(!nearestKey){ toast('ไม่สามารถระบุจังหวัดได้ค่ะ'); return; }
         const sel=document.getElementById('prayer-province');
         if(sel) sel.value = nearestKey;
-        try{ localStorage.setItem('yt_prayer_prov', nearestKey); }catch(e){}
+        try{
+          localStorage.setItem('yt_prayer_prov', nearestKey);
+          localStorage.setItem('yt_prayer_gps', JSON.stringify({lat:uLat, lng:uLng, acc:acc, prov:nearestKey, ts:Date.now()}));
+        }catch(e){}
         loadPrayer(nearestKey);
         const match = PROVINCES.find(([th, en])=>en===nearestKey);
-        toast('📍 ตำแหน่งของคุณ: '+(match?match[0]:nearestKey));
+        toast('📍 ' + (match?match[0]:nearestKey) + ' (±' + Math.round(acc) + ' ม.)');
       },
       (err)=>{
-        if(btn) btn.textContent='📍 ตำแหน่งฉัน';
+        if(btn) btn.textContent=btnTxt;
         if(err.code === 1){
           toast('กรุณาอนุญาตการเข้าถึงตำแหน่ง (Location) ในเบราว์เซอร์ค่ะ');
+        } else if(err.code === 3){
+          toast('หาตำแหน่งไม่ทัน ลองออกไปที่โล่งหรือเปิด GPS แล้วลองใหม่ค่ะ');
         } else {
           toast('ไม่สามารถระบุตำแหน่งได้ ลองใหม่อีกครั้งค่ะ');
         }
       },
-      { timeout: 10000, maximumAge: 60000, enableHighAccuracy: false }
+      // ขอความแม่นยำสูงจาก GPS จริง และไม่ใช้ตำแหน่งเก่าที่แคชไว้
+      { timeout: 15000, maximumAge: 0, enableHighAccuracy: true }
     );
   }
 
@@ -3429,7 +3655,8 @@
 
   function onProvinceChange(){
     const v=document.getElementById('prayer-province').value;
-    try{ localStorage.setItem('yt_prayer_prov',v); }catch(e){}
+    // เลือกจังหวัดเอง = เลิกใช้พิกัด GPS ที่บันทึกไว้
+    try{ localStorage.setItem('yt_prayer_prov',v); localStorage.removeItem('yt_prayer_gps'); }catch(e){}
     loadPrayer(v);
   }
 
@@ -3441,11 +3668,22 @@
     const match = PROVINCES.find(([th, en]) => th === targetCity || en.toLowerCase() === targetCity.toLowerCase());
     if(match) targetCity = match[1];
 
+    renderPrayerLoc();
+    const d0 = new Date();
+    const ds0 = `${String(d0.getDate()).padStart(2,'0')}-${String(d0.getMonth()+1).padStart(2,'0')}-${d0.getFullYear()}`;
+    const gps = savedGps();
     try{
-      let res = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(targetCity)}&country=Thailand&method=3`);
-      let j = await res.json();
+      let res, j;
+      if(gps && gps.prov === targetCity){
+        // มีพิกัด GPS จริง — คำนวณเวลาละหมาดจากตำแหน่งจริง
+        res = await fetch(`https://api.aladhan.com/v1/timings/${ds0}?latitude=${gps.lat}&longitude=${gps.lng}&method=3`);
+        j = await res.json();
+      } else {
+        res = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(targetCity)}&country=Thailand&method=3`);
+        j = await res.json();
+      }
       if(!j || j.code !== 200 || !j.data || !j.data.timings){
-        const coords = PROV_COORDS[targetCity] || PROV_COORDS['Bangkok'];
+        const coords = PROV_COORDS[targetCity];
         if(coords){
           const [lat, lng] = coords;
           const d = new Date();
@@ -3469,10 +3707,10 @@
     const grid=document.getElementById('prayer-grid'), nx=document.getElementById('prayer-next'); if(!prayerTimings) return;
     const now=nowHM(); let nextName=null,nextTime=null;
     for(const [k] of PRAYER_NAMES){ const t=(prayerTimings[k]||'').slice(0,5); if(t>now){ nextName=k; nextTime=t; break; } }
-    grid.innerHTML=PRAYER_NAMES.map(([k,th])=>{ const t=(prayerTimings[k]||'').slice(0,5);
-      return `<div class="pcell${k===nextName?' next':''}"><div class="pn">${th}</div><div class="pt">${t}</div></div>`; }).join('');
-    nx.textContent = nextName ? ('⏳ ละหมาดถัดไป: '+(PRAYER_NAMES.find(p=>p[0]===nextName)[1])+' '+nextTime)
-      : 'ครบเวลาละหมาดของวันนี้แล้ว 🌙';
+    const pname=(k)=>lbl('prayer_'+k)||(PRAYER_NAMES.find(p=>p[0]===k)||[k,k])[1];
+    grid.innerHTML=PRAYER_NAMES.map(([k])=>{ const t=(prayerTimings[k]||'').slice(0,5);
+      return `<div class="pcell${k===nextName?' next':''}"><div class="pn">${esc(pname(k))}</div><div class="pt">${t}</div></div>`; }).join('');
+    nx.textContent = nextName ? (lbl('prayerNext')+' '+pname(nextName)+' '+nextTime) : lbl('prayerDone');
   }
   function prayerNotifyOn(){ try{ return localStorage.getItem('yt_prayer_notify')==='1'; }catch(e){ return false; } }
   function updateNotifyBtn(){ const b=document.getElementById('prayer-notify-btn'); if(b) b.textContent = prayerNotifyOn()?'🔔 เตือน: เปิด':'🔕 เตือน: ปิด'; }
@@ -3565,7 +3803,15 @@
     renderTasbihUI();
   }
 
+  let tasbihSaveTimer = null;
+  // เขียน localStorage แบบหน่วง 300ms — กดรัว ๆ จะได้ไม่เขียนดิสก์ทุกครั้ง
+  function saveTasbihStateSoon(){
+    clearTimeout(tasbihSaveTimer);
+    tasbihSaveTimer = setTimeout(saveTasbihState, 300);
+  }
+
   function saveTasbihState(){
+    clearTimeout(tasbihSaveTimer);
     try{
       localStorage.setItem('yt_tasbih_cnt', tasbihCountVal);
       localStorage.setItem('yt_tasbih_rnd', tasbihRounds);
@@ -3624,6 +3870,25 @@
     }catch(e){}
   }
 
+  // นับด้วย pointerdown (ตอบสนองทันที ไม่มีดีเลย์แตะ) — click ที่ตามมาจะถูกข้าม ส่วน click จากคีย์บอร์ดยังนับได้
+  let tasbihLastPointer = 0;
+  function tasbihTap(e){
+    if(e.pointerType === 'mouse' && e.button !== 0) return;
+    tasbihLastPointer = Date.now();
+    tasbihCount();
+  }
+  function tasbihClick(){
+    if(Date.now() - tasbihLastPointer < 800) return;
+    tasbihCount();
+  }
+
+  let tasbihDoneTimer = null;
+  function tasbihVibrate(ms){
+    // สั่นสั้น ๆ ครั้งเดียว — ไม่ใช้ pattern ยาว (สั่นแรงและบางเครื่องค้าง)
+    if(!tasbihVib || !navigator.vibrate) return;
+    try{ navigator.vibrate(ms); }catch(e){}
+  }
+
   function tasbihCount(){
     tasbihCountVal++;
     const target = getTasbihTarget();
@@ -3633,14 +3898,21 @@
     if(target > 0 && tasbihCountVal >= target){
       tasbihRounds++;
       tasbihCountVal = 0;
-      if(tasbihVib && navigator.vibrate) navigator.vibrate([80, 50, 100]);
-      toast('🎉 ครบรอบ ' + target + ' ครั้งแล้วค่ะ! (รอบที่ ' + tasbihRounds + ')');
+      tasbihVibrate(35);
+      // แจ้งครบรอบในโมดัลเอง (เบา ไม่มี blur) แทน toast
+      const done = document.getElementById('tasbih-done');
+      if(done){
+        done.textContent = lbl('tasbihRoundDone').replace('{n}', target).replace('{r}', tasbihRounds);
+        done.classList.add('show');
+        clearTimeout(tasbihDoneTimer);
+        tasbihDoneTimer = setTimeout(()=>done.classList.remove('show'), 2200);
+      }
     } else {
-      if(tasbihVib && navigator.vibrate) navigator.vibrate(25);
+      tasbihVibrate(10);
     }
 
     renderTasbihUI();
-    saveTasbihState();
+    saveTasbihStateSoon();
   }
 
   function resetTasbih(){
@@ -3678,6 +3950,7 @@
 
   function closeTasbih(){
     document.getElementById('tasbih-backdrop').classList.remove('open');
+    saveTasbihState();
   }
 
   // ---- lightbox (ผังรายการกดขยาย) ----
@@ -3724,53 +3997,40 @@
   });
   function isStandalone(){ return (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone===true; }
   function isIOS(){ return /iPhone|iPad|iPod/i.test(navigator.userAgent); }
-  function isInAppBrowser(){ return /Line|FBAN|FBAV|Instagram|TikTok|MicroMessenger/i.test(navigator.userAgent||''); }
+  function isInAppBrowser(){ return /\bLine\/|FBAN|FBAV|FB_IAB|Instagram|TikTok|MicroMessenger/i.test(navigator.userAgent||''); }
+  function isIOSSafari(){ const ua=navigator.userAgent||''; return isIOS() && /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS/i.test(ua) && !isInAppBrowser(); }
 
+  // ปุ่ม "ติดตั้ง" บนหัวเว็บ — โชว์เมื่อติดตั้งได้จริง (Android/Chrome มี prompt, iOS Safari มีคำแนะนำ)
+  function updateHdrInstall(){
+    const b=document.getElementById('hdr-install-btn'); if(!b) return;
+    b.style.display = (!isStandalone() && (deferredPrompt || isIOSSafari())) ? '' : 'none';
+  }
+  const INSTALL_SNOOZE_MS = 7*24*3600*1000;   // ปิดแบนเนอร์แล้วเงียบ 7 วัน (ไม่ซ่อนถาวร)
   function showInstall(){
-    try{ if(localStorage.getItem('yt_install_dismiss')==='1') return; }catch(e){}
+    updateHdrInstall();
+    try{ const t=+localStorage.getItem('yt_install_dismiss_at')||0; if(Date.now()-t < INSTALL_SNOOZE_MS) return; }catch(e){}
     if(isStandalone()) return;
     const b=document.getElementById('install-banner'); if(b) b.style.display='flex';
   }
-  function dismissInstall(perm){ const b=document.getElementById('install-banner'); if(b) b.style.display='none'; if(perm){ try{localStorage.setItem('yt_install_dismiss','1');}catch(e){} } }
+  function dismissInstall(perm){ const b=document.getElementById('install-banner'); if(b) b.style.display='none'; if(perm){ try{localStorage.setItem('yt_install_dismiss_at', String(Date.now()));}catch(e){} } updateHdrInstall(); }
 
   function renderInstallGuide(){
     const box = document.getElementById('install-guide-box');
     const btn = document.getElementById('modal-install-btn');
     if(!box) return;
-
-    if(isInAppBrowser()){
-      box.innerHTML = `
-        <div style="color:var(--accent);font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px">
-          <span>⚠️</span> <span>ท่านกำลังเปิดในแอป LINE / Facebook</span>
-        </div>
-        <div style="color:var(--text);opacity:.9;font-size:12px;line-height:1.6">
-          เบราว์เซอร์ภายในแอปยังไม่อนุญาตให้ติดตั้งแอพลงโฮมสกรีนโดยตรง กรุณากดปุ่มเมนู <b>3 จุด [...]</b> หรือ <b>แชร์</b> ที่มุมบน แล้วเลือก <b>"เปิดด้วยเบราว์เซอร์อื่น (Safari / Chrome)"</b> เพื่อกดติดตั้งเป็นแอพนะคะ
-        </div>
-      `;
-      if(btn) btn.textContent = '🌐 แตะเพื่อเปิดในเบราว์เซอร์หลัก';
-    } else if(isIOS()){
-      box.innerHTML = `
-        <div style="color:var(--accent);font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px">
-          <span>🍎</span> <span>วิธีติดตั้งบน iPhone / iPad (Safari):</span>
-        </div>
-        <ol style="margin:0;padding-left:20px;color:var(--text);opacity:.9;font-size:12.5px;line-height:1.7">
-          <li>แตะปุ่ม <b>แชร์ ⎋</b> ที่แถบเมนูด้านล่างของ Safari</li>
-          <li>เลื่อนลงแล้วแตะ <b>"เพิ่มไปยังหน้าจอโฮม" (Add to Home Screen)</b></li>
-          <li>แตะ <b>"เพิ่ม" (Add)</b> ที่มุมขวาบน</li>
-        </ol>
-      `;
-      if(btn) btn.textContent = '✅ เข้าใจแล้ว (เริ่มขั้นตอนติดตั้ง)';
-    } else {
-      box.innerHTML = `
-        <div style="color:var(--accent);font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px">
-          <span>🤖</span> <span>สำหรับ Android / Google Chrome:</span>
-        </div>
-        <div style="color:var(--text);opacity:.9;font-size:12.5px;line-height:1.6">
-          กดปุ่ม <b>"ติดตั้งแอพลงหน้าจอโฮมทันที"</b> ด้านล่างนี้ แล้วกดยืนยัน <b>"ติดตั้ง" (Install)</b> ไอคอน Yateem TV จะปรากฏบนหน้าจอโฮมของคุณเหมือนแอปทั่วไปทันทีค่ะ
-        </div>
-      `;
-      if(btn) btn.textContent = '📲 ติดตั้งแอพลงหน้าจอโฮมทันที';
-    }
+    let title, body, btnKey;
+    if(isInAppBrowser()){ title='installGuideInappTitle'; body='installGuideInapp'; btnKey='installInappBtn'; }
+    else if(isIOS()){ title='installGuideIosTitle'; body='installGuideIos'; btnKey='installIosBtn'; }
+    else { title='installGuideAndroidTitle'; body='installGuideAndroid'; btnKey='installBtn'; }
+    box.textContent='';
+    const h=document.createElement('div');
+    h.style.cssText='color:var(--accent);font-weight:700;margin-bottom:6px';
+    h.textContent=lbl(title);
+    const b=document.createElement('div');
+    b.style.cssText='color:var(--text);opacity:.9;font-size:12.5px;line-height:1.7';
+    setMultiline(b, lbl(body));
+    box.append(h, b);
+    if(btn) btn.textContent = lbl(btnKey);
   }
 
   function promptInstallModal(force){
@@ -3788,39 +4048,46 @@
     const m = document.getElementById('install-backdrop');
     if(m) m.classList.remove('open');
   }
+  // iOS Safari: ติดตั้งด้วยคลิกเดียวไม่ได้ (Apple ไม่อนุญาต) — ปิดโมดัลแล้วโชว์ลูกศรชี้ปุ่มแชร์ด้านล่าง 8 วินาที
+  let iosArrowTimer=null;
+  function showIosArrow(){
+    const a=document.getElementById('ios-arrow'); if(!a) return;
+    a.style.display='block';
+    clearTimeout(iosArrowTimer); iosArrowTimer=setTimeout(()=>{ a.style.display='none'; }, 8000);
+    toast(lbl('installIosToast'));
+  }
+  // ติดตั้งคลิกเดียว: มี prompt ของ Chrome อยู่แล้วก็เรียกเลย ไม่ต้องผ่านโมดัล
+  function runInstallPrompt(){
+    const p=deferredPrompt; if(!p) return false;
+    p.prompt();
+    p.userChoice.then((res)=>{
+      if(res && res.outcome === 'accepted') toast(lbl('installingToast'));
+      deferredPrompt = null; updateHdrInstall(); closeInstallModal();
+    }).catch(()=>{ closeInstallModal(); });
+    return true;
+  }
 
   function doInstallFromModal(){
     if(isInAppBrowser()){
+      closeInstallModal();
+      if(window.ytEscape){ window.ytEscape(); return; }
       try{
         if(window.liff && liff.isInClient()){
           liff.openWindow({ url: shareUrl(), external: true });
-          closeInstallModal();
           return;
         }
       }catch(e){}
       openExternal(shareUrl());
-      closeInstallModal();
       return;
     }
-    if(deferredPrompt){
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((res)=>{
-        if(res && res.outcome === 'accepted'){
-          toast('กำลังติดตั้ง Yateem TV ลงหน้าจอโฮม... 🎉');
-        }
-        deferredPrompt = null;
-        closeInstallModal();
-      }).catch(()=>{ closeInstallModal(); });
-    } else if(isIOS()){
-      toast('แตะปุ่มแชร์ ⎋ ที่ด้านล่าง แล้วเลือก "เพิ่มไปยังหน้าจอโฮม" ค่ะ');
-      closeInstallModal();
-    } else {
-      toast('แตะเมนู 3 จุด [...] ของเบราว์เซอร์ แล้วเลือก "เพิ่มไปยังหน้าจอโฮม"');
-      closeInstallModal();
-    }
+    if(runInstallPrompt()) return;
+    closeInstallModal();
+    if(isIOS()) showIosArrow();
+    else toast(lbl('installAndroidToast'));
   }
 
   function doInstall(){
+    if(!isInAppBrowser() && runInstallPrompt()) return;   // Android/Chrome: กดครั้งเดียวติดตั้ง
     promptInstallModal(true);
   }
   function registerSW(){ if('serviceWorker' in navigator){ navigator.serviceWorker.register('service-worker.js').catch(()=>{}); } }
@@ -3843,6 +4110,16 @@
         setTimeout(showInstall, 2500);
       }
     }catch(e){}
+    updateHdrInstall();
+    // ยังอยู่ในเบราว์เซอร์ของแอป (เด้งออกไม่สำเร็จ/ผู้ใช้กดกลับมา) — โชว์ตัวช่วยเปิดใน Chrome/Safari
+    if(window.__ytInApp){
+      setTimeout(()=>{
+        if(document.visibilityState!=='visible') return;
+        const h=document.getElementById('inapp-hint');
+        if(h && isIOS() && !window.__ytInApp.line) h.style.display='';
+        document.getElementById('inapp-backdrop').classList.add('open');
+      }, 1500);
+    }
     const ab=document.getElementById('admin-backdrop'); if(ab) ab.addEventListener('input',()=>{ adminEditing=true; }, true);  // กัน listener รีเฟรชทับตอนกำลังพิมพ์
     initFirebaseApp();
     await initLiff();      // ต้องรู้ชื่อ LINE ก่อนเปิดแชท
