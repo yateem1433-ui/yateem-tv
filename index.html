@@ -2164,7 +2164,9 @@
   }
   function marketPageUrl(){
     const web=marketWebUrl();
-    try{ return marketPage==='track' ? new URL('track.html', web).href : web; }catch(e){ return web; }
+    // ลิงก์ร้านที่ไม่มี / ปิดท้าย (เช่น .../yateem-kitchen-web) ต้องเติม / ก่อน ไม่งั้น track.html จะหลุดไปที่รากโดเมน
+    const base = /\/[^\/.]+$/.test(web) ? web + '/' : web;
+    try{ return marketPage==='track' ? new URL('track.html', base).href : web; }catch(e){ return web; }
   }
   function renderMarketPreview(){
     const box=document.getElementById('market-preview'); if(!box) return;
