@@ -548,6 +548,13 @@
       background:linear-gradient(135deg,var(--accent),var(--accent-2));
       box-shadow:0 12px 34px -8px var(--glow), 0 4px 14px rgba(0,0,0,.35);
       animation:mpPulse 1.8s ease-in-out infinite; }
+    /* ---- ร้านจริงฝังในแท็บ Market (กดสั่ง/ล็อกอิน/ติดตามออเดอร์ได้เลย ไม่ต้องออกจากหน้า) ---- */
+    .market-shop-bar{ display:flex; gap:6px; margin-top:8px; }
+    .market-shop-bar button{ flex:1; border:1px solid var(--stroke); background:var(--glass-2); color:var(--text);
+      border-radius:12px; padding:9px 6px; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; }
+    .market-shop-bar button.on{ border-color:var(--accent); color:var(--accent); }
+    .market-preview.live{ cursor:default; height:calc(100dvh - 250px); }
+    .market-preview.live iframe{ width:100%; height:100%; transform:none; pointer-events:auto; }
     @keyframes mpPulse{ 0%,100%{ transform:translateY(0) scale(1); } 50%{ transform:translateY(-2px) scale(1.02); } }
 
     /* ---- login sheet ---- */
@@ -636,7 +643,7 @@
         lineOA:    ''    // เช่น https://line.me/R/ti/p/@yateemtv
       },
       market: {
-        web:  '',                                         // URL GitHub Pages ของ Yateem Market
+        web:  'https://yateem1433-ui.github.io/yateem-kitchen-web/',  // URL GitHub Pages ของ Yateem Market (ฝังเต็มจอในแท็บ Market)
         liff: 'https://liff.line.me/2011108556-5742xuTd'  // ลิงก์ LIFF (เปิดใน LINE)
       },
       donate: {
@@ -713,6 +720,9 @@
       ['Market','marketCardDesc','เปิดร้าน Yateem Market — สั่งง่าย ส่งทั่วไทย','การ์ด Market: คำโปรย'],
       ['Market','marketOpenBtn','เปิดร้าน Yateem Market ›','ปุ่มเปิดร้าน'],
       ['Market','marketTapCta','🛒 แตะเพื่อสั่งซื้อเลย ›','ข้อความทับรูปพรีวิวร้าน'],
+      ['Market','marketShopBtn','🛒 ร้านค้า','ปุ่มหน้าร้าน (แถบบนร้าน)'],
+      ['Market','marketTrackBtn','📦 ติดตามออเดอร์','ปุ่มติดตามออเดอร์ (แถบบนร้าน)'],
+      ['Market','marketFullBtn','↗ เต็มจอ','ปุ่มเปิดร้านเต็มจอ'],
       ['ละหมาด & ศาสนา','prayerTitle','เวลาละหมาดวันนี้','หัวข้อเวลาละหมาด'],
       ['ละหมาด & ศาสนา','prayerGpsBtn','📍 ตำแหน่งฉัน','ปุ่มหาตำแหน่ง'],
       ['ละหมาด & ศาสนา','prayerLocNearest','จังหวัดใกล้สุด:','ข้อความหน้าชื่อจังหวัด (GPS)'],
@@ -886,7 +896,12 @@
     <!-- ============ แท็บ 2: YATEEM MARKET ============ -->
     <section class="tab-panel" id="panel-market" style="display:none">
       <div class="sec-title">🛒 <span class="accent" data-lbl="marketTitle">Yateem Market</span></div>
-      <div class="market-preview" id="market-preview" style="display:none" onclick="openMarket()"></div>
+      <div class="market-shop-bar" id="market-shop-bar" style="display:none">
+        <button type="button" id="mshop-btn-shop" class="on" onclick="setMarketPage('shop')" data-lbl="marketShopBtn">🛒 ร้านค้า</button>
+        <button type="button" id="mshop-btn-track" onclick="setMarketPage('track')" data-lbl="marketTrackBtn">📦 ติดตามออเดอร์</button>
+        <button type="button" onclick="openMarketFull()" data-lbl="marketFullBtn">↗ เต็มจอ</button>
+      </div>
+      <div class="market-preview" id="market-preview" style="display:none" onclick="if(!this.classList.contains('live'))openMarket()"></div>
       <!-- fallback เมื่อยังไม่มีพรีวิว (กันแท็บว่าง) -->
       <div class="market-hero glass" id="market-fallback" style="display:none">
         <div class="mh-ic">🛍️</div>
@@ -2137,38 +2152,60 @@
     else { track.style.animation='none'; track.style.justifyContent='center'; track.style.width='100%'; }
   }
   // ---- พรีวิวหน้าร้าน Market ----
+  // ร้านจริงฝังในแท็บ Market: ใช้ได้เมื่อเป็นลิงก์เว็บ (ไม่ใช่ LIFF) และไม่ได้เปิดอยู่ในแอป LINE
+  // (ในแอป LINE ใช้ลิงก์ LIFF ของร้านแทน เพราะล็อกอิน LINE ใน iframe ไม่ได้)
+  let marketPage='shop';
+  const MARKET_WEB_DEFAULT='https://yateem1433-ui.github.io/yateem-kitchen-web/';
+  // ถ้าแอดมินเคยบันทึกช่องลิงก์ร้านเป็นค่าว่างไว้ ให้ใช้ร้านหลักเป็นค่าเริ่มต้น
+  function marketWebUrl(){ return ((CONFIG.market&&CONFIG.market.web)||'').trim() || MARKET_WEB_DEFAULT; }
+  function marketLiveMode(){
+    const web=marketWebUrl();
+    return /^https?:\/\//i.test(web) && !/liff\.line\.me/i.test(web) && !(liffReady && inClient);
+  }
+  function marketPageUrl(){
+    const web=marketWebUrl();
+    try{ return marketPage==='track' ? new URL('track.html', web).href : web; }catch(e){ return web; }
+  }
   function renderMarketPreview(){
     const box=document.getElementById('market-preview'); if(!box) return;
     const fb=document.getElementById('market-fallback');
-    const web=((CONFIG.market&&CONFIG.market.web)||'').trim();
+    const bar=document.getElementById('market-shop-bar');
     const prev=((CONFIG.market&&CONFIG.market.previewImg)||'').trim();
-    const isHttp=/^https?:\/\//i.test(web) && !/liff\.line\.me/i.test(web);
     const cta=`<div class="mp-tap">${esc(lbl('marketTapCta'))}</div>`;
-    if(isHttp){
-      // โหลด iframe แบบ lazy — เก็บ URL ไว้ก่อน ค่อยฝังตอนเข้าแท็บ Market (กันแอปร้านทั้งแอปกิน main thread ตั้งแต่เปิดหน้า)
-      box.dataset.iframeSrc = web;
-      box.innerHTML = cta;
-      box.style.display='block'; if(fb) fb.style.display='none';
+    if(marketLiveMode()){
+      // ฝังแบบ lazy — ค่อยโหลดร้านตอนเข้าแท็บ Market ครั้งแรก
+      box.classList.add('live');
+      if(box.dataset.iframeSrc !== marketPageUrl()){ box.dataset.iframeSrc = marketPageUrl(); box.innerHTML=''; }
+      box.style.display='block'; if(bar) bar.style.display='flex'; if(fb) fb.style.display='none';
       if(document.body.classList.contains('tab-market')) mountMarketPreview();
     }else if(prev){
+      box.classList.remove('live'); if(bar) bar.style.display='none';
       delete box.dataset.iframeSrc;
       box.innerHTML=`<img src="${esc(prev)}" alt="Yateem Market" loading="lazy">${cta}`;
       box.style.display='block'; if(fb) fb.style.display='none';
-    }else{ delete box.dataset.iframeSrc; box.style.display='none'; box.innerHTML=''; if(fb) fb.style.display='flex'; }
+    }else{ box.classList.remove('live'); if(bar) bar.style.display='none'; delete box.dataset.iframeSrc; box.style.display='none'; box.innerHTML=''; if(fb) fb.style.display='flex'; }
   }
-  // ฝัง/ถอด iframe พรีวิว Market ตามการเข้า-ออกแท็บ (เฉพาะโหมด iframe)
+  // ฝังร้านตอนเข้าแท็บ Market ครั้งแรก แล้ว "คงไว้" (ไม่ถอดตอนออก) — กันตะกร้า/ฟอร์มสั่งซื้อที่กรอกค้างหาย
   function mountMarketPreview(){
     const box=document.getElementById('market-preview'); if(!box) return;
-    const src=box.dataset.iframeSrc; if(!src) return;              // ไม่ใช่โหมด iframe (รูป/ไม่มี)
-    if(box.querySelector('iframe')) return;                        // ฝังแล้ว
-    const cta=`<div class="mp-tap">${esc(lbl('marketTapCta'))}</div>`;
-    box.innerHTML=`<iframe src="${esc(src)}" title="Yateem Market" loading="lazy" scrolling="no" sandbox="allow-scripts allow-same-origin"></iframe>${cta}`;
+    const src=box.dataset.iframeSrc; if(!src) return;
+    const cur=box.querySelector('iframe');
+    if(cur && cur.dataset.src===src) return;
+    const f=document.createElement('iframe');
+    f.src=src; f.dataset.src=src; f.title='Yateem Market';
+    f.setAttribute('allow','clipboard-write; web-share');
+    box.textContent=''; box.appendChild(f);
   }
-  function unmountMarketPreview(){
-    const box=document.getElementById('market-preview'); if(!box) return;
-    if(!box.dataset.iframeSrc) return;                             // โหมดรูป/ไม่มี iframe — ไม่ต้องยุ่ง
-    if(!box.querySelector('iframe')) return;
-    box.innerHTML=`<div class="mp-tap">${esc(lbl('marketTapCta'))}</div>`;  // ถอด iframe คืน main thread
+  function unmountMarketPreview(){ /* คงร้านไว้ (ดู mountMarketPreview) */ }
+  function setMarketPage(page){
+    marketPage=page;
+    document.getElementById('mshop-btn-shop').classList.toggle('on', page==='shop');
+    document.getElementById('mshop-btn-track').classList.toggle('on', page==='track');
+    renderMarketPreview();
+  }
+  function openMarketFull(){
+    if(!marketLiveMode()){ openMarket(); return; }
+    location.href = marketPageUrl();   // โดเมนเดียวกัน ล็อกอินเดิมยังอยู่ กด Back กลับมา TV ได้
   }
   function openVideo(id,title){
     try{ document.getElementById('player').pause(); }catch(e){}
