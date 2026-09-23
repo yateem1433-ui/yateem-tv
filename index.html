@@ -1654,7 +1654,7 @@
     if(!initFirebaseApp()){ note.textContent='แชทยังไม่พร้อม (ผู้ดูแลยังไม่ได้ตั้งค่า Firebase)'; return; }
     try{
       // รับผลกลับจากการล็อกอิน social (signInWithRedirect) ถ้ามี
-      try{ await firebase.auth().getRedirectResult(); }catch(e){ if(e&&e.code) toast('ล็อกอินไม่สำเร็จ: '+e.code); }
+      try{ await firebase.auth().getRedirectResult(); }catch(e){ const m=loginErrorText(e); if(m) toast(m); }
       // รอ Firebase กู้สถานะล็อกอินที่จำไว้ (persistence = LOCAL) ก่อน — จะได้ไม่ทับ session แอดมิน
       await new Promise(res=>{ const off=firebase.auth().onAuthStateChanged(()=>{ off(); res(); }); });
       let user=firebase.auth().currentUser;
@@ -1831,6 +1831,15 @@
     document.getElementById('login-backdrop').classList.add('open');
   }
   function closeLogin(){ document.getElementById('login-backdrop').classList.remove('open'); }
+  // แปลง error ของ Firebase เป็นข้อความไทย - คืน '' ถ้าไม่ต้องแจ้ง
+  function loginErrorText(e){
+    const code=(e&&e.code)||'';
+    if(code==='auth/popup-closed-by-user'||code==='auth/cancelled-popup-request') return '';
+    if(code==='auth/operation-not-allowed'||code==='auth/unauthorized-domain') return 'ช่องทางนี้ยังไม่เปิดใช้งาน กรุณาเข้าสู่ระบบด้วยช่องทางอื่น (เช่น LINE) ไปก่อนนะคะ';
+    if(code==='auth/account-exists-with-different-credential') return 'อีเมลนี้เคยเข้าสู่ระบบด้วยอีกช่องทางแล้ว กรุณาใช้ช่องทางเดิมค่ะ';
+    if(code==='auth/network-request-failed') return 'เชื่อมต่ออินเทอร์เน็ตไม่สำเร็จ กรุณาลองใหม่อีกครั้งค่ะ';
+    return 'เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้งค่ะ'+(code?' ('+code+')':'');
+  }
   function socialLogin(provider){
     if(!initFirebaseApp()){ toast('ระบบยังไม่พร้อมค่ะ'); return; }
     try{ firebase.auth().signInWithRedirect(provider); }
