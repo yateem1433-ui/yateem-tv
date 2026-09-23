@@ -39,6 +39,10 @@
         ".write": "auth != null"
       }
     },
+    "kitchen": {
+      ".read": true,
+      ".write": false
+    },
     "admins": {
       ".read": false,
       ".write": false
