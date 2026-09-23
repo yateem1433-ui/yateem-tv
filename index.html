@@ -776,7 +776,6 @@
       ['เข้าสู่ระบบ','loginDesc','เข้าสู่ระบบเพื่อแชทและสั่งซื้อด้วยชื่อจริง (ไม่บังคับ)','คำอธิบายหน้าล็อกอิน'],
       ['เข้าสู่ระบบ','loginLineBtn','เข้าสู่ระบบด้วย LINE','ปุ่ม LINE'],
       ['เข้าสู่ระบบ','loginGoogleBtn','เข้าสู่ระบบด้วย Google','ปุ่ม Google'],
-      ['เข้าสู่ระบบ','loginFbBtn','เข้าสู่ระบบด้วย Facebook','ปุ่ม Facebook'],
       ['เข้าสู่ระบบ','loginGuestBtn','แชทแบบไม่ล็อกอิน','ปุ่มไม่ล็อกอิน'],
       ['เข้าสู่ระบบ','logoutBtn','ออกจากระบบ','ปุ่มออกจากระบบ'],
       ['เข้าสู่ระบบ','viewerRole','ผู้ชม Yateem TV','ป้ายใต้ชื่อผู้ใช้'],
@@ -982,7 +981,6 @@
       <div id="login-choices">
         <button class="login-btn line"   onclick="loginLine()"><span class="lb-ic">💬</span> <span data-lbl="loginLineBtn">เข้าสู่ระบบด้วย LINE</span></button>
         <button class="login-btn google" onclick="loginGoogle()"><span class="lb-ic">G</span> <span data-lbl="loginGoogleBtn">เข้าสู่ระบบด้วย Google</span></button>
-        <button class="login-btn fb"     onclick="loginFacebook()"><span class="lb-ic">f</span> <span data-lbl="loginFbBtn">เข้าสู่ระบบด้วย Facebook</span></button>
         <button class="login-btn guest"  onclick="closeLogin()" data-lbl="loginGuestBtn">แชทแบบไม่ล็อกอิน</button>
       </div>
       <div class="legal-links">การเข้าสู่ระบบถือว่ายอมรับ <a href="terms.html">ข้อกำหนด</a> และ <a href="privacy.html">นโยบายความเป็นส่วนตัว</a></div>
@@ -1850,6 +1848,7 @@
     catch(e){ toast('เริ่มเข้าสู่ระบบไม่สำเร็จค่ะ'); console.error(e); }
   }
   function loginGoogle(){ socialLogin(new firebase.auth.GoogleAuthProvider()); }
+  // ปิดปุ่มไว้ชั่วคราว รอ Meta ยืนยันธุรกิจ (แอป Facebook ยังไม่ Live) - ใส่ปุ่มกลับในหน้าล็อกอินเมื่อพร้อม
   function loginFacebook(){ socialLogin(new firebase.auth.FacebookAuthProvider()); }
   async function loginLine(){
     try{
