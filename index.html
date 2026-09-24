@@ -623,6 +623,11 @@
     .ios-arrow{ position:fixed; left:50%; bottom:calc(8px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:60;
       font-size:34px; color:#ffcf40; animation:iosbounce 1s ease-in-out infinite; pointer-events:none; display:none; }
     @keyframes iosbounce{ 0%,100%{ transform:translate(-50%,0) } 50%{ transform:translate(-50%,8px) } }
+    /* iOS 26: ปุ่ม ••• อยู่มุมขวาล่าง / iPad & Chrome iOS: ปุ่มแชร์อยู่ขวาบน */
+    .ios-arrow.br{ left:auto; right:18px; transform:none; animation-name:iosbounceY; }
+    .ios-arrow.tr{ left:auto; right:18px; bottom:auto; top:calc(8px + env(safe-area-inset-top)); transform:none; animation-name:iosbounceUp; }
+    @keyframes iosbounceY{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(8px) } }
+    @keyframes iosbounceUp{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-8px) } }
     .profile-btn{ width:34px; height:34px; min-width:34px; border-radius:50%; border:1px solid var(--stroke);
       background:var(--glass-2); color:var(--text); font-size:16px; cursor:pointer; display:flex; align-items:center;
       justify-content:center; padding:0; overflow:hidden; }
@@ -953,7 +958,13 @@
       ['ติดตั้งแอป','installGuideAndroidTitle','🤖 สำหรับ Android / Google Chrome:','คำแนะนำ Android: หัวข้อ'],
       ['ติดตั้งแอป','installGuideAndroid','กดปุ่มติดตั้งด้านล่าง แล้วกดยืนยัน "ติดตั้ง" (Install) ไอคอน Yateem TV จะปรากฏบนหน้าจอโฮมทันทีค่ะ','คำแนะนำ Android'],
       ['ติดตั้งแอป','installGuideIosTitle','🍎 วิธีติดตั้งบน iPhone / iPad (Safari):','คำแนะนำ iPhone: หัวข้อ'],
-      ['ติดตั้งแอป','installGuideIos','1. แตะปุ่มแชร์ ⎋ ที่แถบด้านล่างของ Safari\n2. เลื่อนลงแล้วแตะ "เพิ่มไปยังหน้าจอโฮม"\n3. แตะ "เพิ่ม" ที่มุมขวาบน','คำแนะนำ iPhone (หลายบรรทัด)'],
+      ['ติดตั้งแอป','installGuideIos','1. แตะปุ่มแชร์ ⎋ ที่แถบด้านล่างของ Safari\n2. เลื่อนลงแล้วแตะ "เพิ่มไปยังหน้าจอโฮม"\n3. แตะ "เพิ่ม" ที่มุมขวาบน','คำแนะนำ iPhone iOS เก่า (หลายบรรทัด)'],
+      ['ติดตั้งแอป','installGuideIos26','1. แตะปุ่ม ••• ที่มุมขวาล่างของ Safari\n2. แตะ "แชร์"\n3. ปัดรายการด้านล่างขึ้น แล้วแตะ "เพิ่มไปยังหน้าจอโฮม" (อยู่ใต้ "ค้นหาในหน้า")\n4. เปิด "เปิดเป็นแอปเว็บ" ไว้ แล้วแตะ "เพิ่ม"\nถ้าไม่เจอ: เลื่อนลงสุด แตะ "แก้ไขการทำงาน" แล้วเพิ่ม "เพิ่มไปยังหน้าจอโฮม" ค่ะ','คำแนะนำ iPhone iOS 26 ขึ้นไป (หลายบรรทัด)'],
+      ['ติดตั้งแอป','installGuideIpad','1. แตะปุ่มแชร์ ⎋ ที่มุมขวาบนของ Safari\n2. เลื่อนลงแล้วแตะ "เพิ่มไปยังหน้าจอโฮม"\n3. แตะ "เพิ่ม" ค่ะ','คำแนะนำ iPad (หลายบรรทัด)'],
+      ['ติดตั้งแอป','installGuideIosChromeTitle','🌐 วิธีติดตั้งบน iPhone (Chrome):','คำแนะนำ Chrome บน iPhone: หัวข้อ'],
+      ['ติดตั้งแอป','installGuideIosChrome','1. แตะปุ่มแชร์ ⎋ ในแถบที่อยู่ด้านบนของ Chrome\n2. เลื่อนลงแล้วแตะ "เพิ่มไปยังหน้าจอโฮม"\n3. แตะ "เพิ่ม" ค่ะ','คำแนะนำ Chrome บน iPhone (หลายบรรทัด)'],
+      ['ติดตั้งแอป','installIosToast26','แตะ ••• มุมขวาล่าง → "แชร์" → ปัดขึ้นหา "เพิ่มไปยังหน้าจอโฮม" ค่ะ','แจ้งเตือนวิธีติดตั้ง iPhone iOS 26'],
+      ['ติดตั้งแอป','installIosToastTop','แตะปุ่มแชร์ ⎋ ด้านบน แล้วเลือก "เพิ่มไปยังหน้าจอโฮม" ค่ะ','แจ้งเตือนวิธีติดตั้ง iPad / Chrome iPhone'],
       ['ติดตั้งแอป','installGuideInappTitle','⚠️ ท่านกำลังเปิดในแอป LINE / Facebook','คำแนะนำในแอป: หัวข้อ'],
       ['ติดตั้งแอป','installGuideInapp','กดปุ่มด้านล่างเพื่อเปิดใน Chrome / Safari แล้วจึงติดตั้งเป็นแอพได้ค่ะ','คำแนะนำในแอป'],
       ['ติดตั้งแอป','installIosToast','แตะปุ่มแชร์ ⎋ ด้านล่าง แล้วเลือก "เพิ่มไปยังหน้าจอโฮม" ค่ะ','แจ้งเตือนวิธีติดตั้ง iPhone'],
@@ -5028,14 +5039,24 @@
     toast('ติดตั้งแอพ Yateem TV เรียบร้อยแล้วค่ะ! 🎉');
   });
   function isStandalone(){ return (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone===true; }
-  function isIOS(){ return /iPhone|iPad|iPod/i.test(navigator.userAgent); }
+  // iPad รุ่นใหม่รายงานตัวเป็น Mac (MacIntel) — แยกด้วยจอสัมผัส
+  function isIPad(){ return /iPad/i.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1); }
+  function isIOS(){ return /iPhone|iPad|iPod/i.test(navigator.userAgent) || isIPad(); }
   function isInAppBrowser(){ return /\bLine\/|FBAN|FBAV|FB_IAB|Instagram|TikTok|MicroMessenger/i.test(navigator.userAgent||''); }
+  function isIOSChrome(){ return isIOS() && /CriOS/i.test(navigator.userAgent||''); }
   function isIOSSafari(){ const ua=navigator.userAgent||''; return isIOS() && /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS/i.test(ua) && !isInAppBrowser(); }
+  // Safari 26 ค้างเลข iOS ใน UA ไว้ที่ 18_x — ต้องดูจาก "Version/26" แทน
+  function iosSafariMajor(){ const m=(navigator.userAgent||'').match(/Version\/(\d+)/); return m ? +m[1] : 0; }
+  // ตำแหน่งปุ่มที่ผู้ใช้ต้องกด: 'br' = ••• ขวาล่าง (iPhone iOS 26), 'tr' = แชร์ขวาบน (iPad/Chrome), '' = แชร์กลางล่าง (iOS เก่า)
+  function iosShareSpot(){
+    if(isIOSChrome() || isIPad()) return 'tr';
+    return iosSafariMajor() >= 26 ? 'br' : '';
+  }
 
-  // ปุ่ม "ติดตั้ง" บนหัวเว็บ — โชว์เมื่อติดตั้งได้จริง (Android/Chrome มี prompt, iOS Safari มีคำแนะนำ)
+  // ปุ่ม "ติดตั้ง" บนหัวเว็บ — โชว์เมื่อติดตั้งได้จริง (Android/Chrome มี prompt, iOS Safari/Chrome มีคำแนะนำ)
   function updateHdrInstall(){
     const b=document.getElementById('hdr-install-btn'); if(!b) return;
-    b.style.display = (!isStandalone() && (deferredPrompt || isIOSSafari())) ? '' : 'none';
+    b.style.display = (!isStandalone() && (deferredPrompt || isIOSSafari() || isIOSChrome())) ? '' : 'none';
   }
   const INSTALL_SNOOZE_MS = 7*24*3600*1000;   // ปิดแบนเนอร์แล้วเงียบ 7 วัน (ไม่ซ่อนถาวร)
   function showInstall(){
@@ -5052,7 +5073,10 @@
     if(!box) return;
     let title, body, btnKey;
     if(isInAppBrowser()){ title='installGuideInappTitle'; body='installGuideInapp'; btnKey='installInappBtn'; }
-    else if(isIOS()){ title='installGuideIosTitle'; body='installGuideIos'; btnKey='installIosBtn'; }
+    else if(isIOS()){
+      title=isIOSChrome() ? 'installGuideIosChromeTitle' : 'installGuideIosTitle'; btnKey='installIosBtn';
+      body = isIOSChrome() ? 'installGuideIosChrome' : isIPad() ? 'installGuideIpad' : iosShareSpot()==='br' ? 'installGuideIos26' : 'installGuideIos';
+    }
     else { title='installGuideAndroidTitle'; body='installGuideAndroid'; btnKey='installBtn'; }
     box.textContent='';
     const h=document.createElement('div');
@@ -5080,13 +5104,17 @@
     const m = document.getElementById('install-backdrop');
     if(m) m.classList.remove('open');
   }
-  // iOS Safari: ติดตั้งด้วยคลิกเดียวไม่ได้ (Apple ไม่อนุญาต) — ปิดโมดัลแล้วโชว์ลูกศรชี้ปุ่มแชร์ด้านล่าง 8 วินาที
+  // iOS: ติดตั้งด้วยคลิกเดียวไม่ได้ (Apple ไม่อนุญาต) — ปิดโมดัลแล้วโชว์ลูกศรชี้ปุ่มที่ต้องกดจริง 12 วินาที
   let iosArrowTimer=null;
   function showIosArrow(){
     const a=document.getElementById('ios-arrow'); if(!a) return;
+    const spot=iosShareSpot();
+    a.classList.remove('br','tr');
+    if(spot) a.classList.add(spot);
+    a.textContent = spot==='tr' ? '⬆' : '⬇';
     a.style.display='block';
-    clearTimeout(iosArrowTimer); iosArrowTimer=setTimeout(()=>{ a.style.display='none'; }, 8000);
-    toast(lbl('installIosToast'));
+    clearTimeout(iosArrowTimer); iosArrowTimer=setTimeout(()=>{ a.style.display='none'; }, 12000);
+    toast(lbl(spot==='br' ? 'installIosToast26' : spot==='tr' ? 'installIosToastTop' : 'installIosToast'));
   }
   // ติดตั้งคลิกเดียว: มี prompt ของ Chrome อยู่แล้วก็เรียกเลย ไม่ต้องผ่านโมดัล
   function runInstallPrompt(){
