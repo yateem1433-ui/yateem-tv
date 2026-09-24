@@ -52,18 +52,16 @@
         ".write": "auth != null"
       }
     },
-    "giftQueue": {
+    "topups": {
       ".read": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true')",
       ".indexOn": ["status", "slipHash", "ts"],
       "$id": {
         ".read": "auth != null && data.child('uid').val() === auth.uid",
         ".write": "(!data.exists() && auth != null && newData.child('uid').val() === auth.uid && newData.child('status').val() === 'pending') || (auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true'))",
-        ".validate": "newData.hasChildren(['uid','name','giftId','amount','slipUrl','status','ts']) && (data.exists() || newData.child('ts').val() === now)",
+        ".validate": "newData.hasChildren(['uid','name','amount','slipUrl','status','ts']) && (data.exists() || newData.child('ts').val() === now)",
         "uid":       { ".validate": "newData.isString() && newData.val().length <= 128" },
         "name":      { ".validate": "newData.isString() && newData.val().length <= 40" },
-        "anon":      { ".validate": "newData.isBoolean()" },
-        "giftId":    { ".validate": "newData.isString() && newData.val().length <= 20" },
-        "amount":    { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 100000" },
+        "amount":    { ".validate": "newData.isNumber() && newData.val() >= 20 && newData.val() <= 20000 && newData.val() % 1 === 0" },
         "slipUrl":   { ".validate": "newData.isString() && newData.val().beginsWith('https://res.cloudinary.com/') && newData.val().length <= 500" },
         "slipHash":  { ".validate": "newData.isString() && newData.val().length <= 80" },
         "status":    { ".validate": "newData.val() === 'pending' || newData.val() === 'approved' || newData.val() === 'rejected'" },
@@ -72,12 +70,35 @@
         "$other":    { ".validate": false }
       }
     },
+    "wallets": {
+      ".read": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true')",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && ((auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true') || (auth.uid === $uid && (data.exists() || (newData.child('balance').val() === 0 && !newData.child('credited').exists()))))",
+        "balance": { ".validate": "newData.isNumber() && newData.val() >= 0 && ((auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true') || (!data.exists() && newData.val() === 0) || (newData.parent().child('lastGiftId').isString() && !root.child('giftFeed').child(newData.parent().child('lastGiftId').val()).exists() && newData.val() === data.val() - newData.parent().parent().parent().child('giftFeed').child(newData.parent().child('lastGiftId').val()).child('amount').val()))" },
+        "lastGiftId": { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "credited":   { ".validate": "(auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true')" },
+        "$other":     { ".validate": false }
+      }
+    },
+    "giftPrices": {
+      ".read": true,
+      ".write": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true')",
+      "$g": { ".validate": "newData.isNumber() && newData.val() > 0" }
+    },
     "giftFeed": {
       ".read": true,
       ".indexOn": ["ts"],
       "$id": {
-        ".write": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true')",
-        ".validate": "newData.hasChildren(['name','giftId','amount','ts'])"
+        ".write": "auth != null && ((!data.exists() && newData.child('uid').val() === auth.uid) || (!newData.exists() && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true')))",
+        ".validate": "newData.hasChildren(['uid','name','giftId','amount','ts']) && newData.child('ts').val() === now && newData.child('giftId').isString() && newData.child('amount').isNumber() && root.child('giftPrices').child(newData.child('giftId').val()).val() === newData.child('amount').val() && newData.parent().parent().child('wallets').child(auth.uid).child('lastGiftId').val() === $id && newData.parent().parent().child('wallets').child(auth.uid).child('balance').val() === root.child('wallets').child(auth.uid).child('balance').val() - newData.child('amount').val()",
+        "uid":    { ".validate": "newData.isString()" },
+        "name":   { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "anon":   { ".validate": "newData.isBoolean()" },
+        "giftId": { ".validate": "newData.val().length <= 20" },
+        "amount": { ".validate": "newData.val() > 0" },
+        "ts":     { ".validate": true },
+        "$other": { ".validate": false }
       }
     },
     "kitchen": {

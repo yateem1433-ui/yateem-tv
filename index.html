@@ -248,7 +248,6 @@
 
     /* ---- ของขวัญโดเนท (แบบ TikTok) ---- */
     .gift-sheet{ max-height:92vh; overflow-y:auto; }
-    .gift-step{ display:none; } .gift-step.on{ display:block; }
     .gift-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:14px 0 6px; }
     .gift-item{ border:1px solid var(--stroke); background:var(--glass-2); color:var(--text); border-radius:16px; padding:10px 4px 8px;
       cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:3px;
@@ -260,9 +259,20 @@
     .gift-item.on{ border-color:var(--accent); transform:translateY(-2px); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
     .gift-anon{ display:flex; align-items:center; justify-content:center; gap:8px; font-size:14px; color:var(--muted); margin:10px 0 0; cursor:pointer; }
     .gift-anon input{ width:18px; height:18px; accent-color:var(--accent); }
-    .gift-sum{ display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:6px; font-size:15px; margin-top:10px; text-align:center; }
-    .gift-sum img{ width:30px; height:30px; } .gift-sum b{ color:var(--accent); }
     .gift-note{ text-align:center; font-size:13px; color:var(--muted); margin-top:8px; }
+    .gift-item.poor{ opacity:.55; }
+    .coin-ic{ width:1.15em; height:1.15em; vertical-align:-0.2em; }
+    .wallet-bar{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px;
+      padding:8px 8px 8px 14px; border-radius:14px; background:var(--glass-2); border:1px solid var(--stroke); }
+    .wallet-bal{ font-size:15px; } .wallet-bal b{ color:var(--accent); font-size:18px; }
+    .wallet-topup{ border:none; border-radius:10px; padding:8px 12px; font-family:inherit; font-weight:700; font-size:14px; cursor:pointer;
+      color:#04150E; background:linear-gradient(135deg,var(--accent),var(--accent-2)); }
+    .wallet-code{ text-align:center; font-size:14px; margin-top:10px; }
+    .wallet-code b{ letter-spacing:2px; color:var(--accent); font-size:16px; }
+    .wallet-code button{ border:none; background:none; cursor:pointer; font-size:16px; }
+    .move-row{ display:flex; gap:8px; align-items:center; margin-top:10px; }
+    .move-row input{ flex:1; min-width:0; text-align:center; text-transform:uppercase; letter-spacing:2px; background:var(--glass-2);
+      border:1px solid var(--stroke); color:var(--text); border-radius:10px; padding:9px; font-family:inherit; font-size:15px; }
     .gift-toggle{ font-size:22px; }
 
     #gift-layer{ position:absolute; inset:0; z-index:9; pointer-events:none; overflow:hidden; }
@@ -319,7 +329,9 @@
     #gift-admin-fab{ position:fixed; right:14px; bottom:calc(86px + env(safe-area-inset-bottom)); z-index:45; display:none;
       border:none; border-radius:999px; padding:10px 16px; font-family:inherit; font-weight:700; font-size:14px; cursor:pointer;
       color:#04150E; background:linear-gradient(135deg,var(--accent),var(--accent-2)); box-shadow:0 10px 30px -8px var(--glow); }
-    body.is-mod #gift-admin-fab.has{ display:block; }
+    body.is-mod #gift-admin-fab{ display:block; }
+    #gift-admin-fab.has{ animation:fabPulse 1.6s ease-in-out infinite; }
+    @keyframes fabPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.08); } }
     .ga-row{ display:flex; gap:10px; align-items:center; padding:10px; border-radius:14px; background:var(--glass-2); border:1px solid var(--stroke); }
     .ga-row img.slip{ width:58px; height:76px; object-fit:cover; border-radius:8px; cursor:pointer; flex:0 0 auto; background:#fff; }
     .ga-info{ flex:1; min-width:0; font-size:13px; line-height:1.5; word-break:break-word; }
@@ -465,26 +477,12 @@
     #react-pop button:hover{ background:rgba(255,255,255,.18); transform:scale(1.28); }
     #react-pop button:active{ transform:scale(.92); }
 
-    /* ---- ปุ่มอีโมจิ (แทรกลงในข้อความที่พิมพ์) ---- */
-    .emoji-bar{ position:relative; display:flex; align-items:center; flex:0 0 auto; }
-    .emoji-btn{ width:42px; height:42px; min-width:42px; border-radius:12px; border:1px solid var(--stroke); cursor:pointer;
+    /* ---- ปุ่มอันดับผู้สนับสนุน (ซ้ายสุดของแถบพิมพ์แชท) ---- */
+    .lb-btn{ width:42px; height:42px; min-width:42px; flex:0 0 auto; border-radius:12px; border:1px solid var(--stroke); cursor:pointer;
       background:var(--glass-2); font-size:21px; display:flex; align-items:center; justify-content:center;
       transition:transform .15s ease, background .15s ease, border-color .15s ease; padding:0; line-height:1; }
-    .emoji-btn:hover{ background:rgba(255,255,255,.16); border-color:var(--accent); transform:scale(1.06); }
-    .emoji-btn:active{ transform:scale(.92); }
-    .emoji-btn.active{ border-color:var(--accent); box-shadow:0 0 14px -2px var(--glow); }
-    #emoji-panel{ position:absolute; bottom:calc(100% + 10px); left:0; z-index:31; display:none;
-      width:min(320px, calc(100vw - 40px)); max-height:210px; overflow-y:auto; padding:8px;
-      grid-template-columns:repeat(8,1fr); gap:2px;
-      background:rgba(12,18,30,.96); border:1px solid var(--stroke); border-radius:16px;
-      -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px);
-      box-shadow:0 16px 36px rgba(0,0,0,.65), 0 0 24px -6px var(--glow); }
-    #emoji-panel.open{ display:grid; animation:popIn .18s cubic-bezier(0.16, 1, 0.3, 1); }
-    #emoji-panel::-webkit-scrollbar{ width:6px; } #emoji-panel::-webkit-scrollbar-thumb{ background:var(--stroke); border-radius:3px; }
-    #emoji-panel button{ width:34px; height:34px; border:none; background:transparent; cursor:pointer; font-size:22px;
-      border-radius:8px; padding:0; line-height:1; transition:transform .12s ease, background .12s ease; }
-    #emoji-panel button:hover{ background:rgba(255,255,255,.14); transform:scale(1.2); }
-    #emoji-panel button:active{ transform:scale(.9); }
+    .lb-btn:hover{ background:rgba(255,255,255,.16); border-color:var(--accent); transform:scale(1.06); }
+    .lb-btn:active{ transform:scale(.92); }
 
     .react-float{ position:absolute; inset:0; z-index:12; pointer-events:none; overflow:hidden; border-radius:var(--radius); }
     .react-float .fx{ position:absolute; bottom:56px; font-size:28px;
@@ -960,7 +958,6 @@
       <div class="live-bar">
         <span class="now-chip" id="now-chip" style="display:none">🔴 <b data-lbl="nowWatching">กำลังชม:</b>&nbsp;<span id="now-title"></span></span>
         <span style="flex:1"></span>
-        <button class="share-btn" onclick="openLeaderboard()">🏆 อันดับ</button>
         <button class="share-btn" onclick="shareSite()" data-lbl="shareBtn">🔗 แชร์</button>
       </div>
 
@@ -971,10 +968,7 @@
         <div class="react-float" id="react-float"></div>
         <!-- ช่องพิมพ์แชท + ปุ่มรีแอคชัน -->
         <div class="chat-input glass">
-          <div class="emoji-bar" id="emoji-bar">
-            <button type="button" class="emoji-btn" id="emoji-btn" onclick="toggleEmojiPanel(event)" aria-label="แทรกอีโมจิ" title="แทรกอีโมจิ">😊</button>
-            <div id="emoji-panel"></div>
-          </div>
+          <button type="button" class="lb-btn" onclick="openLeaderboard()" aria-label="อันดับผู้สนับสนุน" title="อันดับผู้สนับสนุน">🏆</button>
           <input id="chat-text" type="text" placeholder="พิมพ์ข้อความ..." data-ph="chatPlaceholder" maxlength="300"
                  autocomplete="off" onkeydown="if(event.key==='Enter')sendMessage()">
           <div class="react-bar" id="react-bar"></div>
@@ -1118,32 +1112,46 @@
         <button onclick="copyAccount()" data-lbl="donateCopyBtn">📋 คัดลอกเลขบัญชี</button>
         <button class="primary" onclick="saveQR()" data-lbl="donateSaveBtn">💾 บันทึกรูป QR</button>
       </div>
-      <div class="sheet-btns"><button onclick="openGift()">🎁 ส่งของขวัญขึ้นจอไลฟ์</button></div>
+      <div class="sheet-btns"><button onclick="openGift()">🎁 ส่งของขวัญขึ้นจอไลฟ์</button><button onclick="closeDonate();openTopup()">💰 เติมเหรียญ</button></div>
     </div>
   </div>
 
-  <!-- GIFT SHEET (ส่งของขวัญ: เลือก → สแกนจ่าย → แนบสลิป) -->
+  <!-- GIFT SHEET (ส่งของขวัญด้วยเหรียญ — ขึ้นจอทันที) -->
   <div class="backdrop" id="gift-backdrop" onclick="if(event.target===this)closeGift()">
     <div class="sheet glass gift-sheet" style="position:relative">
       <button class="close" onclick="closeGift()">×</button>
       <h2>🎁 ส่งของขวัญ</h2>
-      <div class="gift-step on" data-step="1">
-        <div style="color:var(--muted); font-size:14px">ของขวัญจะขึ้นบนจอไลฟ์พร้อมชื่อของคุณ หลังแอดมินตรวจยอดโอนแล้วค่ะ</div>
-        <div class="gift-grid" id="gift-grid"></div>
-        <label class="gift-anon"><input type="checkbox" id="gift-anon"> ไม่แสดงชื่อ (ขึ้นเป็น "ผู้ใจบุญ")</label>
-        <div class="sheet-btns"><button class="primary" id="gift-next" onclick="giftGoPay()" disabled>ถัดไป: สแกนจ่าย</button></div>
+      <div class="wallet-bar">
+        <span class="wallet-bal"><img class="coin-ic" src="gift_gold.png" alt=""> <b class="js-wallet-bal">0</b> เหรียญ</span>
+        <button type="button" class="wallet-topup" onclick="openTopup()">+ เติมเหรียญ</button>
       </div>
-      <div class="gift-step" data-step="2">
-        <div class="gift-sum" id="gift-sum"></div>
-        <div class="qr-box" id="gift-qr"></div>
-        <div class="bank" id="gift-bank"></div>
-        <div class="gift-note">โอนแล้วกดแนบรูปสลิป ของขวัญจะขึ้นจอเมื่อแอดมินยืนยันค่ะ</div>
-        <input type="file" id="gift-slip" accept="image/*" style="display:none" onchange="giftSlipChosen(this)">
-        <div class="sheet-btns">
-          <button onclick="giftStep(1)">← เปลี่ยนของขวัญ</button>
-          <button class="primary" id="gift-send" onclick="giftPickSlip()">📎 แนบสลิปแล้วส่ง</button>
-        </div>
+      <div class="gift-grid" id="gift-grid"></div>
+      <label class="gift-anon"><input type="checkbox" id="gift-anon"> ไม่แสดงชื่อ (ขึ้นเป็น "ผู้ใจบุญ")</label>
+      <div class="sheet-btns"><button class="primary" id="gift-send" onclick="sendGift()" disabled>เลือกของขวัญก่อนค่ะ</button></div>
+    </div>
+  </div>
+
+  <!-- TOPUP SHEET (เติมเหรียญ: เลือกยอด → สแกนจ่าย → แนบสลิป → แอดมินตรวจ) -->
+  <div class="backdrop" id="topup-backdrop" onclick="if(event.target===this)closeTopup()">
+    <div class="sheet glass gift-sheet" style="position:relative">
+      <button class="close" onclick="closeTopup()">×</button>
+      <h2>💰 เติมเหรียญ</h2>
+      <div style="color:var(--muted); font-size:14px">1 บาท = 1 เหรียญ · ตอนนี้มี <b class="js-wallet-bal">0</b> เหรียญ</div>
+      <div class="amt-row" id="topup-amts">
+        <button class="amt" data-amt="50">50</button>
+        <button class="amt" data-amt="100">100</button>
+        <button class="amt" data-amt="300">300</button>
+        <button class="amt" data-amt="500">500</button>
+        <button class="amt" data-amt="1000">1,000</button>
+        <input class="amt-input" id="topup-custom" type="number" inputmode="numeric" placeholder="กรอกเอง" min="20" max="20000">
       </div>
+      <div class="qr-box" id="topup-qr"></div>
+      <div class="bank" id="topup-bank"></div>
+      <div class="wallet-code">รหัสกระเป๋าของคุณ: <b id="wallet-code">-</b> <button type="button" onclick="copyWalletCode()" aria-label="คัดลอกรหัส">📋</button></div>
+      <div class="gift-note" id="topup-pending"></div>
+      <div class="gift-note">เหรียญใช้ส่งของขวัญในไลฟ์เท่านั้น ไม่สามารถแลกคืนเป็นเงินได้ — ยอดเติมถือเป็นการร่วมสนับสนุนช่องค่ะ<br>เก็บรหัสกระเป๋าไว้ ถ้าเปลี่ยนเครื่องแจ้งแอดมินเพื่อย้ายเหรียญได้ค่ะ</div>
+      <input type="file" id="topup-slip" accept="image/*" style="display:none" onchange="topupSlipChosen(this)">
+      <div class="sheet-btns"><button class="primary" id="topup-send" onclick="topupPickSlip()" disabled>📎 โอนแล้ว แนบสลิป</button></div>
     </div>
   </div>
 
@@ -1161,13 +1169,19 @@
     </div>
   </div>
 
-  <!-- GIFT ADMIN (แอดมินยืนยันของขวัญ) -->
+  <!-- TOPUP ADMIN (แอดมินตรวจสลิปเติมเหรียญ + ย้ายเหรียญ) -->
   <div class="backdrop" id="ga-backdrop" onclick="if(event.target===this)closeGiftAdmin()">
     <div class="sheet glass gift-sheet" style="position:relative">
       <button class="close" onclick="closeGiftAdmin()">×</button>
-      <h2>🎁 ของขวัญรอยืนยัน</h2>
+      <h2>💰 ตรวจสลิปเติมเหรียญ</h2>
       <div style="color:var(--muted); font-size:13px; margin-bottom:10px">เช็กยอดเข้าในแอปธนาคารก่อนกดยืนยัน — แตะรูปสลิปเพื่อขยายค่ะ</div>
       <div class="lb-list" id="ga-list"></div>
+      <details class="lbl-group" style="margin-top:14px">
+        <summary>🔁 ย้ายเหรียญ (ผู้ชมเปลี่ยนเครื่อง)</summary>
+        <div style="color:var(--muted); font-size:13px; margin-top:6px">ให้ผู้ชมเปิดหน้าเติมเหรียญบนเครื่องใหม่ 1 ครั้ง แล้วแจ้งรหัสเดิม + รหัสใหม่ค่ะ</div>
+        <div class="move-row"><input id="mv-from" placeholder="รหัสเดิม" maxlength="6" autocomplete="off"><span>→</span><input id="mv-to" placeholder="รหัสใหม่" maxlength="6" autocomplete="off"></div>
+        <div class="sheet-btns"><button class="primary" onclick="moveCoins()">ย้ายเหรียญทั้งหมด</button></div>
+      </details>
     </div>
   </div>
 
@@ -1646,7 +1660,7 @@
   </div>
 
   <div class="toast" id="toast"></div>
-  <button id="gift-admin-fab" onclick="openGiftAdmin()">🎁 รอยืนยัน</button>
+  <button id="gift-admin-fab" onclick="openGiftAdmin()">💰 สลิป</button>
 
   <script>
   /* ============================================================
@@ -1835,6 +1849,7 @@
     isAdmin=admin;
     document.body.classList.toggle('is-mod', admin);
     bindGiftAdmin(admin);
+    bindWallet();
     updateProfileBtn(user);
     updateChatNote();
   }
@@ -3348,33 +3363,6 @@
   const REACT_IMG_MAP=Object.fromEntries(REACTIONS.filter(r=>r.img).map(r=>[r.e,r.img]));
   let lastReact=0, reactCloseTimer=null;
 
-  // ---- ปุ่มอีโมจิ: แทรกอีโมจิลงในข้อความที่พิมพ์ (แยกจากรีแอคชันที่ลอยขึ้นจอ) ----
-  const CHAT_EMOJIS = ['😊','😄','😁','😂','🤣','😅','😍','🥰','😘','🙂','🙃','😉','😌','😔','😢','😭','😤','😮','😳','🤔','😴','🥱','👍','👎','👏','🙏','🤲','👌','✌️','🤝','💪','❤️','🧡','💛','💚','💙','💜','🤍','🖤','💖','✨','🔥','🎉','💯','🌙','⭐','🕌','🕋','📿','☪️','🌹','🌸','☀️','💧','📺','🛒'];
-  function renderEmojiPanel(){
-    const panel=document.getElementById('emoji-panel'); if(!panel || panel.dataset.built) return;
-    panel.innerHTML = CHAT_EMOJIS.map(e=>`<button type="button" onclick="insertEmoji('${e}')" aria-label="${e}">${e}</button>`).join('');
-    panel.dataset.built='1';
-  }
-  function toggleEmojiPanel(ev){
-    if(ev) ev.stopPropagation();
-    renderEmojiPanel();
-    const panel=document.getElementById('emoji-panel'), btn=document.getElementById('emoji-btn');
-    const open=panel.classList.toggle('open');
-    if(btn) btn.classList.toggle('active', open);
-  }
-  function insertEmoji(em){
-    const input=document.getElementById('chat-text'); if(!input) return;
-    const max=(CONFIG.chat&&CONFIG.chat.maxLen)||300;
-    let start=input.selectionStart, end=input.selectionEnd;
-    if(start===null||start===undefined){ start=end=input.value.length; }
-    let next = input.value.slice(0,start) + em + input.value.slice(end);
-    if(next.length>max) next = next.slice(0,max);
-    input.value = next;
-    const pos=Math.min(start+em.length, input.value.length);
-    input.focus();
-    try{ input.setSelectionRange(pos,pos); }catch(e){}
-  }
-
   function renderReactions(){
     const bar=document.getElementById('react-bar'); if(!bar) return; bar.innerHTML='';
     const pop=document.createElement('div'); pop.id='react-pop';
@@ -3433,13 +3421,6 @@
       const toggle=bar.querySelector('.react-toggle');
       if(toggle) toggle.classList.remove('active');
     }
-    // ปิดถาดอีโมจิเมื่อแตะที่อื่น
-    const ebar=document.getElementById('emoji-bar');
-    const epanel=document.getElementById('emoji-panel');
-    if(epanel && epanel.classList.contains('open') && ebar && !ebar.contains(ev.target)){
-      epanel.classList.remove('open');
-      const eb=document.getElementById('emoji-btn'); if(eb) eb.classList.remove('active');
-    }
   });
 
   const MAX_FLOATS=25;                                   // กันเครื่องกระตุกตอนคนกดรัว ๆ
@@ -3484,54 +3465,131 @@
       .catch(()=>{});
   }
 
-  // ---- ของขวัญโดเนท (แบบ TikTok): ผู้ชมโอน+แนบสลิป → giftQueue (รอ) → แอดมินยืนยัน → giftFeed → ขึ้นจอทุกเครื่อง ----
-  // สลิปมีข้อมูลบัญชี จึงอยู่ใน giftQueue ที่อ่านได้เฉพาะแอดมิน/เจ้าของ ส่วน giftFeed (สาธารณะ) เขียนได้เฉพาะแอดมิน = ปลอมของขวัญไม่ได้
+  // ---- กระเป๋าเหรียญ + ของขวัญ (แบบ TikTok): เติมเหรียญ (แนบสลิป → แอดมินตรวจ) → ส่งของขวัญได้ทันที ----
+  // ไม่มี backend: ยอดเหรียญคุมด้วย database.rules.json — ส่งของขวัญ = update ครั้งเดียว (giftFeed + หักเหรียญ)
+  // rules ตรวจว่าราคา = giftPrices และยอดใหม่ = ยอดเดิม − ราคา จึงปลอม/ใช้เหรียญซ้ำไม่ได้
   const GIFT_ANON_NAME='ผู้ใจบุญ';
+  const TOPUP_MIN=20, TOPUP_MAX=20000;
   let giftSel=null, giftSending=false;
+  let walletRef=null, walletUid=null, walletBal=0, walletLoaded=false, walletExists=false, livePrices={};
   function giftById(id){ return (CONFIG.gifts||[]).find(g=>g && g.id===id); }
   function fmtBaht(n){ return '฿'+(Number(n)||0).toLocaleString('th-TH'); }
+  function fmtCoin(n){ return (Number(n)||0).toLocaleString('th-TH'); }
+  function priceOf(g){ return Number(livePrices[g.id]) || Number(g.amount) || 0; }   // ราคาจริงจาก DB (ตรงกับ rules)
   function giftIconEl(g){
     if(g && g.img){ const i=document.createElement('img'); i.src=g.img; i.alt=''; return i; }
     const s=document.createElement('span'); s.textContent=(g&&g.emoji)||'🎁'; return s;
   }
+  function walletCode(uid){ return uid ? String(uid).slice(0,6).toUpperCase() : '-'; }
 
+  // ฟังกระเป๋าของตัวเอง (ผูกกับ uid — เปลี่ยน uid เช่นล็อกอิน Google ก็ผูกใหม่)
+  function bindWallet(){
+    if(!db || !myUid || walletUid===myUid) return;
+    if(walletRef) walletRef.off();
+    walletUid=myUid; walletLoaded=false;
+    walletRef=db.ref('wallets/'+myUid);
+    walletRef.on('value', s=>{
+      const w=s.val(); walletLoaded=true; walletExists=!!w;
+      walletBal=w ? (Number(w.balance)||0) : 0;
+      renderWallet();
+    }, e=>console.warn('wallet', e));
+  }
+  function ensureWallet(){                                 // สร้างกระเป๋าว่าง (0 เหรียญ) ครั้งแรก — ให้มีรหัสไว้ย้ายเหรียญได้
+    if(walletRef && walletLoaded && !walletExists) walletRef.set({ balance:0 }).catch(()=>{});
+  }
+  function renderWallet(){
+    document.querySelectorAll('.js-wallet-bal').forEach(el=>{ el.textContent=fmtCoin(walletBal); });
+    const wc=document.getElementById('wallet-code'); if(wc) wc.textContent=walletCode(myUid);
+    document.querySelectorAll('#gift-grid .gift-item').forEach(b=>{
+      const g=giftById(b.dataset.id); if(g) b.classList.toggle('poor', priceOf(g)>walletBal);
+    });
+    updateGiftBtn();
+  }
+  function copyWalletCode(){
+    copyText(walletCode(myUid)).then(()=>toast('คัดลอกรหัสกระเป๋าแล้วค่ะ ✅')).catch(()=>toast('กดค้างที่รหัสเพื่อคัดลอกแทนค่ะ'));
+  }
+
+  // ---- ส่งของขวัญ ----
   function openGift(){
     if(typeof closeDonate==='function') closeDonate();
     giftSel=null;
     const grid=document.getElementById('gift-grid'); grid.innerHTML='';
     (CONFIG.gifts||[]).forEach(g=>{
-      const b=document.createElement('button'); b.type='button'; b.className='gift-item';
+      const b=document.createElement('button'); b.type='button'; b.className='gift-item'; b.dataset.id=g.id;
       const gi=document.createElement('span'); gi.className='gi'; gi.appendChild(giftIconEl(g));
       const gn=document.createElement('span'); gn.className='gn'; gn.textContent=g.name;
-      const gp=document.createElement('span'); gp.className='gp'; gp.textContent=fmtBaht(g.amount);
+      const gp=document.createElement('span'); gp.className='gp'; const ci=document.createElement('img'); ci.className='coin-ic'; ci.src='gift_gold.png'; ci.alt='';
+      gp.append(ci, ' '+fmtCoin(priceOf(g)));
       b.append(gi,gn,gp);
-      b.onclick=()=>{
-        grid.querySelectorAll('.gift-item').forEach(x=>x.classList.toggle('on', x===b));
-        giftSel=g; document.getElementById('gift-next').disabled=false;
-      };
+      b.onclick=()=>{ grid.querySelectorAll('.gift-item').forEach(x=>x.classList.toggle('on', x===b)); giftSel=g; updateGiftBtn(); };
       grid.appendChild(b);
     });
-    document.getElementById('gift-next').disabled=true;
-    giftStep(1);
+    ensureWallet(); renderWallet();
     document.getElementById('gift-backdrop').classList.add('open');
   }
   function closeGift(){ document.getElementById('gift-backdrop').classList.remove('open'); }
-  function giftStep(n){
-    document.querySelectorAll('#gift-backdrop .gift-step').forEach(s=>s.classList.toggle('on', s.dataset.step===String(n)));
+  function updateGiftBtn(){
+    const b=document.getElementById('gift-send'); if(!b) return;
+    if(giftSending){ b.disabled=true; b.textContent='กำลังส่ง...'; return; }
+    if(!giftSel){ b.disabled=true; b.textContent='เลือกของขวัญก่อนค่ะ'; return; }
+    b.disabled=false;
+    const p=priceOf(giftSel);
+    b.textContent = walletBal>=p ? ('ส่ง'+giftSel.name+' ('+fmtCoin(p)+' เหรียญ)') : 'เหรียญไม่พอ — เติมเหรียญ';
   }
-  function giftGoPay(){
-    if(!giftSel) return;
+  async function sendGift(){
+    if(!giftSel || giftSending) return;
+    const g=giftSel, amount=priceOf(g);
+    if(walletBal<amount){ openTopup(); return; }
+    if(!chatOn || !db || !myUid){ toast('ยังเชื่อมต่อไม่ได้ ลองใหม่อีกครั้งค่ะ'); return; }
+    if(!livePrices[g.id]){ toast('ของขวัญนี้ยังไม่เปิดให้ส่งค่ะ'); return; }
     const anon=document.getElementById('gift-anon').checked;
-    if(!anon && !ensureName()){ toast('กรุณาตั้งชื่อเล่นก่อน หรือเลือกไม่แสดงชื่อค่ะ'); return; }
-    const who=anon?GIFT_ANON_NAME:displayName();
-    const sum=document.getElementById('gift-sum'); sum.innerHTML='';
-    const nm=document.createElement('span'); nm.textContent=giftSel.name;
-    const amt=document.createElement('b'); amt.textContent=fmtBaht(giftSel.amount);
-    const by=document.createElement('span'); by.textContent='· ในชื่อ '+who;
-    sum.append(giftIconEl(giftSel), nm, amt, by);
-    // QR พร้อมเพย์ระบุยอดตรงตามของขวัญ (ใช้ตัวสร้างเดียวกับกล่องบริจาค)
-    const d=CONFIG.donate||{}, box=document.getElementById('gift-qr');
-    const payload=d.promptpayId ? promptPayPayload(d.promptpayId, Number(giftSel.amount)) : null;
+    const name=anon ? GIFT_ANON_NAME : ensureName();
+    if(!name){ toast('กรุณาตั้งชื่อเล่นก่อน หรือเลือกไม่แสดงชื่อค่ะ'); return; }
+    const id=db.ref('giftFeed').push().key, up={};
+    up['giftFeed/'+id]={ uid:myUid, name:String(name).slice(0,40), anon, giftId:g.id, amount,
+      ts:firebase.database.ServerValue.TIMESTAMP };
+    up['wallets/'+myUid+'/balance']=walletBal-amount;
+    up['wallets/'+myUid+'/lastGiftId']=id;
+    giftSending=true; updateGiftBtn();
+    try{ await db.ref().update(up); toast('ส่ง'+g.name+'แล้ว ขอบคุณค่ะ 🎁'); }
+    catch(e){ console.error(e); toast('ส่งไม่สำเร็จ ยอดเหรียญอาจมีการเปลี่ยนแปลง ลองใหม่อีกครั้งค่ะ'); }
+    finally{ giftSending=false; updateGiftBtn(); }
+  }
+
+  // ---- เติมเหรียญ ----
+  let topupAmt=0, topupSending=false;
+  function openTopup(){
+    if(typeof closeDonate==='function') closeDonate();
+    topupAmt=0;
+    document.querySelectorAll('#topup-amts .amt').forEach(b=>{
+      b.classList.remove('on');
+      b.onclick=()=>{
+        document.querySelectorAll('#topup-amts .amt').forEach(x=>x.classList.toggle('on', x===b));
+        document.getElementById('topup-custom').value='';
+        topupAmt=Number(b.dataset.amt)||0; renderTopupQR();
+      };
+    });
+    const ci=document.getElementById('topup-custom'); ci.value='';
+    ci.oninput=()=>{
+      document.querySelectorAll('#topup-amts .amt').forEach(x=>x.classList.remove('on'));
+      topupAmt=Math.floor(Number(ci.value)||0); renderTopupQR();
+    };
+    ensureWallet(); renderWallet(); renderTopupQR(); renderTopupPending();
+    document.getElementById('topup-backdrop').classList.add('open');
+  }
+  function closeTopup(){ document.getElementById('topup-backdrop').classList.remove('open'); }
+  function renderTopupQR(){
+    const box=document.getElementById('topup-qr'), bank=document.getElementById('topup-bank'), btn=document.getElementById('topup-send');
+    const ok=topupAmt>=TOPUP_MIN && topupAmt<=TOPUP_MAX;
+    btn.disabled=!ok || topupSending;
+    if(!ok){
+      box.innerHTML='<span style="color:#888;text-align:center;font-size:13px">'+
+        (topupAmt ? 'เติมได้ครั้งละ 20–20,000 บาทค่ะ' : 'เลือกยอดที่ต้องการเติมค่ะ')+'</span>';
+      bank.textContent=''; return;
+    }
+    // QR พร้อมเพย์ระบุยอด (ตัวสร้างเดียวกับกล่องบริจาค)
+    const d=CONFIG.donate||{};
+    const payload=d.promptpayId ? promptPayPayload(d.promptpayId, topupAmt) : null;
     let done=false;
     if(payload && typeof qrcode!=='undefined'){
       try{ const qr=qrcode(0,'M'); qr.addData(payload); qr.make(); box.innerHTML=`<img alt="QR พร้อมเพย์" src="${qr.createDataURL(6,1)}">`; done=true; }catch(e){}
@@ -3540,53 +3598,56 @@
       box.innerHTML = d.qrImageUrl ? `<img src="${esc(d.qrImageUrl)}" alt="QR พร้อมเพย์">`
         : '<span style="color:#888;text-align:center;font-size:13px">ยังไม่ได้ตั้งค่า QR<br>ใช้เลขบัญชีด้านล่างค่ะ</span>';
     }
-    const bank=[d.bankName, d.accountName, d.accountNumber].filter(Boolean).join(' · ');
-    document.getElementById('gift-bank').textContent = (done?'':'โอนยอด '+fmtBaht(giftSel.amount)+' ') + (bank?('· '+bank):'');
-    giftStep(2);
+    const acc=[d.bankName, d.accountName, d.accountNumber].filter(Boolean).join(' · ');
+    bank.textContent='โอน '+fmtBaht(topupAmt)+' → ได้ '+fmtCoin(topupAmt)+' เหรียญ'+(acc?(' · '+acc):'');
   }
-  function giftPickSlip(){ if(!giftSending) document.getElementById('gift-slip').click(); }
+  function topupPickSlip(){ if(!topupSending) document.getElementById('topup-slip').click(); }
   async function sha256Hex(file){
     if(!(window.crypto && crypto.subtle)) return '';
     const h=await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
     return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join('');
   }
-  async function giftSlipChosen(input){
+  async function topupSlipChosen(input){
     const f=input.files && input.files[0]; input.value='';
-    if(!f || !giftSel || giftSending) return;
+    const amt=topupAmt;
+    if(!f || topupSending || amt<TOPUP_MIN || amt>TOPUP_MAX) return;
     if(!chatOn || !db || !myUid){ toast('ยังเชื่อมต่อไม่ได้ ลองใหม่อีกครั้งค่ะ'); return; }
-    const g=giftSel, anon=document.getElementById('gift-anon').checked;
-    const name=(anon ? GIFT_ANON_NAME : (displayName()||GIFT_ANON_NAME)).slice(0,40);
-    const btn=document.getElementById('gift-send');
-    giftSending=true; btn.disabled=true; btn.textContent='กำลังส่ง...';
+    const btn=document.getElementById('topup-send');
+    topupSending=true; btn.disabled=true; btn.textContent='กำลังส่งสลิป...';
     try{
       const hash=await sha256Hex(f).catch(()=>'');           // แฮชไฟล์ต้นฉบับ ไว้จับสลิปใช้ซ้ำ
       const up=await uploadToCloudinary(f);
       if(up.type!=='image') throw new Error('กรุณาแนบเป็นรูปสลิปค่ะ');
-      const ref=db.ref('giftQueue').push();
-      await ref.set({ uid:myUid, name, anon, giftId:g.id, amount:Number(g.amount), slipUrl:up.url, slipHash:hash,
+      const ref=db.ref('topups').push();
+      await ref.set({ uid:myUid, name:String(displayName()||'ผู้ชม').slice(0,40), amount:amt, slipUrl:up.url, slipHash:hash,
         status:'pending', ts:firebase.database.ServerValue.TIMESTAMP });
-      saveMyGiftIds(myGiftIds().concat(ref.key)); watchMyGift(ref.key);
-      closeGift();
-      toast('ส่งของขวัญแล้ว รอแอดมินยืนยันสักครู่นะคะ 🎁');
+      saveMyTopups(myTopups().concat({ id:ref.key, amt })); watchTopup(ref.key, amt);
+      closeTopup();
+      toast('ส่งสลิปแล้ว เหรียญจะเข้าเมื่อแอดมินตรวจเสร็จค่ะ 💰');
     }catch(e){
       console.error(e);
       toast((e && !e.code && e.message) ? e.message : 'ส่งไม่สำเร็จค่ะ ลองใหม่อีกครั้งนะคะ');
-    }finally{ giftSending=false; btn.disabled=false; btn.textContent='📎 แนบสลิปแล้วส่ง'; }
+    }finally{ topupSending=false; btn.textContent='📎 โอนแล้ว แนบสลิป'; renderTopupQR(); }
   }
 
-  // ผู้ส่งติดตามสถานะของขวัญตัวเอง (จำไว้ข้ามการรีเฟรช)
-  const MY_GIFTS_KEY='yt_my_gifts';
-  function myGiftIds(){ try{ return JSON.parse(localStorage.getItem(MY_GIFTS_KEY)||'[]'); }catch(e){ return []; } }
-  function saveMyGiftIds(a){ try{ localStorage.setItem(MY_GIFTS_KEY, JSON.stringify(a.slice(-10))); }catch(e){} }
-  function watchMyGift(id){
-    const ref=db.ref('giftQueue/'+id+'/status');
-    const forget=()=>saveMyGiftIds(myGiftIds().filter(x=>x!==id));
+  // รายการเติมที่รอตรวจของเครื่องนี้ (จำไว้ข้ามการรีเฟรช)
+  const MY_TOPUPS_KEY='yt_my_topups';
+  function myTopups(){ try{ return JSON.parse(localStorage.getItem(MY_TOPUPS_KEY)||'[]'); }catch(e){ return []; } }
+  function saveMyTopups(a){ try{ localStorage.setItem(MY_TOPUPS_KEY, JSON.stringify(a.slice(-10))); }catch(e){} renderTopupPending(); }
+  function renderTopupPending(){
+    const el=document.getElementById('topup-pending'); if(!el) return;
+    const list=myTopups();
+    el.textContent = list.length ? ('⏳ รอแอดมินตรวจสลิป: '+list.map(t=>fmtCoin(t.amt)+' เหรียญ').join(', ')) : '';
+  }
+  function watchTopup(id, amt){
+    const ref=db.ref('topups/'+id+'/status');
+    const forget=()=>saveMyTopups(myTopups().filter(t=>t.id!==id));
     const cb=ref.on('value', s=>{
       const st=s.val();
       if(st==='pending') return;
       ref.off('value', cb); forget();
-      if(st==='approved') toast('ของขวัญของคุณขึ้นจอแล้ว ขอบคุณมากค่ะ 🎉');
-      else if(st==='rejected') toast('ของขวัญยังไม่ผ่านการยืนยัน สอบถามแอดมินได้นะคะ');
+      if(st==='approved') toast('เติม '+fmtCoin(amt)+' เหรียญเรียบร้อยแล้วค่ะ 💰');
+      else if(st==='rejected') toast('สลิปเติมเหรียญไม่ผ่านการตรวจ สอบถามแอดมินได้นะคะ');
     }, forget);
   }
 
@@ -3600,7 +3661,9 @@
         giftQ.push(v); playNextGift();
       });
     });
-    myGiftIds().forEach(watchMyGift);
+    db.ref('giftPrices').on('value', s=>{ livePrices=s.val()||{}; renderWallet(); }, ()=>{});
+    bindWallet();
+    myTopups().forEach(t=>watchTopup(t.id, t.amt));
   }
   function playNextGift(){
     if(giftPlaying || !giftQ.length) return;
@@ -3688,25 +3751,36 @@
     }catch(e){ console.error(e); list.innerHTML='<div class="lb-empty">โหลดไม่สำเร็จค่ะ</div>'; }
   }
 
-  // ---- แอดมิน: รายการของขวัญรอยืนยัน ----
+  // ---- แอดมิน: ตรวจสลิปเติมเหรียญ + ย้ายเหรียญ + sync ราคาของขวัญ ----
   let gaRef=null, gaItems={}, gaKnown=null;
   const slipDupSeen={};
   function bindGiftAdmin(on){
     if(on && !gaRef && db){
-      gaRef=db.ref('giftQueue').orderByChild('status').equalTo('pending');
+      gaRef=db.ref('topups').orderByChild('status').equalTo('pending');
       gaRef.on('value', snap=>{
         const items={}; snap.forEach(c=>{ items[c.key]=c.val(); });
         if(gaKnown && Object.keys(items).some(k=>!gaKnown.has(k))) giftAlert();   // ข้ามรอบแรกตอนเพิ่งเปิด
         gaKnown=new Set(Object.keys(items)); gaItems=items; renderGiftAdmin();
-      }, e=>{ console.warn('giftQueue', e); gaRef=null; });
+      }, e=>{ console.warn('topups', e); gaRef=null; });
+      syncGiftPrices();
     }else if(!on && gaRef){
       gaRef.off(); gaRef=null; gaItems={}; gaKnown=null; renderGiftAdmin();
     }
   }
+  // ราคาของขวัญใน DB (rules ใช้ตรวจตอนส่ง) ให้ตรงกับแคตตาล็อก CONFIG.gifts
+  function syncGiftPrices(){
+    const want={};
+    (CONFIG.gifts||[]).forEach(g=>{ if(g && /^[a-z0-9_-]{1,20}$/i.test(g.id||'') && Number(g.amount)>0) want[g.id]=Number(g.amount); });
+    db.ref('giftPrices').once('value').then(s=>{
+      const have=s.val()||{}, ks=Object.keys(want);
+      const same=ks.length===Object.keys(have).length && ks.every(k=>have[k]===want[k]);
+      if(!same) return db.ref('giftPrices').set(want);
+    }).catch(e=>console.warn('giftPrices', e));
+  }
   function openGiftAdmin(){ renderGiftAdmin(); document.getElementById('ga-backdrop').classList.add('open'); }
   function closeGiftAdmin(){ document.getElementById('ga-backdrop').classList.remove('open'); }
   function giftAlert(){
-    toast('🎁 มีของขวัญใหม่รอยืนยันค่ะ');
+    toast('💰 มีสลิปเติมเหรียญใหม่รอตรวจค่ะ');
     try{
       const C=window.AudioContext||window.webkitAudioContext; if(!C) return;
       const ac=giftAlert.ac||(giftAlert.ac=new C()), o=ac.createOscillator(), gn=ac.createGain(), t=ac.currentTime;
@@ -3718,26 +3792,26 @@
   function renderGiftAdmin(){
     const keys=Object.keys(gaItems).sort((a,b)=>(gaItems[a].ts||0)-(gaItems[b].ts||0));
     const fab=document.getElementById('gift-admin-fab');
-    if(fab){ fab.classList.toggle('has', keys.length>0); fab.textContent='🎁 รอยืนยัน ('+keys.length+')'; }
+    if(fab){ fab.classList.toggle('has', keys.length>0); fab.textContent='💰 สลิป ('+keys.length+')'; }
     const list=document.getElementById('ga-list'); if(!list) return;
-    if(!keys.length){ list.innerHTML='<div class="lb-empty">ไม่มีของขวัญรอยืนยันค่ะ ✅</div>'; return; }
+    if(!keys.length){ list.innerHTML='<div class="lb-empty">ไม่มีสลิปรอตรวจค่ะ ✅</div>'; return; }
     list.innerHTML='';
     keys.forEach(k=>{
-      const v=gaItems[k], g=giftById(v.giftId);
+      const v=gaItems[k];
       const row=document.createElement('div'); row.className='ga-row';
       const img=document.createElement('img'); img.className='slip'; img.alt='สลิป'; img.src=v.slipUrl||'';
       img.onclick=()=>openLightbox(v.slipUrl);
       const info=document.createElement('div'); info.className='ga-info';
-      const t1=document.createElement('b'); t1.textContent=(g?g.name:v.giftId)+' · '+fmtBaht(v.amount);
-      const t2=document.createElement('div'); t2.textContent='จาก: '+(v.name||'-')+(v.anon?' (ไม่แสดงชื่อ)':'');
+      const t1=document.createElement('b'); t1.textContent='เติม '+fmtBaht(v.amount)+' → '+fmtCoin(v.amount)+' เหรียญ';
+      const t2=document.createElement('div'); t2.textContent='จาก: '+(v.name||'-')+' · รหัส '+walletCode(v.uid);
       const t3=document.createElement('div'); t3.style.color='var(--muted)';
       try{ t3.textContent=v.ts ? new Date(v.ts).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'}) : ''; }catch(e){}
       const warn=document.createElement('div'); warn.className='ga-warn';
       info.append(t1,t2,t3,warn);
       checkSlipDup(v.slipHash, warn);
       const btns=document.createElement('div'); btns.className='ga-btns';
-      const ok=document.createElement('button'); ok.className='ga-ok'; ok.textContent='✅ ยืนยัน'; ok.onclick=()=>decideGift(k,true,ok);
-      const no=document.createElement('button'); no.className='ga-no'; no.textContent='❌ ปฏิเสธ'; no.onclick=()=>decideGift(k,false,no);
+      const ok=document.createElement('button'); ok.className='ga-ok'; ok.textContent='✅ ยืนยัน'; ok.onclick=()=>decideTopup(k,true,ok);
+      const no=document.createElement('button'); no.className='ga-no'; no.textContent='❌ ปฏิเสธ'; no.onclick=()=>decideTopup(k,false,no);
       btns.append(ok,no);
       row.append(img,info,btns); list.appendChild(row);
     });
@@ -3746,23 +3820,54 @@
     if(!hash) return;
     const show=()=>{ el.textContent='⚠️ สลิปนี้เคยถูกส่งมาแล้ว ตรวจให้ดีนะคะ'; };
     if(slipDupSeen[hash]){ show(); return; }
-    db.ref('giftQueue').orderByChild('slipHash').equalTo(hash).limitToFirst(2).once('value')
+    db.ref('topups').orderByChild('slipHash').equalTo(hash).limitToFirst(2).once('value')
       .then(s=>{ if(s.numChildren()>1){ slipDupSeen[hash]=true; show(); } }).catch(()=>{});
   }
-  async function decideGift(key, approve, btn){
+  async function decideTopup(key, approve, btn){
     const v=gaItems[key]; if(!v) return;
-    if(!approve && !confirm('ปฏิเสธของขวัญนี้ใช่ไหมคะ?')) return;
-    btn.disabled=true;
-    const TS=firebase.database.ServerValue.TIMESTAMP, up={};
-    up['giftQueue/'+key+'/status']=approve?'approved':'rejected';
-    up['giftQueue/'+key+'/decidedAt']=TS;
-    if(approve){
-      const g=giftById(v.giftId)||{};
-      up['giftFeed/'+key]={ uid:v.uid||'', name:v.anon?GIFT_ANON_NAME:String(v.name||GIFT_ANON_NAME).slice(0,40),
-        anon:!!v.anon, giftId:String(v.giftId||''), giftName:g.name||'', amount:Number(v.amount)||0, ts:TS };
+    const TS=firebase.database.ServerValue.TIMESTAMP;
+    if(!approve){
+      if(!confirm('ปฏิเสธสลิปนี้ใช่ไหมคะ?')) return;
+      btn.disabled=true;
+      try{ await db.ref('topups/'+key).update({ status:'rejected', decidedAt:TS }); toast('ปฏิเสธแล้วค่ะ'); }
+      catch(e){ console.error(e); btn.disabled=false; toast('บันทึกไม่สำเร็จค่ะ'); }
+      return;
     }
-    try{ await db.ref().update(up); toast(approve?'ยืนยันแล้ว ของขวัญขึ้นจอค่ะ 🎉':'ปฏิเสธแล้วค่ะ'); }
-    catch(e){ console.error(e); btn.disabled=false; toast('บันทึกไม่สำเร็จค่ะ'); }
+    btn.disabled=true;
+    const amt=Number(v.amount)||0;
+    try{
+      // บวกเหรียญแบบ transaction + จำ topup ที่บวกแล้ว (credited) → กดซ้ำ/เน็ตหลุดแล้วลองใหม่ ก็ไม่บวกซ้ำ
+      await db.ref('wallets/'+v.uid).transaction(w=>{
+        w=w||{ balance:0 };
+        if(w.credited && w.credited[key]) return w;
+        w.balance=(Number(w.balance)||0)+amt;
+        w.credited=Object.assign({}, w.credited, { [key]:true });
+        return w;
+      });
+      await db.ref('topups/'+key).update({ status:'approved', decidedAt:TS });
+      toast('เติม '+fmtCoin(amt)+' เหรียญให้ '+(v.name||'ผู้ชม')+' แล้วค่ะ ✅');
+    }catch(e){ console.error(e); btn.disabled=false; toast('บันทึกไม่สำเร็จค่ะ'); }
+  }
+  async function moveCoins(){
+    const f=(document.getElementById('mv-from').value||'').trim().toUpperCase();
+    const t=(document.getElementById('mv-to').value||'').trim().toUpperCase();
+    if(f.length!==6 || t.length!==6 || f===t){ toast('กรอกรหัสเดิมและรหัสใหม่ให้ครบ 6 ตัวค่ะ'); return; }
+    try{
+      const snap=await db.ref('wallets').once('value');
+      const find=c=>{ const ks=[]; snap.forEach(x=>{ if(walletCode(x.key)===c) ks.push(x.key); }); return ks; };
+      const a=find(f), b=find(t);
+      if(a.length!==1){ toast(a.length ? 'รหัสเดิมตรงกับหลายกระเป๋า ย้ายอัตโนมัติไม่ได้ค่ะ' : 'ไม่พบกระเป๋ารหัสเดิมค่ะ'); return; }
+      if(b.length!==1){ toast(b.length ? 'รหัสใหม่ตรงกับหลายกระเป๋า ย้ายอัตโนมัติไม่ได้ค่ะ' : 'ไม่พบกระเป๋ารหัสใหม่ — ให้ผู้ชมเปิดหน้าเติมเหรียญบนเครื่องใหม่ก่อนค่ะ'); return; }
+      const amt=Number((snap.child(a[0]).val()||{}).balance)||0;
+      if(amt<=0){ toast('กระเป๋ารหัสเดิมไม่มีเหรียญค่ะ'); return; }
+      if(!confirm('ย้าย '+fmtCoin(amt)+' เหรียญ จาก '+f+' ไป '+t+' ใช่ไหมคะ?')) return;
+      // หักกระเป๋าเดิมด้วย transaction ก่อน แล้วค่อยบวกกระเป๋าใหม่ (กันย้ายซ้ำ)
+      let moved=0;
+      await db.ref('wallets/'+a[0]+'/balance').transaction(bal=>{ moved=Number(bal)||0; return 0; });
+      if(moved>0) await db.ref('wallets/'+b[0]+'/balance').transaction(bal=>(Number(bal)||0)+moved);
+      document.getElementById('mv-from').value=''; document.getElementById('mv-to').value='';
+      toast('ย้าย '+fmtCoin(moved)+' เหรียญเรียบร้อยแล้วค่ะ ✅');
+    }catch(e){ console.error(e); toast('ย้ายเหรียญไม่สำเร็จค่ะ'); }
   }
 
   // ---- แชร์ ----
