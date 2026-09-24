@@ -1233,6 +1233,7 @@
       <div class="lb-tabs" id="lb-tabs">
         <button class="on" data-r="day" onclick="setLbRange('day')">วันนี้</button>
         <button data-r="month" onclick="setLbRange('month')">เดือนนี้</button>
+        <button data-r="year" onclick="setLbRange('year')">ปีนี้</button>
       </div>
       <div class="lb-list" id="lb-list"></div>
       <div class="sheet-btns"><button class="primary" onclick="closeLeaderboard();openGift()">🎁 ส่งของขวัญ</button></div>
@@ -1643,7 +1644,48 @@
 
         <!-- TAB: gifts (ทดสอบแอนิเมชัน + ลบของขวัญ) -->
         <div class="apane" id="apane-gifts" style="display:none">
-          <div class="grp" style="border-top:none;padding-top:0">🧪 ทดสอบแอนิเมชัน</div>
+          <div class="grp" style="border-top:none;padding-top:0">📊 สรุปยอดของขวัญ</div>
+          <div class="stats-mode-switch">
+            <button type="button" class="sm-btn" data-gr="day" onclick="setGiftReportMode('day')">📅 รายวัน</button>
+            <button type="button" class="sm-btn on" data-gr="month" onclick="setGiftReportMode('month')">📆 รายเดือน</button>
+            <button type="button" class="sm-btn" data-gr="year" onclick="setGiftReportMode('year')">🗓 รายปี</button>
+          </div>
+          <div class="stats-filters">
+            <div style="flex:1">
+              <label id="gr-picker-lbl">เลือกเดือน</label>
+              <input type="date" id="gr-pick-day" onchange="loadGiftReport()" style="display:none">
+              <input type="month" id="gr-pick-month" onchange="loadGiftReport()">
+              <select id="gr-pick-year" onchange="loadGiftReport()" style="display:none"></select>
+            </div>
+            <button type="button" class="mini primary-mini" onclick="exportGiftReportCSV()" style="margin-top:24px">📥 ส่งออก CSV</button>
+          </div>
+          <div class="stats-overview-grid">
+            <div class="stat-card glass"><div class="sc-icon">🎁</div><div class="sc-val" id="gr-coins">0</div><div class="sc-lbl">ยอดของขวัญรวม (เหรียญ)</div></div>
+            <div class="stat-card glass"><div class="sc-icon">🧾</div><div class="sc-val" id="gr-count">0</div><div class="sc-lbl">จำนวนของขวัญ (ชิ้น)</div></div>
+            <div class="stat-card glass"><div class="sc-icon">👥</div><div class="sc-val" id="gr-senders">0</div><div class="sc-lbl">ผู้ส่ง (คน)</div></div>
+            <div class="stat-card glass"><div class="sc-icon">💰</div><div class="sc-val" id="gr-topup">0</div><div class="sc-lbl">เงินเติมเหรียญที่อนุมัติ (บาท)</div></div>
+          </div>
+          <div class="stats-chart-wrap glass" style="margin-top:12px">
+            <div class="sc-chart-head">
+              <span class="sc-chart-title" id="gr-chart-title">📊 ยอดของขวัญ</span>
+              <span class="filehint">หน่วย: เหรียญ</span>
+            </div>
+            <div class="stats-chart-bars" id="gr-bars"></div>
+          </div>
+          <div class="stats-table-wrap glass">
+            <table class="stats-table">
+              <thead><tr><th>ของขวัญ</th><th>จำนวน (ชิ้น)</th><th>รวม (เหรียญ)</th></tr></thead>
+              <tbody id="gr-by-gift"></tbody>
+            </table>
+          </div>
+          <div class="stats-table-wrap glass">
+            <table class="stats-table">
+              <thead><tr><th>#</th><th>ผู้ส่ง</th><th>รหัส</th><th>ชิ้น</th><th>เหรียญ</th></tr></thead>
+              <tbody id="gr-top"></tbody>
+            </table>
+          </div>
+
+          <div class="grp">🧪 ทดสอบแอนิเมชัน</div>
           <div style="color:var(--muted); font-size:13px; margin-bottom:8px">กดแล้วจะเล่นบนจอวิดีโอให้ดู เห็นเฉพาะเครื่องนี้ ไม่บันทึก ไม่ขึ้นอันดับค่ะ</div>
           <div class="gift-grid" id="ag-preview"></div>
           <div class="grp" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
@@ -2655,7 +2697,7 @@
       loadAdminStats();
     }
     if(t==='gifts'){
-      renderGiftPreviewBtns(); loadAdminGifts();
+      initGiftReportPickers(); loadGiftReport(); renderGiftPreviewBtns(); loadAdminGifts();
     }
   }
   function val(id){ return (document.getElementById(id).value||'').trim(); }
@@ -3902,7 +3944,8 @@
     if(!initFirebaseApp()){ list.innerHTML='<div class="lb-empty">ยังไม่พร้อมค่ะ</div>'; return; }
     list.innerHTML='<div class="lb-empty">กำลังโหลด...</div>';
     const now=new Date(), r=lbRange;
-    const start = r==='day' ? new Date(now.getFullYear(), now.getMonth(), now.getDate()) : new Date(now.getFullYear(), now.getMonth(), 1);
+    const start = r==='day' ? new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      : r==='year' ? new Date(now.getFullYear(), 0, 1) : new Date(now.getFullYear(), now.getMonth(), 1);
     try{
       const snap=await db.ref('giftFeed').orderByChild('ts').startAt(start.getTime()).once('value');
       if(r!==lbRange) return;                                // ผู้ใช้สลับแท็บระหว่างโหลด
@@ -4044,6 +4087,141 @@
       document.getElementById('mv-from').value=''; document.getElementById('mv-to').value='';
       toast('ย้าย '+fmtCoin(moved)+' เหรียญเรียบร้อยแล้วค่ะ ✅');
     }catch(e){ console.error(e); toast('ย้ายเหรียญไม่สำเร็จค่ะ'); }
+  }
+
+  // ---- สรุปยอดของขวัญ รายวัน/เดือน/ปี (แผงแอดมิน แท็บ 🎁) ----
+  let grMode='month', grData=null;
+  function initGiftReportPickers(){
+    const now=new Date();
+    const d=document.getElementById('gr-pick-day'), m=document.getElementById('gr-pick-month'), y=document.getElementById('gr-pick-year');
+    if(!d.value) d.value=ymd(now);
+    if(!m.value) m.value=ymd(now).slice(0,7);
+    if(!y.options.length){
+      for(let yr=now.getFullYear(); yr>=2026; yr--){ const o=document.createElement('option'); o.value=String(yr); o.textContent=yr+' (พ.ศ. '+(yr+543)+')'; y.appendChild(o); }
+    }
+  }
+  function setGiftReportMode(mode){
+    grMode=mode;
+    document.querySelectorAll('[data-gr]').forEach(b=>b.classList.toggle('on', b.dataset.gr===mode));
+    document.getElementById('gr-pick-day').style.display   = mode==='day'?'':'none';
+    document.getElementById('gr-pick-month').style.display = mode==='month'?'':'none';
+    document.getElementById('gr-pick-year').style.display  = mode==='year'?'':'none';
+    document.getElementById('gr-picker-lbl').textContent = mode==='day'?'เลือกวัน':mode==='month'?'เลือกเดือน':'เลือกปี (ค.ศ.)';
+    loadGiftReport();
+  }
+  function giftReportRange(){                               // [เริ่ม, สิ้นสุด), ป้ายชื่อช่วง, จำนวนช่องกราฟ
+    if(grMode==='day'){
+      const [y,m,d]=(document.getElementById('gr-pick-day').value||ymd(new Date())).split('-').map(Number);
+      const a=new Date(y,m-1,d);
+      return { start:a.getTime(), end:new Date(y,m-1,d+1).getTime(), key:ymd(a), slots:24,
+        title:'วันที่ '+d+' '+MONTH_NAMES_TH[m-1]+' '+(y+543), slotOf:t=>new Date(t).getHours(), slotLbl:i=>String(i) };
+    }
+    if(grMode==='year'){
+      const y=Number(document.getElementById('gr-pick-year').value)||new Date().getFullYear();
+      return { start:new Date(y,0,1).getTime(), end:new Date(y+1,0,1).getTime(), key:String(y), slots:12,
+        title:'ปี '+(y+543), slotOf:t=>new Date(t).getMonth(), slotLbl:i=>MONTH_SHORT_TH[i] };
+    }
+    const [y,m]=(document.getElementById('gr-pick-month').value||ymd(new Date()).slice(0,7)).split('-').map(Number);
+    return { start:new Date(y,m-1,1).getTime(), end:new Date(y,m,1).getTime(), key:y+'-'+String(m).padStart(2,'0'),
+      slots:new Date(y,m,0).getDate(), title:MONTH_NAMES_TH[m-1]+' '+(y+543), slotOf:t=>new Date(t).getDate()-1, slotLbl:i=>String(i+1) };
+  }
+  async function loadGiftReport(){
+    if(!initFirebaseApp()) return;
+    const R=giftReportRange(), mode=grMode;
+    document.getElementById('gr-chart-title').textContent='📊 ยอดของขวัญ · '+R.title+' (กำลังโหลด...)';
+    try{
+      const gs=await db.ref('giftFeed').orderByChild('ts').startAt(R.start).endAt(R.end-1).once('value');
+      let topupTotal=0;
+      try{
+        const ts=await db.ref('topups').orderByChild('ts').startAt(R.start).endAt(R.end-1).once('value');
+        ts.forEach(c=>{ const v=c.val()||{}; if(v.status==='approved') topupTotal+=Number(v.amount)||0; });
+      }catch(e){ topupTotal=null; }                         // ไม่ใช่แอดมิน/อ่านไม่ได้
+      if(mode!==grMode) return;                             // สลับโหมดระหว่างโหลด
+      const items=[]; gs.forEach(c=>{ const v=c.val()||{}; if(v.ts>=R.start && v.ts<R.end) items.push(v); });
+      items.sort((a,b)=>a.ts-b.ts);
+      grData={ R, items, topupTotal };
+      renderGiftReport();
+    }catch(e){ console.error(e); document.getElementById('gr-chart-title').textContent='📊 โหลดไม่สำเร็จค่ะ'; }
+  }
+  function summarizeGifts(items){
+    const byGift={}, bySender={}; let coins=0;
+    (CONFIG.gifts||[]).forEach(g=>{ byGift[g.id]={ g, count:0, coins:0 }; });
+    items.forEach(v=>{
+      const amt=Number(v.amount)||0; coins+=amt;
+      const bg=byGift[v.giftId]||(byGift[v.giftId]={ g:{ id:v.giftId, name:v.giftName||v.giftId||'ของขวัญ', emoji:'🎁' }, count:0, coins:0 });
+      bg.count++; bg.coins+=amt;
+      const k=(v.anon?'a:':'u:')+(v.uid||v.name||'');
+      const bs=bySender[k]||(bySender[k]={ name:v.anon?GIFT_ANON_NAME:(v.name||GIFT_ANON_NAME), uid:v.uid||'', count:0, coins:0 });
+      bs.count++; bs.coins+=amt; if(!v.anon && v.name) bs.name=v.name;
+    });
+    const uniq=new Set(items.map(v=>v.uid||v.name||'')).size;
+    return { coins, count:items.length, senders:uniq,
+      gifts:Object.values(byGift).sort((a,b)=>b.coins-a.coins || (a.g.amount||0)-(b.g.amount||0)),
+      top:Object.values(bySender).sort((a,b)=>b.coins-a.coins).slice(0,10) };
+  }
+  function renderGiftReport(){
+    if(!grData) return;
+    const { R, items, topupTotal }=grData, S=summarizeGifts(items);
+    document.getElementById('gr-coins').textContent=fmtCoin(S.coins);
+    document.getElementById('gr-count').textContent=fmtCoin(S.count);
+    document.getElementById('gr-senders').textContent=fmtCoin(S.senders);
+    document.getElementById('gr-topup').textContent=topupTotal===null?'-':fmtCoin(topupTotal);
+    document.getElementById('gr-chart-title').textContent='📊 ยอดของขวัญ · '+R.title;
+    // กราฟ: ชั่วโมง / วัน / เดือน
+    const slots=new Array(R.slots).fill(0);
+    items.forEach(v=>{ const i=R.slotOf(v.ts); if(i>=0 && i<R.slots) slots[i]+=Number(v.amount)||0; });
+    const max=Math.max(1, ...slots), bars=document.getElementById('gr-bars'); bars.innerHTML='';
+    slots.forEach((val,i)=>{
+      const col=document.createElement('div'); col.className='sc-bar-col'; col.title=R.slotLbl(i)+': '+fmtCoin(val)+' เหรียญ';
+      if(val>0){ const sv=document.createElement('span'); sv.className='sc-bar-val'; sv.textContent=fmtCoin(val); col.appendChild(sv); }
+      const f=document.createElement('div'); f.className='sc-bar-fill'; f.style.height=Math.max(3, Math.round(val/max*100))+'%';
+      const l=document.createElement('span'); l.className='sc-bar-label'; l.textContent=R.slotLbl(i);
+      col.append(f,l); bars.appendChild(col);
+    });
+    // ตารางแยกตามของขวัญ
+    const bg=document.getElementById('gr-by-gift'); bg.innerHTML='';
+    S.gifts.forEach(x=>{
+      const tr=document.createElement('tr');
+      const td1=document.createElement('td'); const ic=giftIconEl(x.g);
+      if(ic.tagName==='IMG'){ ic.style.cssText='width:22px;height:22px;vertical-align:middle'; }
+      td1.append(ic, ' '+x.g.name);
+      const td2=document.createElement('td'); td2.textContent=fmtCoin(x.count);
+      const td3=document.createElement('td'); td3.textContent=fmtCoin(x.coins);
+      tr.append(td1,td2,td3); bg.appendChild(tr);
+    });
+    // ผู้ส่งสูงสุด
+    const tp=document.getElementById('gr-top'); tp.innerHTML='';
+    if(!S.top.length){ tp.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted)">ยังไม่มีข้อมูลในช่วงนี้ค่ะ</td></tr>'; }
+    S.top.forEach((x,i)=>{
+      const tr=document.createElement('tr');
+      [ ['🥇','🥈','🥉'][i]||String(i+1), x.name, walletCode(x.uid), fmtCoin(x.count), fmtCoin(x.coins) ].forEach(t=>{
+        const td=document.createElement('td'); td.textContent=t; tr.appendChild(td);
+      });
+      tp.appendChild(tr);
+    });
+  }
+  function exportGiftReportCSV(){
+    if(!grData){ toast('ยังไม่มีข้อมูลค่ะ'); return; }
+    const { R, items, topupTotal }=grData, S=summarizeGifts(items);
+    const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+    let csv='\uFEFF';
+    csv+=q('รายงานสรุปยอดของขวัญ Yateem TV · '+R.title)+'\n';
+    csv+=[q('ยอดของขวัญรวม (เหรียญ)'),S.coins].join(',')+'\n';
+    csv+=[q('จำนวนของขวัญ (ชิ้น)'),S.count].join(',')+'\n';
+    csv+=[q('ผู้ส่ง (คน)'),S.senders].join(',')+'\n';
+    csv+=[q('เงินเติมเหรียญที่อนุมัติ (บาท)'),topupTotal===null?'':topupTotal].join(',')+'\n\n';
+    csv+=[q('ของขวัญ'),q('จำนวน (ชิ้น)'),q('รวม (เหรียญ)')].join(',')+'\n';
+    S.gifts.forEach(x=>{ csv+=[q(x.g.name),x.count,x.coins].join(',')+'\n'; });
+    csv+='\n'+[q('วันเวลา'),q('ผู้ส่ง'),q('รหัสกระเป๋า'),q('ของขวัญ'),q('เหรียญ')].join(',')+'\n';
+    items.forEach(v=>{
+      const g=giftById(v.giftId)||{ name:v.giftName||v.giftId };
+      let when=''; try{ when=new Date(v.ts).toLocaleString('th-TH'); }catch(e){}
+      csv+=[q(when), q(v.anon?GIFT_ANON_NAME:v.name), q(walletCode(v.uid)), q(g.name), Number(v.amount)||0].join(',')+'\n';
+    });
+    const blob=new Blob([csv], { type:'text/csv;charset=utf-8;' }), url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download='YateemTV_Gifts_'+grMode+'_'+R.key+'.csv';
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    toast('ดาวน์โหลดรายงาน CSV เรียบร้อยแล้วค่ะ 📥');
   }
 
   // ---- แผงแอดมิน แท็บ 🎁: ทดสอบแอนิเมชัน (เฉพาะเครื่องนี้) + ลบของขวัญที่ส่งแล้ว ----
