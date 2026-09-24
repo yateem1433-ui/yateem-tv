@@ -453,7 +453,8 @@
       padding:6px 12px; font-family:inherit; font-size:13px; cursor:pointer; }
 
     /* ---- ปุ่มรีแอคชัน & อิโมจิลอย (ตรงช่องพิมพ์แชท) ---- */
-    .react-bar{ position:relative; display:flex; align-items:center; flex:0 0 auto; }
+    /* static: ให้ถาด #react-pop ไปยึด .chat-input (เต็มความกว้าง) — ไม่งั้นถาดล้นออกซ้ายจอบนมือถือ */
+    .react-bar{ position:static; display:flex; align-items:center; flex:0 0 auto; }
     .react-toggle{ width:42px; height:42px; min-width:42px; border-radius:12px; border:1px solid var(--stroke); cursor:pointer;
       background:var(--glass-2); font-size:21px; display:flex; align-items:center; justify-content:center;
       transition:transform .15s ease, background .15s ease, border-color .15s ease; padding:0; line-height:1; }
@@ -462,8 +463,8 @@
     .react-toggle:active{ transform:scale(.92); }
     .react-toggle.active{ border-color:var(--accent); box-shadow:0 0 14px -2px var(--glow); }
 
-    #react-pop{ position:absolute; bottom:calc(100% + 10px); right:0; z-index:30;
-      display:none; align-items:center; gap:4px; padding:6px 8px; max-width:calc(100vw - 48px);
+    #react-pop{ position:absolute; bottom:calc(100% + 10px); right:8px; z-index:30;
+      display:none; align-items:center; justify-content:space-between; gap:4px; padding:6px 8px; max-width:calc(100% - 16px);
       background:rgba(12,18,30,.94); border:1px solid var(--stroke); border-radius:999px;
       -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px);
       box-shadow:0 16px 36px rgba(0,0,0,.65), 0 0 24px -6px var(--glow);
@@ -476,6 +477,11 @@
     #react-pop button img{ width:28px; height:28px; object-fit:contain; pointer-events:none; }
     #react-pop button:hover{ background:rgba(255,255,255,.18); transform:scale(1.28); }
     #react-pop button:active{ transform:scale(.92); }
+    @media (max-width:360px){
+      #react-pop{ gap:2px; padding:5px 6px; }
+      #react-pop button{ width:32px; height:32px; min-width:32px; }
+      #react-pop button img{ width:25px; height:25px; }
+    }
 
     /* ---- ปุ่มอันดับผู้สนับสนุน (ซ้ายสุดของแถบพิมพ์แชท) ---- */
     .lb-btn{ width:42px; height:42px; min-width:42px; flex:0 0 auto; border-radius:12px; border:1px solid var(--stroke); cursor:pointer;
@@ -1342,6 +1348,7 @@
         <button class="atab" data-tab="labels" onclick="adminTab('labels')">ข้อความ</button>
         <button class="atab" data-tab="schedule" onclick="adminTab('schedule')">ผังรายการ</button>
         <button class="atab" data-tab="stats" onclick="adminTab('stats')">📊 สถิติ</button>
+        <button class="atab" data-tab="gifts" onclick="adminTab('gifts')">🎁 ของขวัญ</button>
       </div>
 
       <div class="admin-body">
@@ -1547,6 +1554,19 @@
           <input type="file" id="file-scope-file" accept="image/*,application/pdf">
           <div class="filehint" id="file-scope-hint"></div>
           <button class="save-btn" onclick="saveScopeFile()">💾 บันทึกไฟล์ผังรวม</button>
+        </div>
+
+        <!-- TAB: gifts (ทดสอบแอนิเมชัน + ลบของขวัญ) -->
+        <div class="apane" id="apane-gifts" style="display:none">
+          <div class="grp" style="border-top:none;padding-top:0">🧪 ทดสอบแอนิเมชัน</div>
+          <div style="color:var(--muted); font-size:13px; margin-bottom:8px">กดแล้วจะเล่นบนจอวิดีโอให้ดู เห็นเฉพาะเครื่องนี้ ไม่บันทึก ไม่ขึ้นอันดับค่ะ</div>
+          <div class="gift-grid" id="ag-preview"></div>
+          <div class="grp" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <span>🗑 ของขวัญที่ส่งแล้ว (50 รายการล่าสุด)</span>
+            <button class="mini" onclick="loadAdminGifts()">🔄 โหลดใหม่</button>
+          </div>
+          <div style="color:var(--muted); font-size:13px; margin-bottom:8px">ลบแล้วรายการจะหายจากอันดับ 🏆 แต่เหรียญที่ใช้ไปจะไม่คืนค่ะ</div>
+          <div class="lb-list" id="ag-list"></div>
         </div>
 
         <!-- TAB: stats (สถิติผู้ชม) -->
@@ -2538,7 +2558,7 @@
   function closeAdmin(){ document.getElementById('admin-backdrop').classList.remove('open'); }
   function adminTab(t){
     document.querySelectorAll('.atab').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
-    ['settings','theme','labels','schedule','stats'].forEach(p=>{
+    ['settings','theme','labels','schedule','stats','gifts'].forEach(p=>{
       const el=document.getElementById('apane-'+p); if(el) el.style.display=(p===t)?'block':'none';
     });
     if(t==='schedule'){
@@ -2548,6 +2568,9 @@
     }
     if(t==='stats'){
       loadAdminStats();
+    }
+    if(t==='gifts'){
+      renderGiftPreviewBtns(); loadAdminGifts();
     }
   }
   function val(id){ return (document.getElementById(id).value||'').trim(); }
@@ -3868,6 +3891,66 @@
       document.getElementById('mv-from').value=''; document.getElementById('mv-to').value='';
       toast('ย้าย '+fmtCoin(moved)+' เหรียญเรียบร้อยแล้วค่ะ ✅');
     }catch(e){ console.error(e); toast('ย้ายเหรียญไม่สำเร็จค่ะ'); }
+  }
+
+  // ---- แผงแอดมิน แท็บ 🎁: ทดสอบแอนิเมชัน (เฉพาะเครื่องนี้) + ลบของขวัญที่ส่งแล้ว ----
+  function renderGiftPreviewBtns(){
+    const box=document.getElementById('ag-preview'); if(!box) return;
+    box.innerHTML='';
+    (CONFIG.gifts||[]).forEach(g=>{
+      const b=document.createElement('button'); b.type='button'; b.className='gift-item';
+      const gi=document.createElement('span'); gi.className='gi'; gi.appendChild(giftIconEl(g));
+      const gn=document.createElement('span'); gn.className='gn'; gn.textContent=g.name;
+      const gp=document.createElement('span'); gp.className='gp'; gp.textContent='▶ ดูตัวอย่าง';
+      b.append(gi,gn,gp); b.onclick=()=>previewGift(g.id);
+      box.appendChild(b);
+    });
+  }
+  function previewGift(id){
+    const g=giftById(id); if(!g) return;
+    closeAdmin();
+    const hero=document.getElementById('hero'); if(hero) hero.scrollIntoView({behavior:'smooth', block:'start'});
+    giftQ.push({ name:'ตัวอย่าง (แอดมิน)', giftId:g.id, amount:priceOf(g) });   // ใช้คิวเดิม ไม่ทับของขวัญจริง
+    setTimeout(playNextGift, 350);
+    toast('ตัวอย่างนี้เห็นเฉพาะเครื่องนี้ค่ะ');
+  }
+  async function loadAdminGifts(){
+    const list=document.getElementById('ag-list'); if(!list) return;
+    if(!initFirebaseApp()){ list.innerHTML='<div class="lb-empty">ยังไม่พร้อมค่ะ</div>'; return; }
+    list.innerHTML='<div class="lb-empty">กำลังโหลด...</div>';
+    try{
+      const snap=await db.ref('giftFeed').orderByChild('ts').limitToLast(50).once('value');
+      const rows=[]; snap.forEach(c=>{ rows.push([c.key, c.val()||{}]); });
+      rows.reverse();                                        // ใหม่สุดก่อน
+      if(!rows.length){ list.innerHTML='<div class="lb-empty">ยังไม่มีของขวัญค่ะ</div>'; return; }
+      list.innerHTML='';
+      rows.forEach(([key,v])=>{
+        const g=giftById(v.giftId)||{ name:v.giftName||v.giftId||'ของขวัญ', emoji:'🎁' };
+        const row=document.createElement('div'); row.className='ga-row';
+        const ic=document.createElement('span'); ic.className='gi';
+        ic.style.cssText='width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:30px;flex:0 0 auto';
+        const icon=giftIconEl(g); if(icon.tagName==='IMG'){ icon.style.width='44px'; icon.style.height='44px'; }
+        ic.appendChild(icon);
+        const info=document.createElement('div'); info.className='ga-info';
+        const t1=document.createElement('b'); t1.textContent=(v.name||'-')+(v.anon?' (ไม่แสดงชื่อ)':'');
+        const t2=document.createElement('div'); t2.textContent=g.name+' · '+fmtCoin(v.amount)+' เหรียญ';
+        const t3=document.createElement('div'); t3.style.color='var(--muted)';
+        let when=''; try{ when=v.ts ? new Date(v.ts).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'}) : ''; }catch(e){}
+        t3.textContent=when+(v.uid?(' · รหัส '+walletCode(v.uid)):'');
+        info.append(t1,t2,t3);
+        const btns=document.createElement('div'); btns.className='ga-btns';
+        const del=document.createElement('button'); del.className='ga-no'; del.textContent='🗑 ลบ';
+        del.onclick=async()=>{
+          if(!confirm('ลบของขวัญนี้ใช่ไหมคะ? (หายจากอันดับ แต่เหรียญไม่คืน)')) return;
+          del.disabled=true;
+          try{ await db.ref('giftFeed/'+key).remove(); toast('ลบแล้วค่ะ'); row.remove();
+            if(!list.querySelector('.ga-row')) list.innerHTML='<div class="lb-empty">ยังไม่มีของขวัญค่ะ</div>'; }
+          catch(e){ console.error(e); del.disabled=false; toast('ลบไม่สำเร็จค่ะ'); }
+        };
+        btns.appendChild(del);
+        row.append(ic,info,btns); list.appendChild(row);
+      });
+    }catch(e){ console.error(e); list.innerHTML='<div class="lb-empty">โหลดไม่สำเร็จค่ะ</div>'; }
   }
 
   // ---- แชร์ ----
