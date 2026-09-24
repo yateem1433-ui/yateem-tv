@@ -1209,6 +1209,7 @@
         <input class="amt-input" id="topup-custom" type="number" inputmode="numeric" placeholder="กรอกเอง" min="20" max="20000">
       </div>
       <div class="qr-box" id="topup-qr"></div>
+      <div class="gift-note" id="topup-hint"></div>
       <div class="bank" id="topup-bank"></div>
       <div class="wallet-code">รหัสกระเป๋าของคุณ: <b id="wallet-code">-</b> <button type="button" onclick="copyWalletCode()" aria-label="คัดลอกรหัส">📋</button></div>
       <div class="gift-note" id="topup-pending"></div>
@@ -1216,6 +1217,9 @@
       <input type="file" id="topup-slip" accept="image/*" style="display:none" onchange="topupSlipChosen(this)">
       <div class="sheet-btns">
         <button id="topup-copy" onclick="copyTopupAccount()">📋 คัดลอกเลขบัญชี</button>
+        <button id="topup-save" onclick="saveQR('topup-qr','yateem-topup-qr')">💾 บันทึกรูป QR</button>
+      </div>
+      <div class="sheet-btns" style="margin-top:10px">
         <button class="primary" id="topup-send" onclick="topupPickSlip()" disabled>📎 โอนแล้ว แนบสลิป</button>
       </div>
     </div>
@@ -2318,8 +2322,8 @@
     copyText(num).then(()=>toast('คัดลอกเลขบัญชีแล้วค่ะ ✅'))
       .catch(()=>toast('คัดลอกไม่ได้ กดค้างที่เลขเพื่อคัดลอกแทนค่ะ'));
   }
-  function saveQR(){
-    const box=document.getElementById('qr-box');
+  function saveQR(boxId='qr-box', fileBase='yateem-donate-qr'){     // ใช้ทั้งกล่องบริจาคและหน้าเติมเหรียญ
+    const box=document.getElementById(boxId);
     const canvas=box.querySelector('canvas'), img=box.querySelector('img');
     let href;
     if(canvas){ href=canvas.toDataURL('image/png'); }
@@ -2330,7 +2334,7 @@
     const canDownload = 'download' in a && !/iPhone|iPad|iPod/i.test(navigator.userAgent);
     if(canDownload){
       const ext = href.indexOf('data:image/gif')===0 ? 'gif' : 'png';
-      a.href=href; a.download='yateem-donate-qr.'+ext;
+      a.href=href; a.download=fileBase+'.'+ext;
       document.body.appendChild(a); a.click(); a.remove();
       toast('บันทึกรูป QR แล้วค่ะ');
     }else{
@@ -3710,26 +3714,25 @@
     if(d.accountNumber){ const l=document.createElement('div'); l.className='num'; l.textContent=d.accountNumber; bank.appendChild(l); }
     const cp=document.getElementById('topup-copy'); if(cp) cp.style.display=d.accountNumber?'':'none';
   }
+  // QR แสดงค้างไว้ตั้งแต่เปิดหน้า: ยังไม่เลือกยอด = QR พร้อมเพย์ไม่ระบุยอด (หรือรูป QR ที่อัปโหลด), เลือกยอดแล้ว = ระบุยอดตรง
   function renderTopupQR(){
-    const box=document.getElementById('topup-qr'), btn=document.getElementById('topup-send');
+    const box=document.getElementById('topup-qr'), btn=document.getElementById('topup-send'), hint=document.getElementById('topup-hint');
     const ok=topupAmt>=TOPUP_MIN && topupAmt<=TOPUP_MAX;
     btn.disabled=!ok || topupSending;
     renderTopupBank();
-    if(!ok){
-      box.innerHTML='<span style="color:#888;text-align:center;font-size:13px">'+
-        (topupAmt ? 'เติมได้ครั้งละ 20–20,000 บาทค่ะ' : 'เลือกยอดที่ต้องการเติมค่ะ')+'</span>';
-      return;
-    }
-    // QR พร้อมเพย์ระบุยอด (ตัวสร้างเดียวกับกล่องบริจาค)
     const d=topupAccount();
-    const payload=d.promptpayId ? promptPayPayload(d.promptpayId, topupAmt) : null;
+    const payload=d.promptpayId ? promptPayPayload(d.promptpayId, ok ? topupAmt : null) : null;
     let done=false;
     if(payload && typeof qrcode!=='undefined'){
       try{ const qr=qrcode(0,'M'); qr.addData(payload); qr.make(); box.innerHTML=`<img alt="QR พร้อมเพย์" src="${qr.createDataURL(6,1)}">`; done=true; }catch(e){}
     }
-    if(!done){
-      box.innerHTML = d.qrImageUrl ? `<img src="${esc(d.qrImageUrl)}" alt="QR พร้อมเพย์">`
-        : '<span style="color:#888;text-align:center;font-size:13px">ยังไม่ได้ตั้งค่า QR<br>ใช้เลขบัญชีด้านล่างค่ะ</span>';
+    if(!done && d.qrImageUrl){ box.innerHTML=`<img src="${esc(d.qrImageUrl)}" alt="QR พร้อมเพย์">`; done=true; }
+    if(!done) box.innerHTML='<span style="color:#888;text-align:center;font-size:13px">ยังไม่ได้ตั้งค่า QR<br>ใช้เลขบัญชีด้านล่างค่ะ</span>';
+    const sv=document.getElementById('topup-save'); if(sv) sv.style.display=done?'':'none';
+    if(hint){
+      hint.style.color = (topupAmt && !ok) ? '#ff9f43' : '';
+      hint.textContent = (topupAmt && !ok) ? 'เติมได้ครั้งละ 20–20,000 บาทค่ะ'
+        : (!ok ? 'สแกนโอนได้เลย แล้วเลือกยอดที่โอนก่อนแนบสลิปนะคะ' : '');
     }
   }
   function topupPickSlip(){ if(!topupSending) document.getElementById('topup-slip').click(); }
