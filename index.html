@@ -562,8 +562,18 @@
     /* ---- แถบกำลังออกอากาศ + แชร์ ---- */
     .live-bar{ display:flex; align-items:center; gap:8px; margin-top:10px; }
     .now-chip{ display:inline-flex; align-items:center; background:var(--glass); border:1px solid var(--stroke);
-      border-radius:999px; padding:7px 14px; font-size:13px; max-width:78%; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
-    .now-chip b{ color:var(--accent); font-weight:600; }
+      border-radius:999px; padding:7px 14px; font-size:13px; max-width:78%; min-width:0; overflow:hidden; white-space:nowrap; }
+    .now-chip b{ color:var(--accent); font-weight:600; flex:0 0 auto; }
+    /* ชื่อรายการยาวเกิน → วิ่งวนแบบตัววิ่ง (ป้าย "กำลังชม:" อยู่กับที่) */
+    .now-marq{ display:block; flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+    .now-marq.running{ text-overflow:clip;
+      -webkit-mask:linear-gradient(90deg, transparent 0, #000 6px, #000 calc(100% - 14px), transparent);
+      mask:linear-gradient(90deg, transparent 0, #000 6px, #000 calc(100% - 14px), transparent); }
+    .now-track{ display:inline-flex; white-space:nowrap; will-change:transform; }
+    .now-track .now-dup{ padding-left:40px; }
+    .now-track.run{ animation:nowMarq var(--dur,10s) linear 1.2s infinite; }
+    @keyframes nowMarq{ from{ transform:translateX(0); } to{ transform:translateX(calc(-1 * var(--dist,0px))); } }
+    @media (prefers-reduced-motion: reduce){ .now-track.run{ animation:none; } }
     .share-btn{ border:1px solid var(--accent); background:color-mix(in srgb, var(--accent) 14%, transparent); color:var(--accent);
       border-radius:999px; padding:7px 16px; font-family:inherit; font-weight:700; font-size:14px; cursor:pointer; white-space:nowrap; }
 
@@ -1030,7 +1040,7 @@
 
       <!-- แถบ กำลังชม + แชร์ -->
       <div class="live-bar">
-        <span class="now-chip" id="now-chip" style="display:none">🔴 <b data-lbl="nowWatching">กำลังชม:</b>&nbsp;<span id="now-title"></span></span>
+        <span class="now-chip" id="now-chip" style="display:none">🔴 <b data-lbl="nowWatching">กำลังชม:</b>&nbsp;<span class="now-marq" id="now-marq"><span class="now-track" id="now-track"><span id="now-title"></span></span></span></span>
         <span style="flex:1"></span>
         <button class="share-btn" onclick="shareSite()" data-lbl="shareBtn">🔗 แชร์</button>
       </div>
@@ -4334,6 +4344,27 @@
   function closeShare(){ document.getElementById('share-backdrop').classList.remove('open'); }
 
   // ---- กำลังออกอากาศ ----
+  // ตัววิ่ง: ชื่อยาวเกินกล่อง → ต่อสำเนาท้าย แล้ววิ่งวนต่อเนื่องด้วยความเร็วคงที่ ~40px/วิ; ชื่อสั้นอยู่นิ่ง
+  function fitNowMarquee(){
+    const box=document.getElementById('now-marq'), track=document.getElementById('now-track'), tt=document.getElementById('now-title');
+    if(!box || !track || !tt) return;
+    track.classList.remove('run'); box.classList.remove('running');
+    track.querySelectorAll('.now-dup').forEach(d=>d.remove());
+    if(!box.clientWidth) return;                              // ยังซ่อนอยู่
+    if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const w=tt.getBoundingClientRect().width;
+    if(w <= box.clientWidth + 1) return;
+    const dup=document.createElement('span'); dup.className='now-dup'; dup.setAttribute('aria-hidden','true'); dup.textContent=tt.textContent;
+    track.appendChild(dup);
+    const dist=w+40;
+    track.style.setProperty('--dist', dist.toFixed(1)+'px');
+    track.style.setProperty('--dur', Math.max(6, dist/40).toFixed(1)+'s');
+    void track.offsetWidth;                                   // รีสตาร์ตแอนิเมชันจากต้นชื่อ
+    track.classList.add('run'); box.classList.add('running');
+  }
+  let nowMarqTimer=null;
+  window.addEventListener('resize', ()=>{ clearTimeout(nowMarqTimer); nowMarqTimer=setTimeout(fitNowMarquee, 200); });
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>fitNowMarquee()).catch(()=>{});
   function updateNowChip(){
     const chip=document.getElementById('now-chip'), tt=document.getElementById('now-title'); if(!chip) return;
     try{
@@ -4365,8 +4396,10 @@
       }
 
       if(cur && cur.title){
-        tt.textContent = cur.title + (cur.t ? (' (' + cur.t.trim() + ')') : '');
+        const txt = cur.title + (cur.t ? (' (' + cur.t.trim() + ')') : '');
+        const wasHidden = chip.style.display==='none';
         chip.style.display = 'inline-flex';
+        if(tt.textContent!==txt || wasHidden){ tt.textContent = txt; fitNowMarquee(); }   // เปลี่ยนรายการเท่านั้นถึงเริ่มวิ่งใหม่
       } else {
         chip.style.display = 'none';
       }
