@@ -314,6 +314,61 @@
     @keyframes sparkOut{ 0%{transform:translate(-50%,-50%) scale(1); opacity:0} 10%{opacity:1}
       100%{transform:translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(.3); opacity:0} }
 
+    /* เหรียญเพชร: ฉากพิเศษ (แฟลช → เหรียญตกกระแทก → คลื่นแสง → ฝนเพชร → ประกาย 3 ระลอก) */
+    .gift-dia{ position:absolute; inset:0; animation:diaFade 6.5s ease forwards; }
+    .dia-bg{ position:absolute; inset:0; background:radial-gradient(circle at 50% 42%, rgba(10,20,50,.3), rgba(2,4,14,.82) 75%); }
+    .dia-bg::after{ content:''; position:absolute; inset:0; mix-blend-mode:screen; animation:diaHue 4s linear infinite;
+      background:linear-gradient(120deg, rgba(255,120,200,.2), rgba(120,220,255,.2), rgba(180,140,255,.2), rgba(140,255,200,.18), rgba(255,120,200,.2));
+      background-size:300% 300%; }
+    .dia-flash{ position:absolute; inset:0; z-index:6; animation:diaFlash .6s ease-out forwards;
+      background:radial-gradient(circle, #fff, rgba(180,230,255,.9) 40%, rgba(180,230,255,0) 80%); }
+    .dia-stage{ position:absolute; inset:0; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+      animation:diaShake .45s linear .65s 1; }
+    .dia-coin{ position:relative; height:54%; max-height:250px; aspect-ratio:1; perspective:700px;
+      animation:diaDrop .9s cubic-bezier(.3,.9,.4,1.15) .15s both; }
+    .dia-coin img{ position:relative; z-index:2; width:100%; height:100%; animation:coinSpin .55s ease-in-out 1.05s 3 both;
+      filter:drop-shadow(0 0 18px rgba(170,230,255,.95)) drop-shadow(0 0 40px rgba(255,150,230,.55)); }
+    .dia-halo{ position:absolute; inset:-18%; z-index:1; border-radius:50%; opacity:0; animation:diaHalo 1.1s ease-in-out 1.2s infinite;
+      background:radial-gradient(circle, rgba(200,240,255,.75), rgba(160,200,255,.25) 45%, transparent 70%); }
+    .dia-rays{ position:absolute; inset:-95%; z-index:0; border-radius:50%;
+      -webkit-mask:radial-gradient(circle, #000 14%, transparent 60%); mask:radial-gradient(circle, #000 14%, transparent 60%); }
+    .dia-rays.r1{ background:repeating-conic-gradient(rgba(255,140,210,.42) 0 5deg, rgba(120,220,255,.45) 5deg 10deg, transparent 10deg 18deg);
+      animation:raysSpin 6s linear infinite; }
+    .dia-rays.r2{ background:repeating-conic-gradient(rgba(255,255,255,.35) 0 3deg, transparent 3deg 26deg); animation:raysSpin 9s linear infinite reverse; }
+    .dia-ring{ position:absolute; left:50%; top:50%; z-index:1; width:100%; height:100%; border-radius:50%; opacity:0;
+      border:3px solid rgba(190,235,255,.9); box-shadow:0 0 18px rgba(160,220,255,.9), inset 0 0 12px rgba(255,170,230,.6);
+      transform:translate(-50%,-50%) scale(.6); animation:diaRing 1.1s ease-out both; }
+    .dia-name{ position:relative; z-index:3; display:flex; flex-direction:column; align-items:center; max-width:90%; padding:6px 20px;
+      border-radius:16px; background:rgba(8,14,32,.9); color:#fff; overflow:hidden; animation:diaNameIn .5s cubic-bezier(.2,.8,.2,1) 1s both; }
+    .dia-name::before{ content:''; position:absolute; inset:0; border-radius:16px; padding:2px; animation:diaHue 2.5s linear infinite;
+      background:linear-gradient(90deg,#ff8ad8,#8fe3ff,#c9a8ff,#9dffd0,#ffe38a,#ff8ad8); background-size:300% 100%;
+      -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; }
+    .dia-name::after{ content:''; position:absolute; top:0; bottom:0; width:40%; left:-60%; animation:diaShine 2.2s ease-in-out 1.4s infinite;
+      background:linear-gradient(100deg, transparent, rgba(255,255,255,.35), transparent); }
+    .dia-name b{ max-width:100%; font-size:17px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .dia-name span{ font-size:13px; color:#bfe9ff; white-space:nowrap; }
+    .dia-drop{ position:absolute; top:-12%; z-index:2; font-size:var(--sz,18px); line-height:1;
+      animation:diaFall var(--fd,2.4s) linear var(--dl,0s) both; filter:drop-shadow(0 0 6px rgba(170,230,255,.9)); }
+    .dia-drop.star{ width:var(--sz); height:var(--sz); background:#fff;
+      clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%); }
+    .gift-dia .gift-spark{ top:40%; z-index:5; }
+    @keyframes diaFade{ 0%{opacity:0} 4%{opacity:1} 90%{opacity:1} 100%{opacity:0} }
+    @keyframes diaFlash{ 0%{opacity:0} 15%{opacity:1} 100%{opacity:0} }
+    @keyframes diaHue{ 0%{background-position:0% 50%} 100%{background-position:300% 50%} }
+    @keyframes diaDrop{ 0%{transform:translateY(-170%) scale(.55); opacity:0} 55%{transform:translateY(6%) scale(1.06); opacity:1}
+      72%{transform:translateY(-4%) scale(.98)} 86%{transform:translateY(2%)} 100%{transform:none; opacity:1} }
+    @keyframes diaShake{ 0%,100%{transform:none} 20%{transform:translate(-5px,3px)} 40%{transform:translate(5px,-3px)} 60%{transform:translate(-3px,2px)} 80%{transform:translate(3px,-1px)} }
+    @keyframes diaHalo{ 0%,100%{opacity:.55; transform:scale(.92)} 50%{opacity:1; transform:scale(1.08)} }
+    @keyframes diaRing{ 0%{opacity:.95; transform:translate(-50%,-50%) scale(.6)} 100%{opacity:0; transform:translate(-50%,-50%) scale(2.6)} }
+    @keyframes diaNameIn{ from{opacity:0; transform:translateY(14px) scale(.9)} to{opacity:1; transform:none} }
+    @keyframes diaShine{ 0%{left:-60%} 60%,100%{left:130%} }
+    @keyframes diaFall{ 0%{transform:translateY(0) rotate(0); opacity:0} 10%{opacity:1} 85%{opacity:1}
+      100%{transform:translateY(var(--fy,260px)) rotate(var(--rot,180deg)); opacity:0} }
+    @media (prefers-reduced-motion: reduce){
+      .dia-drop, .dia-ring, .dia-rays, .dia-flash, .gift-dia .gift-spark{ display:none; }
+      .dia-stage, .dia-coin, .dia-coin img, .dia-halo{ animation:none; }
+    }
+
     /* อันดับผู้สนับสนุน + แผงยืนยันของแอดมิน */
     .lb-tabs{ display:flex; gap:8px; margin:12px 0; }
     .lb-tabs button{ flex:1; border:1px solid var(--stroke); background:var(--glass-2); color:var(--text); border-radius:12px;
@@ -746,6 +801,8 @@
         accountNumber: '',   // เลขบัญชี
         qrImageUrl:    ''    // URL รูป QR พร้อมเพย์แบบคงที่ (ถ้าไม่ใส่ promptpayId จะใช้รูปนี้แทน)
       },
+      // บัญชีรับเงินเติมเหรียญ — useDonate:true = ใช้บัญชีเดียวกับกล่องบริจาค (ปุ่มร่วมสนับสนุน)
+      topup: { useDonate:true, promptpayId:'', bankName:'', accountName:'', accountNumber:'', qrImageUrl:'' },
       // ของขวัญโดเนท (ขึ้นจอหลังแอดมินยืนยันสลิป) — tier: s=แถบเล็ก, bronze/silver=แถบ+เหรียญหมุน, gold/diamond=เต็มจอ
       gifts: [
         { id:'rose',    name:'กุหลาบ',       emoji:'🌹',               amount:20,   tier:'s' },
@@ -778,7 +835,7 @@
       quranPdfUrl: 'ThailandQuranแปลไทย.pdf'        // ลิงก์ไฟล์ PDF อัลกุรอานแปลไทย (มีไฟล์ในเว็บแล้ว หรือแอดมินแก้ URL ได้)
     };
     // ค่าที่แอดมินแก้ได้ (ทับด้วย /settings จาก Firebase ตอนโหลด)
-    const ADMIN_KEYS = ['streamUrl','social','market','donate','gifts','videos','sponsors','theme','labels','logoUrl','domain','prayerProvince','hijriOffset','quranPdfUrl'];
+    const ADMIN_KEYS = ['streamUrl','social','market','donate','topup','gifts','videos','sponsors','theme','labels','logoUrl','domain','prayerProvince','hijriOffset','quranPdfUrl'];
 
     // ---- ชุดธีมสำเร็จ (อิงสีโลโก้ยาตีมทีวี: น้ำเงิน–ทอง) ----
     const THEMES = {
@@ -1158,7 +1215,7 @@
       <div class="gift-note">เหรียญใช้ส่งของขวัญในไลฟ์เท่านั้น ไม่สามารถแลกคืนเป็นเงินได้ — ยอดเติมถือเป็นการร่วมสนับสนุนช่องค่ะ<br>เก็บรหัสกระเป๋าไว้ ถ้าเปลี่ยนเครื่องแจ้งแอดมินเพื่อย้ายเหรียญได้ค่ะ</div>
       <input type="file" id="topup-slip" accept="image/*" style="display:none" onchange="topupSlipChosen(this)">
       <div class="sheet-btns">
-        <button id="topup-copy" onclick="copyAccount()">📋 คัดลอกเลขบัญชี</button>
+        <button id="topup-copy" onclick="copyTopupAccount()">📋 คัดลอกเลขบัญชี</button>
         <button class="primary" id="topup-send" onclick="topupPickSlip()" disabled>📎 โอนแล้ว แนบสลิป</button>
       </div>
     </div>
@@ -1399,6 +1456,27 @@
               <input id="f-qr" placeholder="วาง URL รูป QR หรืออัปโหลดด้านล่าง" oninput="const p=document.getElementById('f-qr-preview');p.src=this.value;p.style.visibility='visible'">
               <input type="file" id="f-qr-file" accept="image/*" style="margin-top:8px">
               <button class="mini" onclick="adminUploadQR()">⬆️ อัปโหลดรูป QR</button>
+            </div>
+          </div>
+
+          <div class="grp">💰 บัญชีเติมเหรียญ</div>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="f-tp-same" style="width:18px;height:18px;margin:0" onchange="toggleTopupFields()">
+            ใช้ QR และบัญชีเดียวกับปุ่มร่วมสนับสนุน (บัญชีบริจาคด้านบน)
+          </label>
+          <div id="f-tp-fields">
+            <label>เบอร์พร้อมเพย์ / เลขบัตร ปชช.</label><input id="f-tp-ppid" placeholder="0812345678">
+            <label>ชื่อธนาคาร</label><input id="f-tp-bankname">
+            <label>ชื่อบัญชี</label><input id="f-tp-accname">
+            <label>เลขบัญชี</label><input id="f-tp-accnum">
+            <label>รูป QR พร้อมเพย์ (อัปโหลด หรือวาง URL)</label>
+            <div class="logo-row">
+              <img id="f-tp-qr-preview" alt="qr" onerror="this.style.visibility='hidden'">
+              <div style="flex:1">
+                <input id="f-tp-qr" placeholder="วาง URL รูป QR หรืออัปโหลดด้านล่าง" oninput="const p=document.getElementById('f-tp-qr-preview');p.src=this.value;p.style.visibility='visible'">
+                <input type="file" id="f-tp-qr-file" accept="image/*" style="margin-top:8px">
+                <button class="mini" onclick="adminUploadQR('f-tp-')">⬆️ อัปโหลดรูป QR</button>
+              </div>
             </div>
           </div>
 
@@ -2590,6 +2668,12 @@
     setv('f-ppid',CONFIG.donate.promptpayId); setv('f-bankname',CONFIG.donate.bankName);
     setv('f-accname',CONFIG.donate.accountName); setv('f-accnum',CONFIG.donate.accountNumber); setv('f-qr',CONFIG.donate.qrImageUrl);
     const qp=document.getElementById('f-qr-preview'); qp.src=CONFIG.donate.qrImageUrl||''; qp.style.visibility=CONFIG.donate.qrImageUrl?'visible':'hidden';
+    const tp=CONFIG.topup||{};
+    document.getElementById('f-tp-same').checked = tp.useDonate!==false;
+    setv('f-tp-ppid',tp.promptpayId); setv('f-tp-bankname',tp.bankName); setv('f-tp-accname',tp.accountName);
+    setv('f-tp-accnum',tp.accountNumber); setv('f-tp-qr',tp.qrImageUrl);
+    const tq=document.getElementById('f-tp-qr-preview'); tq.src=tp.qrImageUrl||''; tq.style.visibility=tp.qrImageUrl?'visible':'hidden';
+    toggleTopupFields();
     const cleanQuranUrl = (CONFIG.quranPdfUrl && !CONFIG.quranPdfUrl.includes('drive.google.com')) ? CONFIG.quranPdfUrl : 'ThailandQuranแปลไทย.pdf';
     setv('f-quran',cleanQuranUrl); setv('f-prayer',CONFIG.prayerProvince); setv('f-hijri-offset',CONFIG.hijriOffset !== undefined ? String(CONFIG.hijriOffset) : '-1'); setv('f-domain',CONFIG.domain);
   }
@@ -2616,11 +2700,16 @@
       toast('อัปโหลดแล้ว กด "บันทึกการตั้งค่าทั้งหมด" เพื่อใช้งาน');
     }catch(e){ toast('อัปโหลดไม่สำเร็จ'+(e.message?': '+e.message:'')); console.error(e); }
   }
-  async function adminUploadQR(){
+  function toggleTopupFields(){
+    const same=document.getElementById('f-tp-same').checked;
+    document.getElementById('f-tp-fields').style.display = same ? 'none' : 'block';
+  }
+  // prefix 'f-' = บัญชีบริจาค, 'f-tp-' = บัญชีเติมเหรียญ
+  async function adminUploadQR(prefix='f-'){
     if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
-    const f=document.getElementById('f-qr-file').files[0]; if(!f){ toast('เลือกไฟล์รูป QR ก่อนค่ะ'); return; }
+    const f=document.getElementById(prefix+'qr-file').files[0]; if(!f){ toast('เลือกไฟล์รูป QR ก่อนค่ะ'); return; }
     try{ toast('กำลังอัปโหลดรูป QR...'); const up=await uploadToCloudinary(f);
-      setv('f-qr',up.url); const qp=document.getElementById('f-qr-preview'); qp.src=up.url; qp.style.visibility='visible';
+      setv(prefix+'qr',up.url); const qp=document.getElementById(prefix+'qr-preview'); qp.src=up.url; qp.style.visibility='visible';
       toast('อัปโหลดแล้ว กด "บันทึกการตั้งค่าทั้งหมด" เพื่อใช้งาน');
     }catch(e){ toast('อัปโหลดไม่สำเร็จ'+(e.message?': '+e.message:'')); console.error(e); }
   }
@@ -2759,6 +2848,8 @@
       social:{ youtube:val('f-youtube'),facebook:val('f-facebook'),tiktok:val('f-tiktok'),instagram:val('f-instagram'),lineOA:val('f-lineOA') },
       market:{ web:val('f-market'), previewImg:val('f-market-preview') },
       donate:{ promptpayId:val('f-ppid'),bankName:val('f-bankname'),accountName:val('f-accname'),accountNumber:val('f-accnum'),qrImageUrl:val('f-qr') },
+      topup:{ useDonate:document.getElementById('f-tp-same').checked, promptpayId:val('f-tp-ppid'), bankName:val('f-tp-bankname'),
+        accountName:val('f-tp-accname'), accountNumber:val('f-tp-accnum'), qrImageUrl:val('f-tp-qr') },
       videos: adminVideos.map(v=>({id:v.id,title:v.title||''})),
       sponsors: adminSponsors.slice(0,10).map(s=>({img:s.img,link:s.link||''})),
       quranPdfUrl: val('f-quran'), prayerProvince: val('f-prayer'),
@@ -3604,8 +3695,14 @@
     document.getElementById('topup-backdrop').classList.add('open');
   }
   function closeTopup(){ document.getElementById('topup-backdrop').classList.remove('open'); }
+  // บัญชีรับเงินเติมเหรียญ: แยกของตัวเอง หรือใช้บัญชีเดียวกับกล่องบริจาค (ตั้งในแผงแอดมิน)
+  function topupAccount(){ const t=CONFIG.topup||{}; return t.useDonate===false ? t : (CONFIG.donate||{}); }
+  function copyTopupAccount(){
+    const num=topupAccount().accountNumber||''; if(!num){ toast('ยังไม่ได้ตั้งค่าเลขบัญชีค่ะ'); return; }
+    copyText(num).then(()=>toast('คัดลอกเลขบัญชีแล้วค่ะ ✅')).catch(()=>toast('คัดลอกไม่ได้ กดค้างที่เลขเพื่อคัดลอกแทนค่ะ'));
+  }
   function renderTopupBank(){                               // เลขบัญชีแสดงตลอด (โอนเองได้แม้ไม่มี QR) + ปุ่มคัดลอก
-    const d=CONFIG.donate||{}, bank=document.getElementById('topup-bank'); bank.innerHTML='';
+    const d=topupAccount(), bank=document.getElementById('topup-bank'); bank.innerHTML='';
     const ok=topupAmt>=TOPUP_MIN && topupAmt<=TOPUP_MAX;
     if(ok){ const l=document.createElement('div'); l.textContent='โอน '+fmtBaht(topupAmt)+' → ได้ '+fmtCoin(topupAmt)+' เหรียญ'; bank.appendChild(l); }
     if(d.bankName){ const l=document.createElement('div'); l.textContent=d.bankName; bank.appendChild(l); }
@@ -3624,7 +3721,7 @@
       return;
     }
     // QR พร้อมเพย์ระบุยอด (ตัวสร้างเดียวกับกล่องบริจาค)
-    const d=CONFIG.donate||{};
+    const d=topupAccount();
     const payload=d.promptpayId ? promptPayPayload(d.promptpayId, topupAmt) : null;
     let done=false;
     if(payload && typeof qrcode!=='undefined'){
@@ -3705,14 +3802,56 @@
     const dur=showGift(giftQ.shift());
     setTimeout(()=>{ giftPlaying=false; playNextGift(); }, dur+300);
   }
+  // เหรียญเพชร: ฉากพิเศษ ~6.5 วิ (ชิ้นส่วนรวม ~70 ชิ้น ลบทิ้งเมื่อจบฉาก)
+  function buildDiamondScene(el, g, name, amount, layer){
+    const mk=(t,c)=>{ const e=document.createElement(t); e.className=c; return e; };
+    const H=layer.clientHeight||220;
+    el.className='gift-dia';
+    const coin=mk('div','dia-coin');
+    coin.append(mk('div','dia-rays r1'), mk('div','dia-rays r2'), mk('div','dia-halo'));
+    [0.65,0.85,1.05].forEach(d=>{ const r=mk('span','dia-ring'); r.style.animationDelay=d+'s'; coin.appendChild(r); });  // คลื่นกระแทก
+    coin.appendChild(giftIconEl(g));
+    const cap=mk('div','dia-name');
+    const nb=document.createElement('b'); nb.textContent=name;
+    const ns=document.createElement('span'); ns.textContent='ส่ง'+g.name+' 💎 '+fmtCoin(amount)+' เหรียญ';
+    cap.append(nb, ns);
+    const stage=mk('div','dia-stage'); stage.append(coin, cap);
+    el.append(mk('div','dia-bg'), stage);
+    for(let i=0;i<26;i++){                                   // ฝนเพชร + ดาว โปรยทั่วจอ
+      const star=i%3===2, d=mk('span','dia-drop'+(star?' star':''));
+      if(!star) d.textContent='💎';
+      d.style.left=(Math.random()*96).toFixed(1)+'%';
+      d.style.setProperty('--sz', (star ? 8+Math.random()*8 : 14+Math.random()*14).toFixed(0)+'px');
+      d.style.setProperty('--fd', (1.8+Math.random()*1.4).toFixed(2)+'s');
+      d.style.setProperty('--dl', (0.3+Math.random()*4).toFixed(2)+'s');
+      d.style.setProperty('--fy', Math.round(H*1.25)+'px');
+      d.style.setProperty('--rot', ((Math.random()-0.5)*540).toFixed(0)+'deg');
+      el.appendChild(d);
+    }
+    const colors=['#ffffff','#9fe3ff','#ffb3e6','#c7b3ff','#b3ffd9','#ffe9a8'];
+    [0.7, 2.7, 4.2].forEach((t,w)=>{                          // ประกายระเบิด 3 ระลอก: ตอนกระแทก / หมุนจบ / ช่วงท้าย
+      for(let i=0;i<12;i++){
+        const sp=mk('span','gift-spark'), a=Math.random()*Math.PI*2, r=(60+Math.random()*120)*(w===0?1.25:1), c=colors[(i+w)%colors.length];
+        sp.style.setProperty('--tx', (Math.cos(a)*r).toFixed(0)+'px');
+        sp.style.setProperty('--ty', (Math.sin(a)*r).toFixed(0)+'px');
+        sp.style.background=c; sp.style.color=c;
+        sp.style.animationDelay=(t+Math.random()*0.35).toFixed(2)+'s';
+        el.appendChild(sp);
+      }
+    });
+    el.appendChild(mk('div','dia-flash'));                   // แฟลชเปิดฉาก (ทับบนสุด)
+    return 6500;
+  }
   function showGift(v){
     const layer=document.getElementById('gift-layer'); if(!layer) return 0;
     const g=giftById(v.giftId) || { name:v.giftName||'ของขวัญ', emoji:'🎁', tier:'s' };
     const tier=g.tier||'s', name=String(v.name||GIFT_ANON_NAME);
     const el=document.createElement('div');
     let dur;
-    if(tier==='gold' || tier==='diamond'){
-      dur = tier==='diamond' ? 5000 : 3600;
+    if(tier==='diamond'){
+      dur=buildDiamondScene(el, g, name, v.amount, layer);
+    }else if(tier==='gold'){
+      dur=3600;
       el.className='gift-big t-'+tier; el.style.setProperty('--dur', dur+'ms');
       const coin=document.createElement('div'); coin.className='gbig-coin';
       const rays=document.createElement('div'); rays.className='gbig-rays';
