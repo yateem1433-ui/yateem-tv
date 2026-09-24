@@ -16,6 +16,19 @@
             "$other": { ".validate": false }
           }
         },
+        "reactions": {
+          ".read": true,
+          ".indexOn": ["ts"],
+          "$r": {
+            ".write": "(!data.exists() && auth != null && newData.child('uid').val() === auth.uid) || (data.exists() && !newData.exists() && auth != null && data.child('uid').val() === auth.uid)",
+            ".validate": "newData.hasChildren(['uid','name','e','ts']) && newData.child('uid').isString() && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('e').isString() && newData.child('e').val().length >= 1 && newData.child('e').val().length <= 8 && newData.child('ts').val() === now",
+            "uid":  { ".validate": true },
+            "name": { ".validate": true },
+            "e":    { ".validate": true },
+            "ts":   { ".validate": true },
+            "$other": { ".validate": false }
+          }
+        },
         "presence": {
           ".read": true,
           "$conn": {
