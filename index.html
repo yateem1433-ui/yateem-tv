@@ -276,6 +276,17 @@
     .gift-toggle{ font-size:22px; }
 
     #gift-layer{ position:absolute; inset:0; z-index:9; pointer-events:none; overflow:hidden; }
+    /* ปุ่มชวนลองส่งของขวัญ หลังตัวอย่างเล่นจบ */
+    #gift-cta{ position:absolute; left:50%; bottom:12px; z-index:10; display:none; align-items:center; gap:8px;
+      transform:translateX(-50%); max-width:calc(100% - 20px); padding:6px 6px 6px 14px; border-radius:999px;
+      background:rgba(10,14,24,.82); border:1px solid var(--accent); color:#fff; font-size:14px; font-weight:600;
+      white-space:nowrap; box-shadow:0 6px 20px rgba(0,0,0,.4); animation:gcIn .35s ease; }
+    #gift-cta.show{ display:flex; }
+    #gift-cta .gc-tx{ overflow:hidden; text-overflow:ellipsis; }
+    #gift-cta .gc-go{ border:none; border-radius:999px; padding:7px 14px; background:var(--accent); color:#111;
+      font-family:inherit; font-weight:800; font-size:14px; cursor:pointer; }
+    #gift-cta .gc-x{ border:none; background:none; color:rgba(255,255,255,.7); font-size:20px; line-height:1; cursor:pointer; padding:0 6px; }
+    @keyframes gcIn{ from{ opacity:0; transform:translate(-50%,10px); } to{ opacity:1; transform:translate(-50%,0); } }
     .gift-banner{ position:absolute; left:10px; top:50px; display:flex; align-items:center; gap:8px; max-width:80%;
       padding:4px 14px 4px 4px; border-radius:999px; color:#fff; border:1px solid rgba(255,255,255,.2);
       background:linear-gradient(90deg, rgba(10,16,30,.94), rgba(10,16,30,.6));
@@ -388,7 +399,7 @@
     #gift-admin-fab.has{ animation:fabPulse 1.6s ease-in-out infinite; }
     @keyframes fabPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.08); } }
     .ga-row{ display:flex; gap:10px; align-items:center; padding:10px; border-radius:14px; background:var(--glass-2); border:1px solid var(--stroke); }
-    .ga-row img.slip{ width:58px; height:76px; object-fit:cover; border-radius:8px; cursor:pointer; flex:0 0 auto; background:#fff; }
+    .ga-row img.slip{ width:72px; height:96px; object-fit:cover; border-radius:8px; cursor:pointer; flex:0 0 auto; background:#fff; }
     .ga-info{ flex:1; min-width:0; font-size:13px; line-height:1.5; word-break:break-word; }
     .ga-info b{ font-size:14px; }
     .ga-warn{ color:#ff9f43; font-weight:600; }
@@ -597,6 +608,9 @@
 
     /* ---- lightbox / quran modal ---- */
     .lb-img{ max-width:96vw; max-height:86vh; border-radius:14px; }
+    .lb-cap{ max-width:92vw; text-align:center; font-weight:700; font-size:15px; line-height:1.5; color:#fff;
+      background:rgba(0,0,0,.55); border:1px solid var(--stroke); border-radius:12px; padding:8px 14px; }
+    #lightbox-backdrop:has(.lb-cap[style*="block"]) .lb-img{ max-height:76vh; }
     .quran-modal{ width:96vw; height:90vh; max-width:900px; border-radius:18px; padding:8px; position:relative; display:flex; flex-direction:column; }
     .quran-modal iframe{ flex:1; width:100%; border:0; border-radius:12px; background:#fff; }
 
@@ -733,6 +747,16 @@
     .login-btn.google .lb-ic{ background:#fff; color:#4285F4; border:1px solid #dadce0; }
     .login-btn.fb .lb-ic{ background:#1877F2; }
     .login-btn.guest{ background:none; color:var(--muted); border-style:dashed; }
+    .login-btn.phone .lb-ic{ background:#2563EB; }
+    /* ล็อกอินด้วยเบอร์โทร (OTP) — อยู่ในแผ่นล็อกอินเดียวกัน สลับแทนปุ่มเลือกช่องทาง */
+    #login-phone{ display:none; flex-direction:column; gap:10px; margin-top:16px; }
+    #login-phone input{ width:100%; box-sizing:border-box; font-family:inherit; font-size:18px; text-align:center; padding:13px;
+      border-radius:14px; border:1px solid var(--stroke); background:var(--glass-2); color:var(--text); }
+    #login-phone input#lpn-otp{ font-size:24px; letter-spacing:.4em; }
+    #login-phone .lpn-hint{ color:var(--muted); font-size:14px; text-align:center; }
+    #login-phone .lpn-err{ color:#f87171; font-size:14px; text-align:center; display:none; }
+    #login-phone .login-btn.primary{ background:var(--accent); color:#111; border-color:transparent; }
+    #login-phone .lpn-link{ background:none; border:none; color:var(--muted); text-decoration:underline; font-family:inherit; font-size:13px; cursor:pointer; }
     .lp-row{ display:flex; align-items:center; gap:12px; margin-top:16px; }
     .lp-row img{ width:52px; height:52px; border-radius:50%; object-fit:cover; border:1px solid var(--stroke); background:var(--glass-2); }
     .lp-name{ font-weight:700; font-size:17px; } .lp-sub{ font-size:13px; color:var(--muted); }
@@ -948,6 +972,7 @@
       ['เข้าสู่ระบบ','loginDesc','เข้าสู่ระบบเพื่อแชทและสั่งซื้อด้วยชื่อจริง (ไม่บังคับ)','คำอธิบายหน้าล็อกอิน'],
       ['เข้าสู่ระบบ','loginLineBtn','เข้าสู่ระบบด้วย LINE','ปุ่ม LINE'],
       ['เข้าสู่ระบบ','loginGoogleBtn','เข้าสู่ระบบด้วย Google','ปุ่ม Google'],
+      ['เข้าสู่ระบบ','loginPhoneBtn','เข้าสู่ระบบด้วยเบอร์โทรศัพท์','ปุ่มเบอร์โทร'],
       ['เข้าสู่ระบบ','loginGuestBtn','แชทแบบไม่ล็อกอิน','ปุ่มไม่ล็อกอิน'],
       ['เข้าสู่ระบบ','logoutBtn','ออกจากระบบ','ปุ่มออกจากระบบ'],
       ['เข้าสู่ระบบ','viewerRole','ผู้ชม Yateem TV','ป้ายใต้ชื่อผู้ใช้'],
@@ -1036,6 +1061,12 @@
         <button class="unmute-btn" id="unmute-btn" onclick="unmuteNow()" style="display:none" data-lbl="unmuteBtn">🔊 แตะเพื่อเปิดเสียง</button>
         <!-- ของขวัญที่แอดมินยืนยันแล้ว ลอยขึ้นบนจอวิดีโอ -->
         <div id="gift-layer"></div>
+        <!-- ชวนลองส่งของขวัญ (โผล่หลังตัวอย่างของขวัญเล่นจบ) -->
+        <div id="gift-cta" role="status">
+          <span class="gc-tx">🎁 ส่งของขวัญให้รายการได้นะคะ</span>
+          <button type="button" class="gc-go" onclick="giftCtaGo()">ลองส่ง</button>
+          <button type="button" class="gc-x" onclick="hideGiftCta()" aria-label="ปิด">×</button>
+        </div>
       </div>
 
       <!-- แถบ กำลังชม + แชร์ -->
@@ -1159,7 +1190,24 @@
       <div id="login-choices">
         <button class="login-btn line"   onclick="loginLine()"><span class="lb-ic">💬</span> <span data-lbl="loginLineBtn">เข้าสู่ระบบด้วย LINE</span></button>
         <button class="login-btn google" onclick="loginGoogle()"><span class="lb-ic">G</span> <span data-lbl="loginGoogleBtn">เข้าสู่ระบบด้วย Google</span></button>
+        <button class="login-btn phone"  onclick="openPhoneLogin()"><span class="lb-ic">📱</span> <span data-lbl="loginPhoneBtn">เข้าสู่ระบบด้วยเบอร์โทรศัพท์</span></button>
         <button class="login-btn guest"  onclick="closeLogin()" data-lbl="loginGuestBtn">แชทแบบไม่ล็อกอิน</button>
+      </div>
+      <div id="login-phone">
+        <div id="lpn-step1" style="display:flex;flex-direction:column;gap:10px">
+          <div class="lpn-hint">กรอกเบอร์มือถือ ระบบจะส่งรหัส OTP 6 หลักทาง SMS ให้ค่ะ</div>
+          <input id="lpn-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="เช่น 0812345678" onkeydown="if(event.key==='Enter')sendPhoneOtp()">
+          <button class="login-btn primary" id="lpn-send" onclick="sendPhoneOtp()">ส่งรหัส OTP</button>
+        </div>
+        <div id="lpn-step2" style="display:none;flex-direction:column;gap:10px">
+          <div class="lpn-hint" id="lpn-sent"></div>
+          <input id="lpn-otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="รหัส 6 หลัก" onkeydown="if(event.key==='Enter')confirmPhoneOtp()">
+          <button class="login-btn primary" id="lpn-confirm" onclick="confirmPhoneOtp()">ยืนยันรหัส</button>
+          <button class="lpn-link" onclick="phoneStep(1)">เปลี่ยนเบอร์ / ขอรหัสใหม่</button>
+        </div>
+        <div class="lpn-err" id="lpn-err"></div>
+        <div id="lpn-recaptcha"></div>
+        <button class="login-btn guest" onclick="closePhoneLogin()">← กลับไปเลือกช่องทางอื่น</button>
       </div>
       <div class="legal-links">การเข้าสู่ระบบถือว่ายอมรับ <a href="terms.html">ข้อกำหนด</a> และ <a href="privacy.html">นโยบายความเป็นส่วนตัว</a></div>
       <div id="login-profile" style="display:none">
@@ -1288,9 +1336,10 @@
     </div>
   </div>
 
-  <!-- IMAGE LIGHTBOX (ผังรายการกดขยาย) -->
-  <div class="backdrop" id="lightbox-backdrop" onclick="closeLightbox()" style="align-items:center">
-    <img class="lb-img" id="lightbox-img" alt="ผังรายการ" src="">
+  <!-- IMAGE LIGHTBOX (ผังรายการ / สลิปเติมเหรียญ กดขยาย) — มีคำอธิบายใต้รูปได้ (เช่นยอดที่ต้องตรงกับสลิป) -->
+  <div class="backdrop" id="lightbox-backdrop" onclick="closeLightbox()" style="align-items:center;flex-direction:column;gap:10px">
+    <img class="lb-img" id="lightbox-img" alt="รูปขยาย" src="">
+    <div class="lb-cap" id="lightbox-cap" style="display:none"></div>
   </div>
 
   <!-- QURAN MODAL (ฝัง daasee ในเว็บเรา) -->
@@ -1709,6 +1758,9 @@
           <div class="grp">🧪 ทดสอบแอนิเมชัน</div>
           <div style="color:var(--muted); font-size:13px; margin-bottom:8px">กดแล้วจะเล่นบนจอวิดีโอให้ดู เห็นเฉพาะเครื่องนี้ ไม่บันทึก ไม่ขึ้นอันดับค่ะ</div>
           <div class="gift-grid" id="ag-preview"></div>
+          <div class="grp">📣 โชว์ของขวัญให้ผู้ชมทุกคน</div>
+          <div style="color:var(--muted); font-size:13px; margin-bottom:8px">กดแล้วผู้ชมที่ดูอยู่ตอนนี้ทุกคนจะเห็นแอนิเมชันพร้อมกัน (ขึ้นว่าเป็นตัวอย่าง) พร้อมปุ่มชวนลองส่ง — ไม่ใช้เหรียญ ไม่ขึ้นอันดับ ไม่นับในรายงานค่ะ</div>
+          <div class="gift-grid" id="ag-broadcast"></div>
           <div class="grp" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
             <span>🗑 ของขวัญที่ส่งแล้ว (50 รายการล่าสุด)</span>
             <button class="mini" onclick="loadAdminGifts()">🔄 โหลดใหม่</button>
@@ -1860,7 +1912,8 @@
         await withTimeout(liff.init({ liffId: CONFIG.liffId }), 8000, 'init-timeout');
         liffReady=true; liffErr=''; inClient=liff.isInClient();
         // ดึงโปรไฟล์เมื่อล็อกอินอยู่ — ทั้งในแอป LINE (อัตโนมัติ) และหลังกดล็อกอิน LINE จากเบราว์เซอร์
-        try{ if(liff.isLoggedIn()){ lineProfile = await liff.getProfile(); } }catch(e){}
+        // (ไม่ได้ล็อกอินอยู่ = คงโปรไฟล์ที่จำไว้จาก restoreLineProfile ไว้เหมือนเดิม)
+        try{ if(liff.isLoggedIn()){ lineProfile = await liff.getProfile(); saveLineProfile(lineProfile); } }catch(e){}
       }catch(e){
         liffReady=false; liffErr=String((e&&(e.code||e.message))||'unknown');
         console.warn('LIFF init failed:', e);
@@ -2021,6 +2074,14 @@
       if(!user){ await firebase.auth().signInAnonymously(); user=firebase.auth().currentUser; }
       myUid=user.uid;
       applyUserState(user);
+      // จำผู้ใช้ได้ → ทักทายครั้งเดียวต่อการเปิดแอป (ไม่นับแขก/บัญชีแอดมิน)
+      try{
+        const back=(!user.isAnonymous || (lineProfile && lineProfile.displayName)) && !isAdmin;
+        if(back && !sessionStorage.getItem('yt_welcomed')){
+          sessionStorage.setItem('yt_welcomed','1');
+          const n=displayName(); if(n) setTimeout(()=>toast('ยินดีต้อนรับกลับค่ะ คุณ'+n+' 👋'), 1200);
+        }
+      }catch(e){}
       try{ trackVisitor(); }catch(e){}   // บันทึกสถิติหลัง auth พร้อมแล้ว (กัน PERMISSION_DENIED ตอน anon ยังไม่เสร็จ)
       // อัปเดตสถานะเมื่อผู้ใช้ล็อกอิน/ออกภายหลัง (social redirect กลับมา ฯลฯ)
       firebase.auth().onAuthStateChanged(u=>{ if(u){ myUid=u.uid; } applyUserState(u); });
@@ -2052,6 +2113,8 @@
     const u=(typeof firebase!=='undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if(u && !u.isAnonymous && u.displayName) return { name:u.displayName, photo:u.photoURL||'' };
     if(lineProfile && lineProfile.displayName) return { name:lineProfile.displayName, photo:lineProfile.pictureUrl||'' };
+    // บัญชีเบอร์โทรที่ยังไม่ตั้งชื่อ: ใช้ชื่อเล่นที่เคยตั้ง ไม่งั้นโชว์เบอร์แบบปิดบางส่วน
+    if(u && !u.isAnonymous && u.phoneNumber) return { name:(localStorage.getItem('yt_nick')||maskPhone(u.phoneNumber)), photo:'' };
     return { name:(localStorage.getItem('yt_nick')||''), photo:'' };
   }
   function displayName(){ return currentIdentity().name; }
@@ -2206,6 +2269,7 @@
     const id=currentIdentity();
     const loggedIn=(u && !u.isAnonymous) || (lineProfile && lineProfile.displayName);
     document.getElementById('login-choices').style.display=loggedIn?'none':'flex';
+    document.getElementById('login-phone').style.display='none';
     const prof=document.getElementById('login-profile'); prof.style.display=loggedIn?'flex':'none';
     if(loggedIn){
       const ph=document.getElementById('lp-photo'); ph.src=id.photo||'icon.jpg'; ph.onerror=function(){this.src='icon.jpg';};
@@ -2224,10 +2288,124 @@
     if(code==='auth/network-request-failed') return 'เชื่อมต่ออินเทอร์เน็ตไม่สำเร็จ กรุณาลองใหม่อีกครั้งค่ะ';
     return 'เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้งค่ะ'+(code?' ('+code+')':'');
   }
-  function socialLogin(provider){
+  // popup ก่อน: ล็อกอินเสร็จในหน้าเดิมและจำไว้ในเครื่อง (redirect ข้ามโดเมน github.io ↔ firebaseapp.com
+  // มักหายกลางทางใน Safari/เบราว์เซอร์ที่บล็อก third-party storage = กดแล้วกลับมาไม่ติด) — โดนบล็อกค่อย redirect
+  async function socialLogin(provider){
     if(!initFirebaseApp()){ toast('ระบบยังไม่พร้อมค่ะ'); return; }
-    try{ firebase.auth().signInWithRedirect(provider); }
-    catch(e){ toast('เริ่มเข้าสู่ระบบไม่สำเร็จค่ะ'); console.error(e); }
+    try{
+      await firebase.auth().signInWithPopup(provider);
+      closeLogin(); toast('เข้าสู่ระบบแล้วค่ะ');
+    }catch(e){
+      const code=(e&&e.code)||'';
+      if(code==='auth/popup-blocked'||code==='auth/operation-not-supported-in-this-environment'){
+        try{ firebase.auth().signInWithRedirect(provider); }catch(e2){ toast('เริ่มเข้าสู่ระบบไม่สำเร็จค่ะ'); }
+        return;
+      }
+      const m=loginErrorText(e); if(m) toast(m);
+    }
+  }
+
+  // ---- ล็อกอินด้วยเบอร์โทรศัพท์ (Firebase Phone Auth + OTP ทาง SMS) ----
+  // ผูกเบอร์เข้ากับบัญชี anonymous เดิมของเครื่องนี้ (uid เดิม = กระเป๋าเหรียญเดิมอยู่ครบ)
+  // ถ้าเบอร์นี้เคยมีบัญชีแล้ว (credential-already-in-use) สลับไปใช้บัญชีเดิมของเบอร์นั้นแทน
+  let phoneConfirm=null, phoneVerifier=null;
+  function toE164(raw){
+    const s=String(raw||'').replace(/[\s\-().]/g,'');
+    if(/^\+\d{8,15}$/.test(s)) return s;
+    if(/^0\d{8,9}$/.test(s)) return '+66'+s.slice(1);
+    if(/^66\d{8,9}$/.test(s)) return '+'+s;
+    return '';
+  }
+  function maskPhone(e164){
+    const s=String(e164||''); const local=s.indexOf('+66')===0 ? '0'+s.slice(3) : s;
+    return local.length>4 ? local.slice(0,3)+'-xxx-'+local.slice(-4) : local;
+  }
+  function phoneErrText(e){
+    const code=(e&&e.code)||'';
+    if(code==='auth/invalid-phone-number') return 'เบอร์โทรศัพท์ไม่ถูกต้อง กรุณาตรวจสอบอีกครั้งค่ะ';
+    if(code==='auth/too-many-requests'||code==='auth/quota-exceeded') return 'ขอรหัสบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่ค่ะ';
+    if(code==='auth/invalid-verification-code') return 'รหัส OTP ไม่ถูกต้อง กรุณาลองใหม่ค่ะ';
+    if(code==='auth/code-expired') return 'รหัส OTP หมดอายุแล้ว กรุณากดขอรหัสใหม่ค่ะ';
+    if(code==='auth/operation-not-allowed'||code==='auth/billing-not-enabled'||code==='auth/unauthorized-domain')
+      return 'ระบบเข้าสู่ระบบด้วยเบอร์โทรยังไม่เปิดใช้งาน กรุณาใช้ LINE หรือ Google ไปก่อนนะคะ';
+    return loginErrorText(e)||'เข้าสู่ระบบไม่สำเร็จค่ะ';
+  }
+  function phoneErr(msg){ const el=document.getElementById('lpn-err'); el.textContent=msg||''; el.style.display=msg?'block':'none'; }
+  function phoneStep(n){
+    document.getElementById('lpn-step1').style.display=n===1?'flex':'none';
+    document.getElementById('lpn-step2').style.display=n===2?'flex':'none';
+    phoneErr('');
+    if(n===1) phoneConfirm=null;
+    setTimeout(()=>{ const f=document.getElementById(n===1?'lpn-phone':'lpn-otp'); if(f) f.focus(); }, 60);
+  }
+  function openPhoneLogin(){
+    if(!initFirebaseApp()){ toast('ระบบยังไม่พร้อมค่ะ'); return; }
+    document.getElementById('login-choices').style.display='none';
+    document.getElementById('login-phone').style.display='flex';
+    phoneStep(1);
+  }
+  function closePhoneLogin(){
+    document.getElementById('login-phone').style.display='none';
+    document.getElementById('login-choices').style.display='flex';
+    phoneConfirm=null;
+  }
+  function resetPhoneVerifier(){
+    try{ if(phoneVerifier) phoneVerifier.clear(); }catch(e){}
+    phoneVerifier=null; const box=document.getElementById('lpn-recaptcha'); if(box) box.innerHTML='';
+  }
+  async function sendPhoneOtp(){
+    const input=document.getElementById('lpn-phone'), phone=toE164(input.value);
+    if(!phone){ phoneErr('กรุณากรอกเบอร์มือถือให้ถูกต้อง เช่น 0812345678'); return; }
+    const btn=document.getElementById('lpn-send'); btn.disabled=true; btn.textContent='กำลังส่งรหัส...'; phoneErr('');
+    try{
+      const auth=firebase.auth(); auth.languageCode='th';
+      if(!phoneVerifier) phoneVerifier=new firebase.auth.RecaptchaVerifier('lpn-recaptcha',{size:'invisible'});
+      const cur=auth.currentUser;
+      phoneConfirm=(cur && cur.isAnonymous) ? await cur.linkWithPhoneNumber(phone, phoneVerifier)
+                                            : await auth.signInWithPhoneNumber(phone, phoneVerifier);
+      document.getElementById('lpn-sent').textContent='ส่งรหัสไปที่ '+input.value.trim()+' แล้ว กรอกรหัส 6 หลักจาก SMS ค่ะ';
+      document.getElementById('lpn-otp').value='';
+      phoneStep(2);
+    }catch(e){ resetPhoneVerifier(); phoneErr(phoneErrText(e)); console.warn(e); }
+    finally{ btn.disabled=false; btn.textContent='ส่งรหัส OTP'; }
+  }
+  async function confirmPhoneOtp(){
+    const code=document.getElementById('lpn-otp').value.replace(/\D/g,'');
+    if(code.length!==6){ phoneErr('กรุณากรอกรหัส 6 หลักจาก SMS ค่ะ'); return; }
+    if(!phoneConfirm){ phoneStep(1); return; }
+    const btn=document.getElementById('lpn-confirm'); btn.disabled=true; btn.textContent='กำลังยืนยัน...'; phoneErr('');
+    try{
+      let res;
+      try{ res=await phoneConfirm.confirm(code); }
+      catch(e){
+        if(e && e.code==='auth/credential-already-in-use' && e.credential) res=await firebase.auth().signInWithCredential(e.credential);
+        else throw e;
+      }
+      const u=(res&&res.user)||firebase.auth().currentUser;
+      // บัญชีเบอร์โทรไม่มีชื่อ — ขอชื่อที่ใช้แสดงในแชทครั้งเดียว แล้วเก็บไว้ในบัญชี (หน้าร้านเห็นชื่อเดียวกัน)
+      if(u && !u.displayName){
+        const n=(prompt('ตั้งชื่อที่ใช้แสดงในแชท', localStorage.getItem('yt_nick')||'')||'').trim().slice(0,40);
+        if(n){ try{ await u.updateProfile({displayName:n}); localStorage.setItem('yt_nick',n); }catch(e){} }
+      }
+      closePhoneLogin(); closeLogin();
+      if(u){ myUid=u.uid; applyUserState(u); }
+      toast('เข้าสู่ระบบด้วยเบอร์โทรแล้วค่ะ');
+    }catch(e){ phoneErr(phoneErrText(e)); console.warn(e); }
+    finally{ btn.disabled=false; btn.textContent='ยืนยันรหัส'; }
+  }
+
+  // ---- จำโปรไฟล์ LINE ไว้ในเครื่อง: เปิดแอปครั้งหน้าโชว์ชื่อ/รูปได้ทันที ไม่ต้องรอ/พึ่ง LIFF ----
+  // ในทีวี LINE ใช้แค่ชื่อ/รูปในแชท (ไม่ใช่สิทธิ์ใดๆ) จึงใช้โปรไฟล์ที่จำไว้ได้แม้ LIFF จะหลุดไป — ออกจากระบบ = ลบทิ้ง
+  const LINE_PROFILE_KEY='yt_line_profile', LINE_PROFILE_MAX_AGE=90*24*3600*1000;
+  function saveLineProfile(p){
+    if(!p || !p.userId) return;
+    try{ localStorage.setItem(LINE_PROFILE_KEY, JSON.stringify({ userId:p.userId, displayName:p.displayName||'', pictureUrl:p.pictureUrl||'', ts:Date.now() })); }catch(e){}
+  }
+  function restoreLineProfile(){
+    try{
+      const p=JSON.parse(localStorage.getItem(LINE_PROFILE_KEY)||'null');
+      if(p && p.displayName && Date.now()-(p.ts||0) < LINE_PROFILE_MAX_AGE) lineProfile=p;
+    }catch(e){}
   }
   function loginGoogle(){ socialLogin(new firebase.auth.GoogleAuthProvider()); }
   // ปิดปุ่มไว้ชั่วคราว รอ Meta ยืนยันธุรกิจ (แอป Facebook ยังไม่ Live) - ใส่ปุ่มกลับในหน้าล็อกอินเมื่อพร้อม
@@ -2247,14 +2425,14 @@
         }
       }
       if(!liff.isLoggedIn()){ localStorage.setItem('yt_line','1'); liff.login(); return; }  // redirect ไป LINE
-      lineProfile=await liff.getProfile(); localStorage.setItem('yt_line','1');
+      lineProfile=await liff.getProfile(); localStorage.setItem('yt_line','1'); saveLineProfile(lineProfile);
       applyUserState((firebase.auth&&firebase.auth().currentUser)||null);
       closeLogin(); toast('เข้าสู่ระบบ LINE แล้วค่ะ');
     }catch(e){ toast('เข้าสู่ระบบ LINE ไม่สำเร็จค่ะ'); console.error(e); }
   }
   async function logoutUser(){
     try{
-      if(lineProfile){ lineProfile=null; try{ localStorage.removeItem('yt_line'); }catch(e){}
+      if(lineProfile){ lineProfile=null; try{ localStorage.removeItem('yt_line'); localStorage.removeItem(LINE_PROFILE_KEY); }catch(e){}
         try{ if(liffReady && !inClient && liff.isLoggedIn()) liff.logout(); }catch(e){} }
       const u=firebase.auth().currentUser;
       if(u && !u.isAnonymous){ await firebase.auth().signOut(); }
@@ -3771,7 +3949,7 @@
     up['wallets/'+myUid+'/balance']=walletBal-amount;
     up['wallets/'+myUid+'/lastGiftId']=id;
     giftSending=true; updateGiftBtn();
-    try{ await db.ref().update(up); toast('ส่ง'+g.name+'แล้ว ขอบคุณค่ะ 🎁'); }
+    try{ await db.ref().update(up); toast('ส่ง'+g.name+'แล้ว ขอบคุณค่ะ 🎁'); try{ localStorage.setItem('yt_gift_sent','1'); }catch(e){} }
     catch(e){ console.error(e); toast('ส่งไม่สำเร็จ ยอดเหรียญอาจมีการเปลี่ยนแปลง ลองใหม่อีกครั้งค่ะ'); }
     finally{ giftSending=false; updateGiftBtn(); }
   }
@@ -3897,12 +4075,79 @@
     db.ref('giftPrices').on('value', s=>{ livePrices=s.val()||{}; renderWallet(); }, ()=>{});
     bindWallet();
     myTopups().forEach(t=>watchTopup(t.id, t.amt));
+    bindGiftDemo();
+    scheduleAutoGiftDemo();
   }
   function playNextGift(){
     if(giftPlaying || !giftQ.length) return;
     giftPlaying=true;
-    const dur=showGift(giftQ.shift());
-    setTimeout(()=>{ giftPlaying=false; playNextGift(); }, dur+300);
+    const v=giftQ.shift();
+    const dur=showGift(v);
+    setTimeout(()=>{ giftPlaying=false; if(v && v.demo) showGiftCta(); playNextGift(); }, dur+300);
+  }
+
+  /* ---- ตัวอย่างของขวัญ: ชวนผู้ชมลองส่ง ----
+     1) แอดมินกด "โชว์ให้ผู้ชมทุกคน" → เขียน giftDemo/<id> {giftId, ts} → ทุกเครื่องเล่นพร้อมกัน
+        (แยกจาก giftFeed จึงไม่ขึ้นอันดับ/รายงาน ไม่ตัดเหรียญ — rules ให้เขียนได้เฉพาะแอดมิน)
+     2) อัตโนมัติ: ผู้ชมที่ยังไม่เคยส่งของขวัญ เห็นตัวอย่าง 1 ครั้งต่อวัน หลังดูไลฟ์ ~45 วิ (เล่นในเครื่องเท่านั้น)
+     จบตัวอย่างแล้วโผล่ปุ่ม "ลองส่ง" เปิดหน้าส่งของขวัญ */
+  const GIFT_DEMO_NAME='ผู้ชมใจดี (ตัวอย่าง)';
+  function demoGiftEntry(g){ return { name:GIFT_DEMO_NAME, giftId:g.id, amount:priceOf(g), demo:true }; }
+  function bindGiftDemo(){
+    db.ref('.info/serverTimeOffset').once('value', s=>{
+      const since=Date.now() + (s.val()||0) - 5000;
+      db.ref('giftDemo').orderByChild('ts').startAt(since).on('child_added', snap=>{
+        const v=snap.val(), g=v && giftById(v.giftId); if(!g) return;
+        giftQ.push(demoGiftEntry(g)); playNextGift();
+      }, ()=>{ /* rules ยังไม่ได้เผยแพร่ — ข้ามไป ตัวอย่างอัตโนมัติยังทำงาน */ });
+    });
+  }
+  let giftCtaTimer=null;
+  function showGiftCta(){
+    if(isAdmin) return;                                       // แอดมินไม่ต้องเห็นปุ่มชวน
+    const el=document.getElementById('gift-cta'); if(!el) return;
+    el.classList.add('show');
+    clearTimeout(giftCtaTimer); giftCtaTimer=setTimeout(hideGiftCta, 8000);
+  }
+  function hideGiftCta(){ const el=document.getElementById('gift-cta'); if(el) el.classList.remove('show'); clearTimeout(giftCtaTimer); }
+  function giftCtaGo(){ hideGiftCta(); openGift(); }
+  function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+  let autoDemoTries=0;
+  function scheduleAutoGiftDemo(delay){
+    let sent=false, shown=false;
+    try{ sent=!!localStorage.getItem('yt_gift_sent'); shown=localStorage.getItem('yt_gift_demo_day')===todayKey(); }catch(e){}
+    if(sent || shown || autoDemoTries>=6) return;
+    setTimeout(()=>{
+      autoDemoTries++;
+      const live=document.getElementById('panel-live');
+      const watching=document.visibilityState==='visible' && live && live.style.display!=='none';
+      if(isAdmin) return;
+      if(!watching || giftPlaying || giftQ.length){ scheduleAutoGiftDemo(30000); return; }  // ยังไม่ว่าง ลองใหม่อีก 30 วิ
+      const pool=(CONFIG.gifts||[]).filter(g=>g.tier!=='diamond');        // ฉากเพชรยาวเกินไปสำหรับตัวอย่าง
+      const g=pool[Math.floor(Math.random()*pool.length)]; if(!g) return;
+      try{ localStorage.setItem('yt_gift_demo_day', todayKey()); }catch(e){}
+      giftQ.push(demoGiftEntry(g)); playNextGift();
+    }, delay||45000);
+  }
+  // แอดมิน: ส่งตัวอย่างให้ผู้ชมทุกคนเห็น + เก็บกวาดตัวอย่างเก่ากว่า 1 วัน (กันโหนดโตไปเรื่อยๆ)
+  async function broadcastGiftDemo(id){
+    const g=giftById(id); if(!g || !db) return;
+    if(!confirm('โชว์ "'+g.name+'" ให้ผู้ชมที่ดูอยู่ทุกคนเห็นตอนนี้ใช่ไหมคะ?')) return;
+    try{
+      await db.ref('giftDemo').push({ giftId:g.id, ts:firebase.database.ServerValue.TIMESTAMP });
+      closeAdmin();
+      const hero=document.getElementById('hero'); if(hero) hero.scrollIntoView({behavior:'smooth', block:'start'});
+      toast('โชว์'+g.name+'ให้ผู้ชมทุกคนแล้วค่ะ 📣');
+      try{
+        const old=await db.ref('giftDemo').orderByChild('ts').endAt(Date.now()-86400000).once('value');
+        const up={}; old.forEach(c=>{ up[c.key]=null; }); if(Object.keys(up).length) await db.ref('giftDemo').update(up);
+      }catch(e){}
+    }catch(e){
+      console.error(e);
+      toast(String(e&&e.code||e).indexOf('PERMISSION_DENIED')>-1
+        ? 'ยังส่งไม่ได้ค่ะ — ต้องเผยแพร่ rules ใหม่ใน Firebase ก่อน'
+        : 'ส่งตัวอย่างไม่สำเร็จค่ะ');
+    }
   }
   // เหรียญเพชร: ฉากพิเศษ ~6.5 วิ (ชิ้นส่วนรวม ~70 ชิ้น ลบทิ้งเมื่อจบฉาก)
   function buildDiamondScene(el, g, name, amount, layer){
@@ -4076,7 +4321,8 @@
       const v=gaItems[k];
       const row=document.createElement('div'); row.className='ga-row';
       const img=document.createElement('img'); img.className='slip'; img.alt='สลิป'; img.src=v.slipUrl||'';
-      img.onclick=()=>openLightbox(v.slipUrl);
+      img.title='แตะเพื่อขยายดูสลิป';
+      img.onclick=()=>openLightbox(v.slipUrl, 'ต้องโอน '+fmtBaht(v.amount)+' → '+fmtCoin(v.amount)+' เหรียญ · '+(v.name||'-')+' · รหัส '+walletCode(v.uid));
       const info=document.createElement('div'); info.className='ga-info';
       const t1=document.createElement('b'); t1.textContent='เติม '+fmtBaht(v.amount)+' → '+fmtCoin(v.amount)+' เหรียญ';
       const t2=document.createElement('div'); t2.textContent='จาก: '+(v.name||'-')+' · รหัส '+walletCode(v.uid);
@@ -4292,6 +4538,17 @@
       const gp=document.createElement('span'); gp.className='gp'; gp.textContent='▶ ดูตัวอย่าง';
       b.append(gi,gn,gp); b.onclick=()=>previewGift(g.id);
       box.appendChild(b);
+    });
+    // ปุ่มโชว์ให้ผู้ชมทุกคน (giftDemo)
+    const bc=document.getElementById('ag-broadcast'); if(!bc) return;
+    bc.innerHTML='';
+    (CONFIG.gifts||[]).forEach(g=>{
+      const b=document.createElement('button'); b.type='button'; b.className='gift-item';
+      const gi=document.createElement('span'); gi.className='gi'; gi.appendChild(giftIconEl(g));
+      const gn=document.createElement('span'); gn.className='gn'; gn.textContent=g.name;
+      const gp=document.createElement('span'); gp.className='gp'; gp.textContent='📣 โชว์ทุกคน';
+      b.append(gi,gn,gp); b.onclick=()=>broadcastGiftDemo(g.id);
+      bc.appendChild(b);
     });
   }
   function previewGift(id){
@@ -5080,7 +5337,13 @@
   }
 
   // ---- lightbox (ผังรายการกดขยาย) ----
-  function openLightbox(url){ const img=document.getElementById('lightbox-img'); img.src=url; document.getElementById('lightbox-backdrop').classList.add('open'); }
+  // caption (ไม่บังคับ) = ข้อความใต้รูป เช่น ยอดเติมเหรียญที่ต้องตรงกับสลิป
+  function openLightbox(url, caption){
+    const img=document.getElementById('lightbox-img'); img.src=url;
+    const cap=document.getElementById('lightbox-cap');
+    if(cap){ cap.textContent=caption||''; cap.style.display=caption ? 'block' : 'none'; }
+    document.getElementById('lightbox-backdrop').classList.add('open');
+  }
   function closeLightbox(){ document.getElementById('lightbox-backdrop').classList.remove('open'); }
 
   /* ============================================================
@@ -5265,7 +5528,8 @@
     }
     const ab=document.getElementById('admin-backdrop'); if(ab) ab.addEventListener('input',()=>{ adminEditing=true; }, true);  // กัน listener รีเฟรชทับตอนกำลังพิมพ์
     initFirebaseApp();
-    await initLiff();      // ต้องรู้ชื่อ LINE ก่อนเปิดแชท
+    restoreLineProfile();  // ชื่อ/รูป LINE ที่จำไว้ในเครื่อง — โชว์ได้ทันทีแม้ LIFF จะช้าหรือพัง
+    await initLiff();      // ต้องรู้ชื่อ LINE ก่อนเปิดแชท (ล็อกอินอยู่ = อัปเดตโปรไฟล์ล่าสุดทับ)
     loadSettings();        // ดึง /settings ทับ CONFIG → setStream/initSocial/renderVideos
     loadSchedule();        // ดึง /schedule → renderSchedule
     initChat();            // anon auth + presence + messages (+ ตรวจ #admin/#mod) — เรียก trackVisitor() หลัง auth พร้อม
