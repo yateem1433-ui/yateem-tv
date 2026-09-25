@@ -571,7 +571,7 @@
       mask:linear-gradient(90deg, transparent 0, #000 6px, #000 calc(100% - 14px), transparent); }
     .now-track{ display:inline-flex; white-space:nowrap; will-change:transform; }
     .now-track .now-dup{ padding-left:40px; }
-    .now-track.run{ animation:nowMarq var(--dur,10s) linear 1.2s infinite; }
+    .now-track.run.css-anim{ animation:nowMarq var(--dur,10s) linear 2s infinite; }   /* สำรองกรณีไม่มี Web Animations API */
     @keyframes nowMarq{ from{ transform:translateX(0); } to{ transform:translateX(calc(-1 * var(--dist,0px))); } }
     @media (prefers-reduced-motion: reduce){ .now-track.run{ animation:none; } }
     .share-btn{ border:1px solid var(--accent); background:color-mix(in srgb, var(--accent) 14%, transparent); color:var(--accent);
@@ -1834,14 +1834,39 @@
   /* ============================================================
      1) LIFF (opportunistic — ไม่บังคับล็อกอิน)
      ============================================================ */
-  let liffReady=false, inClient=false, lineProfile=null;
-  async function initLiff(){
-    try{
-      await liff.init({ liffId: CONFIG.liffId });
-      liffReady=true; inClient=liff.isInClient();
-      // ดึงโปรไฟล์เมื่อล็อกอินอยู่ — ทั้งในแอป LINE (อัตโนมัติ) และหลังกดล็อกอิน LINE จากเบราว์เซอร์
-      try{ if(liff.isLoggedIn()){ lineProfile = await liff.getProfile(); } }catch(e){}
-    }catch(e){ liffReady=false; }
+  let liffReady=false, inClient=false, lineProfile=null, liffErr='', liffInitP=null;
+  const LIFF_SDK_URL='https://static.line-scdn.net/liff/edge/2/sdk.js';
+  // ตั้งเวลาหมดให้ promise — กัน liff.init ค้าง (เน็ตช้า/สคริปต์ LINE โหลดไม่ขึ้น) แล้วลากทั้งหน้ารอไปด้วย
+  function withTimeout(p, ms, code){
+    return Promise.race([p, new Promise((_,rej)=>setTimeout(()=>rej({code}), ms))]);
+  }
+  // โหลด LIFF SDK ใหม่ กรณีสคริปต์ใน <head> โหลดไม่สำเร็จ (บางเครื่อง/บางเน็ตบล็อก static.line-scdn.net)
+  function loadLiffSdk(){
+    if(window.liff) return Promise.resolve();
+    return new Promise((res,rej)=>{
+      const s=document.createElement('script'); s.src=LIFF_SDK_URL; s.charset='utf-8';
+      s.onload=()=>res(); s.onerror=()=>rej({code:'sdk'});
+      document.head.appendChild(s);
+    });
+  }
+  // เดิม init ครั้งเดียว ถ้าพลาดครั้งแรก liffReady=false ไปตลอด → คนอื่นกดล็อกอินเจอ "LINE ยังไม่พร้อม"
+  // ตอนนี้เก็บสาเหตุไว้ใน liffErr และเรียกซ้ำได้ (loginLine จะลองใหม่ให้เอง)
+  function initLiff(){
+    if(liffReady) return Promise.resolve();
+    if(liffInitP) return liffInitP;
+    liffInitP = (async()=>{
+      try{
+        if(!window.liff) await withTimeout(loadLiffSdk(), 8000, 'sdk-timeout');
+        await withTimeout(liff.init({ liffId: CONFIG.liffId }), 8000, 'init-timeout');
+        liffReady=true; liffErr=''; inClient=liff.isInClient();
+        // ดึงโปรไฟล์เมื่อล็อกอินอยู่ — ทั้งในแอป LINE (อัตโนมัติ) และหลังกดล็อกอิน LINE จากเบราว์เซอร์
+        try{ if(liff.isLoggedIn()){ lineProfile = await liff.getProfile(); } }catch(e){}
+      }catch(e){
+        liffReady=false; liffErr=String((e&&(e.code||e.message))||'unknown');
+        console.warn('LIFF init failed:', e);
+      }finally{ liffInitP=null; }
+    })();
+    return liffInitP;
   }
   function openExternal(url){
     if(!url) return;
@@ -2209,7 +2234,18 @@
   function loginFacebook(){ socialLogin(new firebase.auth.FacebookAuthProvider()); }
   async function loginLine(){
     try{
-      if(!liffReady){ toast('LINE ยังไม่พร้อมค่ะ'); return; }
+      if(!liffReady){
+        toast('กำลังเชื่อมต่อ LINE…');
+        await initLiff();                                   // ลองโหลด/เริ่ม LIFF ใหม่อีกรอบ
+        if(!liffReady){
+          // ยังไม่ได้ → เปิดผ่านลิงก์ LIFF แทน: มือถือจะเข้าแอป LINE และล็อกอินให้อัตโนมัติ
+          const code=liffErr||'unknown';
+          if(CONFIG.liffId && !/[?&]liffFallback=1/.test(location.search)){
+            location.href='https://liff.line.me/'+CONFIG.liffId+'?liffFallback=1'; return;
+          }
+          toast('เชื่อมต่อ LINE ไม่สำเร็จ ('+code+') กรุณาลองใหม่ค่ะ'); return;
+        }
+      }
       if(!liff.isLoggedIn()){ localStorage.setItem('yt_line','1'); liff.login(); return; }  // redirect ไป LINE
       lineProfile=await liff.getProfile(); localStorage.setItem('yt_line','1');
       applyUserState((firebase.auth&&firebase.auth().currentUser)||null);
@@ -4344,11 +4380,15 @@
   function closeShare(){ document.getElementById('share-backdrop').classList.remove('open'); }
 
   // ---- กำลังออกอากาศ ----
-  // ตัววิ่ง: ชื่อยาวเกินกล่อง → ต่อสำเนาท้าย แล้ววิ่งวนต่อเนื่องด้วยความเร็วคงที่ ~40px/วิ; ชื่อสั้นอยู่นิ่ง
+  // ตัววิ่ง: ชื่อยาวเกินกล่อง → ต่อสำเนาท้าย แล้ววิ่งวนต่อเนื่องช้าๆ ~18px/วิ ให้อ่านทัน
+  // และหยุดนิ่งที่ต้นชื่อ ~2 วิ ทุกรอบก่อนวิ่งต่อ; ชื่อสั้นอยู่นิ่ง
+  const NOW_MARQ_SPEED=18, NOW_MARQ_HOLD_MS=2000;
+  let nowMarqAnim=null;
   function fitNowMarquee(){
     const box=document.getElementById('now-marq'), track=document.getElementById('now-track'), tt=document.getElementById('now-title');
     if(!box || !track || !tt) return;
-    track.classList.remove('run'); box.classList.remove('running');
+    if(nowMarqAnim){ try{ nowMarqAnim.cancel(); }catch(e){} nowMarqAnim=null; }
+    track.classList.remove('run','css-anim'); box.classList.remove('running');
     track.querySelectorAll('.now-dup').forEach(d=>d.remove());
     if(!box.clientWidth) return;                              // ยังซ่อนอยู่
     if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -4358,9 +4398,19 @@
     track.appendChild(dup);
     const dist=w+40;
     track.style.setProperty('--dist', dist.toFixed(1)+'px');
-    track.style.setProperty('--dur', Math.max(6, dist/40).toFixed(1)+'s');
-    void track.offsetWidth;                                   // รีสตาร์ตแอนิเมชันจากต้นชื่อ
+    const runMs=Math.max(10000, dist/NOW_MARQ_SPEED*1000), totalMs=runMs+NOW_MARQ_HOLD_MS;
     track.classList.add('run'); box.classList.add('running');
+    if(track.animate){
+      nowMarqAnim=track.animate([
+        { transform:'translateX(0)', offset:0 },
+        { transform:'translateX(0)', offset:NOW_MARQ_HOLD_MS/totalMs },   // หยุดนิ่งให้อ่านต้นชื่อ
+        { transform:'translateX('+(-dist).toFixed(1)+'px)', offset:1 }
+      ], { duration:totalMs, iterations:Infinity, easing:'linear' });
+    }else{
+      track.style.setProperty('--dur', (runMs/1000).toFixed(1)+'s');
+      void track.offsetWidth;                                 // รีสตาร์ตแอนิเมชันจากต้นชื่อ
+      track.classList.add('css-anim');
+    }
   }
   let nowMarqTimer=null;
   window.addEventListener('resize', ()=>{ clearTimeout(nowMarqTimer); nowMarqTimer=setTimeout(fitNowMarquee, 200); });
