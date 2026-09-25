@@ -747,16 +747,6 @@
     .login-btn.google .lb-ic{ background:#fff; color:#4285F4; border:1px solid #dadce0; }
     .login-btn.fb .lb-ic{ background:#1877F2; }
     .login-btn.guest{ background:none; color:var(--muted); border-style:dashed; }
-    .login-btn.phone .lb-ic{ background:#2563EB; }
-    /* ล็อกอินด้วยเบอร์โทร (OTP) — อยู่ในแผ่นล็อกอินเดียวกัน สลับแทนปุ่มเลือกช่องทาง */
-    #login-phone{ display:none; flex-direction:column; gap:10px; margin-top:16px; }
-    #login-phone input{ width:100%; box-sizing:border-box; font-family:inherit; font-size:18px; text-align:center; padding:13px;
-      border-radius:14px; border:1px solid var(--stroke); background:var(--glass-2); color:var(--text); }
-    #login-phone input#lpn-otp{ font-size:24px; letter-spacing:.4em; }
-    #login-phone .lpn-hint{ color:var(--muted); font-size:14px; text-align:center; }
-    #login-phone .lpn-err{ color:#f87171; font-size:14px; text-align:center; display:none; }
-    #login-phone .login-btn.primary{ background:var(--accent); color:#111; border-color:transparent; }
-    #login-phone .lpn-link{ background:none; border:none; color:var(--muted); text-decoration:underline; font-family:inherit; font-size:13px; cursor:pointer; }
     .lp-row{ display:flex; align-items:center; gap:12px; margin-top:16px; }
     .lp-row img{ width:52px; height:52px; border-radius:50%; object-fit:cover; border:1px solid var(--stroke); background:var(--glass-2); }
     .lp-name{ font-weight:700; font-size:17px; } .lp-sub{ font-size:13px; color:var(--muted); }
@@ -972,7 +962,6 @@
       ['เข้าสู่ระบบ','loginDesc','เข้าสู่ระบบเพื่อแชทและสั่งซื้อด้วยชื่อจริง (ไม่บังคับ)','คำอธิบายหน้าล็อกอิน'],
       ['เข้าสู่ระบบ','loginLineBtn','เข้าสู่ระบบด้วย LINE','ปุ่ม LINE'],
       ['เข้าสู่ระบบ','loginGoogleBtn','เข้าสู่ระบบด้วย Google','ปุ่ม Google'],
-      ['เข้าสู่ระบบ','loginPhoneBtn','เข้าสู่ระบบด้วยเบอร์โทรศัพท์','ปุ่มเบอร์โทร'],
       ['เข้าสู่ระบบ','loginGuestBtn','แชทแบบไม่ล็อกอิน','ปุ่มไม่ล็อกอิน'],
       ['เข้าสู่ระบบ','logoutBtn','ออกจากระบบ','ปุ่มออกจากระบบ'],
       ['เข้าสู่ระบบ','viewerRole','ผู้ชม Yateem TV','ป้ายใต้ชื่อผู้ใช้'],
@@ -1190,24 +1179,7 @@
       <div id="login-choices">
         <button class="login-btn line"   onclick="loginLine()"><span class="lb-ic">💬</span> <span data-lbl="loginLineBtn">เข้าสู่ระบบด้วย LINE</span></button>
         <button class="login-btn google" onclick="loginGoogle()"><span class="lb-ic">G</span> <span data-lbl="loginGoogleBtn">เข้าสู่ระบบด้วย Google</span></button>
-        <button class="login-btn phone"  onclick="openPhoneLogin()"><span class="lb-ic">📱</span> <span data-lbl="loginPhoneBtn">เข้าสู่ระบบด้วยเบอร์โทรศัพท์</span></button>
         <button class="login-btn guest"  onclick="closeLogin()" data-lbl="loginGuestBtn">แชทแบบไม่ล็อกอิน</button>
-      </div>
-      <div id="login-phone">
-        <div id="lpn-step1" style="display:flex;flex-direction:column;gap:10px">
-          <div class="lpn-hint">กรอกเบอร์มือถือ ระบบจะส่งรหัส OTP 6 หลักทาง SMS ให้ค่ะ</div>
-          <input id="lpn-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="เช่น 0812345678" onkeydown="if(event.key==='Enter')sendPhoneOtp()">
-          <button class="login-btn primary" id="lpn-send" onclick="sendPhoneOtp()">ส่งรหัส OTP</button>
-        </div>
-        <div id="lpn-step2" style="display:none;flex-direction:column;gap:10px">
-          <div class="lpn-hint" id="lpn-sent"></div>
-          <input id="lpn-otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="รหัส 6 หลัก" onkeydown="if(event.key==='Enter')confirmPhoneOtp()">
-          <button class="login-btn primary" id="lpn-confirm" onclick="confirmPhoneOtp()">ยืนยันรหัส</button>
-          <button class="lpn-link" onclick="phoneStep(1)">เปลี่ยนเบอร์ / ขอรหัสใหม่</button>
-        </div>
-        <div class="lpn-err" id="lpn-err"></div>
-        <div id="lpn-recaptcha"></div>
-        <button class="login-btn guest" onclick="closePhoneLogin()">← กลับไปเลือกช่องทางอื่น</button>
       </div>
       <div class="legal-links">การเข้าสู่ระบบถือว่ายอมรับ <a href="terms.html">ข้อกำหนด</a> และ <a href="privacy.html">นโยบายความเป็นส่วนตัว</a></div>
       <div id="login-profile" style="display:none">
@@ -2113,8 +2085,6 @@
     const u=(typeof firebase!=='undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if(u && !u.isAnonymous && u.displayName) return { name:u.displayName, photo:u.photoURL||'' };
     if(lineProfile && lineProfile.displayName) return { name:lineProfile.displayName, photo:lineProfile.pictureUrl||'' };
-    // บัญชีเบอร์โทรที่ยังไม่ตั้งชื่อ: ใช้ชื่อเล่นที่เคยตั้ง ไม่งั้นโชว์เบอร์แบบปิดบางส่วน
-    if(u && !u.isAnonymous && u.phoneNumber) return { name:(localStorage.getItem('yt_nick')||maskPhone(u.phoneNumber)), photo:'' };
     return { name:(localStorage.getItem('yt_nick')||''), photo:'' };
   }
   function displayName(){ return currentIdentity().name; }
@@ -2269,7 +2239,6 @@
     const id=currentIdentity();
     const loggedIn=(u && !u.isAnonymous) || (lineProfile && lineProfile.displayName);
     document.getElementById('login-choices').style.display=loggedIn?'none':'flex';
-    document.getElementById('login-phone').style.display='none';
     const prof=document.getElementById('login-profile'); prof.style.display=loggedIn?'flex':'none';
     if(loggedIn){
       const ph=document.getElementById('lp-photo'); ph.src=id.photo||'icon.jpg'; ph.onerror=function(){this.src='icon.jpg';};
@@ -2303,95 +2272,6 @@
       }
       const m=loginErrorText(e); if(m) toast(m);
     }
-  }
-
-  // ---- ล็อกอินด้วยเบอร์โทรศัพท์ (Firebase Phone Auth + OTP ทาง SMS) ----
-  // ผูกเบอร์เข้ากับบัญชี anonymous เดิมของเครื่องนี้ (uid เดิม = กระเป๋าเหรียญเดิมอยู่ครบ)
-  // ถ้าเบอร์นี้เคยมีบัญชีแล้ว (credential-already-in-use) สลับไปใช้บัญชีเดิมของเบอร์นั้นแทน
-  let phoneConfirm=null, phoneVerifier=null;
-  function toE164(raw){
-    const s=String(raw||'').replace(/[\s\-().]/g,'');
-    if(/^\+\d{8,15}$/.test(s)) return s;
-    if(/^0\d{8,9}$/.test(s)) return '+66'+s.slice(1);
-    if(/^66\d{8,9}$/.test(s)) return '+'+s;
-    return '';
-  }
-  function maskPhone(e164){
-    const s=String(e164||''); const local=s.indexOf('+66')===0 ? '0'+s.slice(3) : s;
-    return local.length>4 ? local.slice(0,3)+'-xxx-'+local.slice(-4) : local;
-  }
-  function phoneErrText(e){
-    const code=(e&&e.code)||'';
-    if(code==='auth/invalid-phone-number') return 'เบอร์โทรศัพท์ไม่ถูกต้อง กรุณาตรวจสอบอีกครั้งค่ะ';
-    if(code==='auth/too-many-requests'||code==='auth/quota-exceeded') return 'ขอรหัสบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่ค่ะ';
-    if(code==='auth/invalid-verification-code') return 'รหัส OTP ไม่ถูกต้อง กรุณาลองใหม่ค่ะ';
-    if(code==='auth/code-expired') return 'รหัส OTP หมดอายุแล้ว กรุณากดขอรหัสใหม่ค่ะ';
-    if(code==='auth/operation-not-allowed'||code==='auth/billing-not-enabled'||code==='auth/unauthorized-domain')
-      return 'ระบบเข้าสู่ระบบด้วยเบอร์โทรยังไม่เปิดใช้งาน กรุณาใช้ LINE หรือ Google ไปก่อนนะคะ';
-    return loginErrorText(e)||'เข้าสู่ระบบไม่สำเร็จค่ะ';
-  }
-  function phoneErr(msg){ const el=document.getElementById('lpn-err'); el.textContent=msg||''; el.style.display=msg?'block':'none'; }
-  function phoneStep(n){
-    document.getElementById('lpn-step1').style.display=n===1?'flex':'none';
-    document.getElementById('lpn-step2').style.display=n===2?'flex':'none';
-    phoneErr('');
-    if(n===1) phoneConfirm=null;
-    setTimeout(()=>{ const f=document.getElementById(n===1?'lpn-phone':'lpn-otp'); if(f) f.focus(); }, 60);
-  }
-  function openPhoneLogin(){
-    if(!initFirebaseApp()){ toast('ระบบยังไม่พร้อมค่ะ'); return; }
-    document.getElementById('login-choices').style.display='none';
-    document.getElementById('login-phone').style.display='flex';
-    phoneStep(1);
-  }
-  function closePhoneLogin(){
-    document.getElementById('login-phone').style.display='none';
-    document.getElementById('login-choices').style.display='flex';
-    phoneConfirm=null;
-  }
-  function resetPhoneVerifier(){
-    try{ if(phoneVerifier) phoneVerifier.clear(); }catch(e){}
-    phoneVerifier=null; const box=document.getElementById('lpn-recaptcha'); if(box) box.innerHTML='';
-  }
-  async function sendPhoneOtp(){
-    const input=document.getElementById('lpn-phone'), phone=toE164(input.value);
-    if(!phone){ phoneErr('กรุณากรอกเบอร์มือถือให้ถูกต้อง เช่น 0812345678'); return; }
-    const btn=document.getElementById('lpn-send'); btn.disabled=true; btn.textContent='กำลังส่งรหัส...'; phoneErr('');
-    try{
-      const auth=firebase.auth(); auth.languageCode='th';
-      if(!phoneVerifier) phoneVerifier=new firebase.auth.RecaptchaVerifier('lpn-recaptcha',{size:'invisible'});
-      const cur=auth.currentUser;
-      phoneConfirm=(cur && cur.isAnonymous) ? await cur.linkWithPhoneNumber(phone, phoneVerifier)
-                                            : await auth.signInWithPhoneNumber(phone, phoneVerifier);
-      document.getElementById('lpn-sent').textContent='ส่งรหัสไปที่ '+input.value.trim()+' แล้ว กรอกรหัส 6 หลักจาก SMS ค่ะ';
-      document.getElementById('lpn-otp').value='';
-      phoneStep(2);
-    }catch(e){ resetPhoneVerifier(); phoneErr(phoneErrText(e)); console.warn(e); }
-    finally{ btn.disabled=false; btn.textContent='ส่งรหัส OTP'; }
-  }
-  async function confirmPhoneOtp(){
-    const code=document.getElementById('lpn-otp').value.replace(/\D/g,'');
-    if(code.length!==6){ phoneErr('กรุณากรอกรหัส 6 หลักจาก SMS ค่ะ'); return; }
-    if(!phoneConfirm){ phoneStep(1); return; }
-    const btn=document.getElementById('lpn-confirm'); btn.disabled=true; btn.textContent='กำลังยืนยัน...'; phoneErr('');
-    try{
-      let res;
-      try{ res=await phoneConfirm.confirm(code); }
-      catch(e){
-        if(e && e.code==='auth/credential-already-in-use' && e.credential) res=await firebase.auth().signInWithCredential(e.credential);
-        else throw e;
-      }
-      const u=(res&&res.user)||firebase.auth().currentUser;
-      // บัญชีเบอร์โทรไม่มีชื่อ — ขอชื่อที่ใช้แสดงในแชทครั้งเดียว แล้วเก็บไว้ในบัญชี (หน้าร้านเห็นชื่อเดียวกัน)
-      if(u && !u.displayName){
-        const n=(prompt('ตั้งชื่อที่ใช้แสดงในแชท', localStorage.getItem('yt_nick')||'')||'').trim().slice(0,40);
-        if(n){ try{ await u.updateProfile({displayName:n}); localStorage.setItem('yt_nick',n); }catch(e){} }
-      }
-      closePhoneLogin(); closeLogin();
-      if(u){ myUid=u.uid; applyUserState(u); }
-      toast('เข้าสู่ระบบด้วยเบอร์โทรแล้วค่ะ');
-    }catch(e){ phoneErr(phoneErrText(e)); console.warn(e); }
-    finally{ btn.disabled=false; btn.textContent='ยืนยันรหัส'; }
   }
 
   // ---- จำโปรไฟล์ LINE ไว้ในเครื่อง: เปิดแอปครั้งหน้าโชว์ชื่อ/รูปได้ทันที ไม่ต้องรอ/พึ่ง LIFF ----
