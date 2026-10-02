@@ -2421,13 +2421,22 @@
      ============================================================ */
   const MEMBER_PROFILE_KEY = 'yateemMemberProfile';
   const SAVED_MEMBER_KEY = 'yateemSavedMemberInfo';
+  const MASTER_MEMBER_KEY = 'yateemMasterProfile'; // ข้อมูลสมาชิกแก้ไขล่าสุดจากหน้าเว็บ YATEEM TV เท่านั้น (Master Source)
 
   function readMemberProfile(){
-    try{ return JSON.parse(localStorage.getItem(MEMBER_PROFILE_KEY)||'null'); }catch(e){ return null; }
+    try{
+      const master = JSON.parse(localStorage.getItem(MASTER_MEMBER_KEY)||'null');
+      if(master && (master.fullname || master.phone)) return master;
+      return JSON.parse(localStorage.getItem(MEMBER_PROFILE_KEY)||'null');
+    }catch(e){ return null; }
   }
 
   function readSavedMember(){
-    try{ return JSON.parse(localStorage.getItem(SAVED_MEMBER_KEY)||'null'); }catch(e){ return null; }
+    try{
+      const master = JSON.parse(localStorage.getItem(MASTER_MEMBER_KEY)||'null');
+      if(master && (master.fullname || master.phone)) return master;
+      return JSON.parse(localStorage.getItem(SAVED_MEMBER_KEY)||'null');
+    }catch(e){ return null; }
   }
 
   function saveSavedMember(p){
@@ -2439,27 +2448,48 @@
     if(!p) return;
     try{
       localStorage.setItem(MEMBER_PROFILE_KEY, JSON.stringify(p));
-      saveSavedMember(p);
+      localStorage.setItem(SAVED_MEMBER_KEY, JSON.stringify(p));
+      if(p.source === 'YATEEM_TV' || !localStorage.getItem(MASTER_MEMBER_KEY)){
+        localStorage.setItem(MASTER_MEMBER_KEY, JSON.stringify(p));
+      }
       if(p.nickname || p.fullname) localStorage.setItem('yt_nick', p.nickname || p.fullname);
       syncMemberToIframe(p);
     }catch(e){}
   }
 
   function syncMemberToIframe(p){
+    p = p || readMemberProfile() || readSavedMember();
+    if(!p) return;
     const f = document.querySelector('#market-preview iframe');
     if(f && f.contentWindow){
       try{ f.contentWindow.postMessage({ type:'YATEEM_MEMBER_SYNC', profile:p }, '*'); }catch(e){}
     }
   }
 
-  // ฟังการซิงก์โปรไฟล์สมาชิกจาก Yateem Market (เมื่อสั่งซื้อและสมัครสมาชิกในร้านค้า)
+  // ฟังข้อความหรือการร้องขอจาก Yateem Market
   window.addEventListener('message', function(e){
-    if(e.data && e.data.type === 'YATEEM_MEMBER_SYNC' && e.data.profile){
+    if(!e.data) return;
+    if(e.data.type === 'YATEEM_REQUEST_MEMBER'){
+      const p = readMemberProfile() || readSavedMember();
+      if(p) syncMemberToIframe(p);
+      return;
+    }
+    // สมาชิกแก้ไขล่าสุดจากหน้าเว็บ YATEEM TV เท่านั้นทั้งสองเว็บ - รักษาชื่อ ที่อยู่ เบอร์โทรเดิมของ YATEEM TV ไว้เสมอ
+    if(e.data.type === 'YATEEM_MEMBER_SYNC' && e.data.profile){
       const p = e.data.profile;
-      saveMemberProfile(p);
+      const cur = readMemberProfile() || readSavedMember() || {};
+      const merged = Object.assign({}, p, {
+        fullname: cur.fullname || p.fullname,
+        phone: cur.phone || p.phone,
+        address: cur.address || p.address,
+        nickname: cur.nickname || p.nickname,
+        avatar: cur.avatar || p.avatar,
+        source: 'YATEEM_TV',
+        updatedAt: cur.updatedAt || Date.now()
+      });
+      saveMemberProfile(merged);
       updateProfileBtn(firebase.auth && firebase.auth().currentUser);
       updateChatNote();
-      showMemberWelcomeBanner(p);
     }
   });
 
@@ -2774,6 +2804,7 @@
     const old = readMemberProfile() || readSavedMember() || {};
     const memberId = old.memberId || genMemberId(phone);
 
+    // ข้อมูลสมาชิกแก้ไขล่าสุดจากหน้าเว็บ YATEEM TV เท่านั้น (Master Source of Truth ทั้งสองเว็บ)
     const profile = {
       memberId: memberId,
       fullname: fullname,
@@ -2781,6 +2812,7 @@
       address: address,
       nickname: nickname || fullname.split(' ')[0],
       avatar: currentMemberAvatar || old.avatar || '',
+      source: 'YATEEM_TV',
       registeredAt: old.registeredAt || Date.now(),
       updatedAt: Date.now()
     };
@@ -2789,11 +2821,12 @@
 
     // จำในระบบ Yateem Kitchen ด้วย (แชร์ localStorage บนโดเมนเดียวกัน)
     try{
+      localStorage.setItem('yateemMasterProfile', JSON.stringify(profile));
       localStorage.setItem('yateemMemberProfile', JSON.stringify(profile));
       localStorage.setItem('yateemSavedMemberInfo', JSON.stringify(profile));
-      // เซฟโปรไฟล์สั่งอาหารสำหรับ auto-prefill ในร้านค้า
       const uid = 'member_' + phone;
       localStorage.setItem('yateemProfile_' + uid, JSON.stringify({ fullname:fullname, phone:phone, address:address }));
+      localStorage.setItem('yateemLastProfile', JSON.stringify({ fullname:fullname, phone:phone, address:address }));
       localStorage.setItem('yateemLastLineUid', uid);
     }catch(e){}
 
@@ -2983,7 +3016,7 @@
     window.scrollTo(0,0);
     if(name==='live') updateNowChip();
     // Market: ฝัง iframe ตอนเข้า / ถอดตอนออก (lazy)
-    if(name==='market'){ try{ mountMarketPreview(); }catch(e){} } else { try{ unmountMarketPreview(); }catch(e){} }
+    if(name==='market'){ try{ mountMarketPreview(); syncMemberToIframe(); }catch(e){} } else { try{ unmountMarketPreview(); }catch(e){} }
     // ละหมาด: ถ้าตอนเปิดหน้าโหลดเวลาไม่สำเร็จ ให้ลองใหม่ตอนเข้าแท็บ (กันต้องรีเฟรช)
     if(name==='faith' && !prayerTimings){ try{ const sel=document.getElementById('prayer-province'); loadPrayer((sel&&sel.value)||currentProvince()); }catch(e){} }
   }
@@ -3289,10 +3322,17 @@
     const box=document.getElementById('market-preview'); if(!box) return;
     const src=box.dataset.iframeSrc; if(!src) return;
     const cur=box.querySelector('iframe');
-    if(cur && cur.dataset.src===src) return;
+    if(cur && cur.dataset.src===src){
+      syncMemberToIframe();
+      return;
+    }
     const f=document.createElement('iframe');
     f.src=src; f.dataset.src=src; f.title='Yateem Market';
     f.setAttribute('allow','clipboard-write; web-share');
+    f.onload = function(){
+      const p = readMemberProfile() || readSavedMember();
+      if(p) syncMemberToIframe(p);
+    };
     box.textContent=''; box.appendChild(f);
   }
   function unmountMarketPreview(){ /* คงร้านไว้ (ดู mountMarketPreview) */ }
