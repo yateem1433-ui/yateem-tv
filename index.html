@@ -3351,7 +3351,15 @@
     const web=marketWebUrl();
     // ลิงก์ร้านที่ไม่มี / ปิดท้าย (เช่น .../yateem-kitchen-web) ต้องเติม / ก่อน ไม่งั้น track.html จะหลุดไปที่รากโดเมน
     const base = /\/[^\/.]+$/.test(web) ? web + '/' : web;
-    try{ return marketPage==='track' ? new URL('track.html', base).href : web; }catch(e){ return web; }
+    let target = web;
+    try{ target = marketPage==='track' ? new URL('track.html', base).href : web; }catch(e){ target = web; }
+    try{
+      const u = new URL(target);
+      u.searchParams.set('embed', 'tv');
+      return u.href;
+    }catch(e){
+      return target + (target.includes('?') ? '&' : '?') + 'embed=tv';
+    }
   }
   function renderMarketPreview(){
     const box=document.getElementById('market-preview'); if(!box) return;
