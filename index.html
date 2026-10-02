@@ -2452,6 +2452,17 @@
     }
   }
 
+  // ฟังการซิงก์โปรไฟล์สมาชิกจาก Yateem Market (เมื่อสั่งซื้อและสมัครสมาชิกในร้านค้า)
+  window.addEventListener('message', function(e){
+    if(e.data && e.data.type === 'YATEEM_MEMBER_SYNC' && e.data.profile){
+      const p = e.data.profile;
+      saveMemberProfile(p);
+      updateProfileBtn(firebase.auth && firebase.auth().currentUser);
+      updateChatNote();
+      showMemberWelcomeBanner(p);
+    }
+  });
+
   function genMemberId(phone){
     const clean = String(phone||'').replace(/\D/g,'');
     const tail = clean.length >= 4 ? clean.slice(-4) : String(Math.floor(1000 + Math.random()*9000));
