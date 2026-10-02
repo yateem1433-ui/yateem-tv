@@ -778,6 +778,51 @@
     .mem-divider::before, .mem-divider::after{ content:''; flex:1; height:1px; background:var(--stroke); }
     .profile-btn.is-member{ border-color:var(--accent) !important; box-shadow:0 0 12px var(--glow); }
 
+    /* ---- member avatar & remembered account & welcome banner styles ---- */
+    .mem-avatar-wrap{ display:flex; flex-direction:column; align-items:center; gap:8px; margin:4px 0 10px; }
+    .mem-avatar-preview{ width:76px; height:76px; border-radius:50%; border:2px solid var(--accent); position:relative; overflow:hidden; background:var(--glass-2); box-shadow:0 0 16px var(--glow); display:flex; align-items:center; justify-content:center; }
+    .mem-avatar-preview img{ width:100%; height:100%; object-fit:cover; border-radius:50%; }
+    .mem-avatar-placeholder{ font-size:32px; color:var(--accent); }
+    .mem-avatar-actions{ display:flex; gap:8px; align-items:center; }
+    .mem-avatar-upload-btn{ font-size:12px; font-weight:600; padding:6px 14px; border-radius:14px; background:var(--glass-2); border:1px solid var(--stroke); color:var(--text); cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .15s ease; }
+    .mem-avatar-upload-btn:hover{ border-color:var(--accent); color:var(--accent); }
+    .mem-avatar-clear-btn{ font-size:12px; padding:6px 10px; border-radius:14px; background:none; border:1px solid rgba(255,100,100,.3); color:#ff6b73; cursor:pointer; }
+    .mem-avatar-presets{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; }
+    .mem-avatar-preset-list{ display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
+    .mem-avatar-preset-item{ width:34px; height:34px; border-radius:50%; border:1px solid var(--stroke); background:var(--glass-2); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; transition:transform .12s, border-color .12s; }
+    .mem-avatar-preset-item:hover, .mem-avatar-preset-item.on{ border-color:var(--accent); transform:scale(1.15); box-shadow:0 0 10px var(--glow); }
+
+    /* Member Card with Avatar */
+    .mc-identity-row{ display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+    .mc-avatar-frame{ width:54px; height:54px; border-radius:50%; border:2px solid var(--accent); overflow:hidden; flex-shrink:0; background:var(--glass-2); box-shadow:0 0 12px var(--glow); display:flex; align-items:center; justify-content:center; }
+    .mc-avatar-frame img{ width:100%; height:100%; object-fit:cover; }
+    .mc-avatar-frame .mc-av-fallback{ font-size:26px; }
+
+    /* Remembered Account Box in Choices View */
+    .saved-member-box{ background:linear-gradient(135deg, rgba(234,185,52,.15), rgba(27,79,216,.12)); border:1px solid rgba(234,185,52,.4); border-radius:16px; padding:12px; margin-bottom:12px; display:flex; flex-direction:column; gap:10px; text-align:left; }
+    .smb-header{ display:flex; justify-content:space-between; align-items:center; }
+    .smb-badge{ font-size:11px; font-weight:700; color:var(--accent); background:rgba(234,185,52,.2); padding:3px 9px; border-radius:10px; border:1px solid rgba(234,185,52,.3); }
+    .smb-profile{ display:flex; align-items:center; gap:10px; }
+    .smb-avatar{ width:44px; height:44px; border-radius:50%; border:1.5px solid var(--accent); overflow:hidden; flex-shrink:0; background:var(--glass-2); display:flex; align-items:center; justify-content:center; font-size:22px; }
+    .smb-avatar img{ width:100%; height:100%; object-fit:cover; }
+    .smb-info{ display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; }
+    .smb-name{ font-size:15px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .smb-sub{ font-size:12px; color:var(--muted); }
+    .login-btn.resume-member-btn{ background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#070B14; font-weight:700; border:none; box-shadow:0 4px 18px -4px var(--glow); margin-top:2px; }
+    .login-btn.resume-member-btn .lb-ic{ background:rgba(0,0,0,.2); color:#070B14; }
+
+    /* Welcome Toast / Banner */
+    .member-welcome-toast{ position:fixed; top:68px; left:50%; transform:translateX(-50%) translateY(-20px); z-index:99; width:calc(100% - 32px); max-width:480px; padding:12px 16px; border-radius:18px; background:rgba(7,11,20,.92); border:1px solid rgba(234,185,52,.45); box-shadow:0 12px 36px -8px rgba(0,0,0,.8), 0 0 24px -4px var(--glow); display:flex; align-items:center; gap:12px; cursor:pointer; opacity:0; pointer-events:none; transition:opacity .35s ease, transform .35s cubic-bezier(0.16, 1, 0.3, 1); }
+    .member-welcome-toast.show{ opacity:1; pointer-events:auto; transform:translateX(-50%) translateY(0); }
+    .mwt-avatar{ width:44px; height:44px; border-radius:50%; border:2px solid var(--accent); overflow:hidden; flex-shrink:0; background:var(--glass-2); display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 0 10px var(--glow); }
+    .mwt-avatar img{ width:100%; height:100%; object-fit:cover; }
+    .mwt-content{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; text-align:left; }
+    .mwt-badge{ font-size:10px; font-weight:700; color:var(--accent); letter-spacing:.5px; text-transform:uppercase; }
+    .mwt-name{ font-size:14px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .mwt-sub{ font-size:11px; color:var(--muted); }
+    .mwt-close{ background:none; border:none; color:var(--muted); font-size:22px; cursor:pointer; padding:4px 8px; flex-shrink:0; }
+    .mwt-close:hover{ color:#fff; }
+
     /* ---- admin stats dashboard ---- */
     .stats-overview-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-top:8px; }
     .stat-card{ padding:14px 12px; border-radius:14px; text-align:center; border:1px solid var(--stroke); display:flex; flex-direction:column; align-items:center; }
@@ -1205,7 +1250,23 @@
 
       <!-- Choices View -->
       <div id="login-choices">
-        <button class="login-btn member-signup-btn" onclick="showMemberRegisterForm()"><span class="lb-ic">🌟</span> <span>ลงทะเบียนสมัครสมาชิก Yateem</span></button>
+        <!-- Remembered Member Box (โชว์เมื่อเคยมีข้อมูลสมาชิกจำไว้ในเครื่อง) -->
+        <div id="saved-member-box" style="display:none" class="saved-member-box">
+          <div class="smb-header">
+            <span class="smb-badge">💾 พบบัญชีที่จำไว้ในเครื่องนี้</span>
+            <span onclick="forgetSavedMember()" style="cursor:pointer;color:var(--muted);font-size:11px;text-decoration:underline">ลบข้อมูลจำ</span>
+          </div>
+          <div class="smb-profile">
+            <div class="smb-avatar" id="smb-avatar">🌟</div>
+            <div class="smb-info">
+              <div class="smb-name" id="smb-name">คุณ ...</div>
+              <div class="smb-sub" id="smb-sub">เบอร์โทร: -</div>
+            </div>
+          </div>
+          <button type="button" class="login-btn resume-member-btn" onclick="restoreSavedMember()"><span class="lb-ic">⚡</span> <span>เข้าสู่ระบบต่อด้วยชื่อนี้ (ไม่ต้องพิมพ์ใหม่)</span></button>
+        </div>
+
+        <button class="login-btn member-signup-btn" onclick="showMemberRegisterForm()"><span class="lb-ic">🌟</span> <span>ลงทะเบียนสมัครสมาชิก YATEEM TV</span></button>
         <div class="mem-divider">หรือเข้าสู่ระบบด้วยโซเชียล</div>
         <button class="login-btn line"   onclick="loginLine()"><span class="lb-ic">💬</span> <span data-lbl="loginLineBtn">เข้าสู่ระบบด้วย LINE</span></button>
         <button class="login-btn google" onclick="loginGoogle()"><span class="lb-ic">G</span> <span data-lbl="loginGoogleBtn">เข้าสู่ระบบด้วย Google</span></button>
@@ -1214,6 +1275,27 @@
 
       <!-- Registration / Edit Form View -->
       <form id="member-form-wrap" onsubmit="event.preventDefault(); submitMemberForm();">
+        <!-- Avatar Uploader & Presets -->
+        <div class="mem-avatar-wrap">
+          <div class="mem-avatar-preview" id="mem-avatar-preview">
+            <img id="mem-avatar-img" src="" alt="Avatar" style="display:none">
+            <div id="mem-avatar-placeholder" class="mem-avatar-placeholder">🌟</div>
+          </div>
+          <div class="mem-avatar-actions">
+            <label for="mem-avatar-file" class="mem-avatar-upload-btn">
+              📷 เลือกรูปโปรไฟล์
+              <input type="file" id="mem-avatar-file" accept="image/*" style="display:none" onchange="handleMemberAvatarUpload(event)">
+            </label>
+            <button type="button" class="mem-avatar-clear-btn" id="mem-avatar-clear-btn" onclick="clearMemberAvatar()" style="display:none">นำรูปออก</button>
+          </div>
+          <div class="mem-avatar-presets">
+            <span style="font-size:11px;color:var(--muted)">หรือแตะเลือกรูปสำเร็จรูป:</span>
+            <div class="mem-avatar-preset-list" id="mem-avatar-presets">
+              <!-- Emojis & icons generated by JS -->
+            </div>
+          </div>
+        </div>
+
         <div class="mem-field">
           <label for="mem-fullname">ชื่อ-นามสกุลจริง* (สำหรับจัดส่งอาหาร/พัสดุ)</label>
           <input type="text" id="mem-fullname" class="mem-input" placeholder="เช่น อับดุลเลาะห์ สมาน" required>
@@ -1230,7 +1312,7 @@
           <label for="mem-nickname">ชื่อเล่นในแชททีวี (ไม่บังคับ — หากเว้นไว้จะใช้ชื่อจริง)</label>
           <input type="text" id="mem-nickname" class="mem-input" placeholder="เช่น บังเลาะห์">
         </div>
-        <button type="submit" class="login-btn member-signup-btn" style="margin-top:6px"><span class="lb-ic">💾</span> <span id="mem-submit-text">บันทึกและสมัครสมาชิก</span></button>
+        <button type="submit" class="login-btn member-signup-btn" style="margin-top:6px"><span class="lb-ic">💾</span> <span id="mem-submit-text">ลงทะเบียนสมัครสมาชิก YATEEM TV</span></button>
         <button type="button" class="login-btn guest" onclick="cancelMemberForm()">ย้อนกลับ</button>
       </form>
 
@@ -1238,10 +1320,19 @@
       <div id="login-profile" style="display:none">
         <div class="member-card" id="mem-card-view">
           <div class="mc-header">
-            <span class="mc-badge">🌟 สมาชิก Yateem Member</span>
+            <span class="mc-badge">🌟 สมาชิก VIP YATEEM TV</span>
             <span class="mc-id" id="mc-member-id">YT-XXXX</span>
           </div>
-          <div class="mc-name" id="mc-fullname">ชื่อสมาชิก</div>
+          <div class="mc-identity-row">
+            <div class="mc-avatar-frame" id="mc-avatar-frame">
+              <img id="mc-avatar-img" src="" alt="" style="display:none">
+              <span id="mc-avatar-fallback" class="mc-av-fallback">🌟</span>
+            </div>
+            <div>
+              <div class="mc-name" id="mc-fullname">ชื่อสมาชิก</div>
+              <div style="font-size:12px;color:var(--accent);">✅ สมาชิกระบบเชื่อมต่อ Yateem Kitchen</div>
+            </div>
+          </div>
           <div class="mc-info">
             <div class="mc-info-item"><span class="icon">📞</span><span id="mc-phone">-</span></div>
             <div class="mc-info-item"><span class="icon">📍</span><span id="mc-address">ยังไม่ระบุที่อยู่</span></div>
@@ -1923,6 +2014,17 @@
   </div>
 
   <div class="toast" id="toast"></div>
+
+  <!-- Member Welcome Banner (ต้อนรับสมาชิกทุกครั้งเมื่อเข้าใช้งาน) -->
+  <div id="member-welcome-banner" class="member-welcome-toast glass" onclick="openLogin()">
+    <div class="mwt-avatar" id="mwt-avatar">🌟</div>
+    <div class="mwt-content">
+      <div class="mwt-badge">✨ ยินดีต้อนรับสู่ YATEEM TV</div>
+      <div class="mwt-name">สวัสดีคุณ <strong id="mwt-username">สมาชิก</strong> 🌟</div>
+      <div class="mwt-sub">สมาชิก VIP · รับชมสดและสั่งอาหารได้ทันที (แตะดูบัตร)</div>
+    </div>
+    <button type="button" class="mwt-close" onclick="event.stopPropagation(); closeMemberWelcomeBanner()">&times;</button>
+  </div>
   <button id="gift-admin-fab" onclick="openGiftAdmin()">💰 สลิป</button>
 
   <script>
@@ -2156,9 +2258,12 @@
     const mem = readMemberProfile();
     const u=(typeof firebase!=='undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if(mem && (mem.nickname || mem.fullname)) {
+      const av = mem.avatar || '';
+      const isImgUrl = av.startsWith('data:') || av.startsWith('http');
       return {
         name: mem.nickname || mem.fullname,
-        photo: (lineProfile && lineProfile.pictureUrl) || (u && u.photoURL) || '',
+        photo: isImgUrl ? av : ((lineProfile && lineProfile.pictureUrl) || (u && u.photoURL) || ''),
+        avatarIcon: !isImgUrl ? (av || '🌟') : '',
         isMember: true,
         member: mem
       };
@@ -2276,7 +2381,7 @@
     try{
       await db.ref(`rooms/${CONFIG.chat.roomId}/messages`).push({
         uid: myUid, name: name.slice(0,40),
-        photo: (currentIdentity().photo||'').slice(0,500),
+        photo: (currentIdentity().photo||'').slice(0,60000),
         text: clean(text).slice(0,CONFIG.chat.maxLen),
         ts: firebase.database.ServerValue.TIMESTAMP
       });
@@ -2312,18 +2417,29 @@
   }
 
   /* ============================================================
-     4b) ล็อกอิน & สมาชิก Yateem (จำข้อมูลข้ามไปยัง Yateem Kitchen)
+     4b) ล็อกอิน & สมาชิก YATEEM TV (จำข้อมูลข้ามไปยัง Yateem Kitchen)
      ============================================================ */
   const MEMBER_PROFILE_KEY = 'yateemMemberProfile';
+  const SAVED_MEMBER_KEY = 'yateemSavedMemberInfo';
 
   function readMemberProfile(){
     try{ return JSON.parse(localStorage.getItem(MEMBER_PROFILE_KEY)||'null'); }catch(e){ return null; }
+  }
+
+  function readSavedMember(){
+    try{ return JSON.parse(localStorage.getItem(SAVED_MEMBER_KEY)||'null'); }catch(e){ return null; }
+  }
+
+  function saveSavedMember(p){
+    if(!p) return;
+    try{ localStorage.setItem(SAVED_MEMBER_KEY, JSON.stringify(p)); }catch(e){}
   }
 
   function saveMemberProfile(p){
     if(!p) return;
     try{
       localStorage.setItem(MEMBER_PROFILE_KEY, JSON.stringify(p));
+      saveSavedMember(p);
       if(p.nickname || p.fullname) localStorage.setItem('yt_nick', p.nickname || p.fullname);
       syncMemberToIframe(p);
     }catch(e){}
@@ -2341,6 +2457,126 @@
     const tail = clean.length >= 4 ? clean.slice(-4) : String(Math.floor(1000 + Math.random()*9000));
     const rnd = Math.floor(100 + Math.random()*900);
     return 'YT-' + tail + '-' + rnd;
+  }
+
+  /* ---- Avatar Management ---- */
+  let currentMemberAvatar = '';
+  const AVATAR_PRESETS = ['🌟', '👨🏻‍🍳', '🧕', '👳‍♂️', '👑', '🍲', '🌙', '🕌', '👦', '👧'];
+
+  function renderAvatarPresets(){
+    const wrap = document.getElementById('mem-avatar-presets');
+    if(!wrap) return;
+    wrap.innerHTML = AVATAR_PRESETS.map(icon => 
+      `<button type="button" class="mem-avatar-preset-item ${currentMemberAvatar===icon?'on':''}" onclick="setMemberAvatarPreset('${icon}')">${icon}</button>`
+    ).join('');
+  }
+
+  function setMemberAvatarPreset(icon){
+    currentMemberAvatar = icon;
+    updateAvatarFormPreview();
+    renderAvatarPresets();
+  }
+
+  function updateAvatarFormPreview(){
+    const img = document.getElementById('mem-avatar-img');
+    const ph = document.getElementById('mem-avatar-placeholder');
+    const clr = document.getElementById('mem-avatar-clear-btn');
+    if(!img || !ph) return;
+
+    if(currentMemberAvatar){
+      if(currentMemberAvatar.startsWith('data:') || currentMemberAvatar.startsWith('http')){
+        img.src = currentMemberAvatar;
+        img.style.display = 'block';
+        ph.style.display = 'none';
+      } else {
+        img.style.display = 'none';
+        ph.textContent = currentMemberAvatar;
+        ph.style.display = 'block';
+      }
+      if(clr) clr.style.display = 'inline-block';
+    } else {
+      img.style.display = 'none';
+      ph.textContent = '🌟';
+      ph.style.display = 'block';
+      if(clr) clr.style.display = 'none';
+    }
+  }
+
+  function handleMemberAvatarUpload(e){
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    if(!file.type.startsWith('image/')){ toast('กรุณาเลือกไฟล์รูปภาพค่ะ'); return; }
+    if(file.size > 10 * 1024 * 1024){ toast('รูปภาพมีขนาดใหญ่เกินไปค่ะ (ไม่เกิน 10MB)'); return; }
+
+    const reader = new FileReader();
+    reader.onload = function(evt){
+      const img = new Image();
+      img.onload = function(){
+        try{
+          const canvas = document.createElement('canvas');
+          const maxDim = 160;
+          let w = img.width, h = img.height;
+          if(w > h){
+            if(w > maxDim){ h = Math.round(h * maxDim / w); w = maxDim; }
+          } else {
+            if(h > maxDim){ w = Math.round(w * maxDim / h); h = maxDim; }
+          }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          currentMemberAvatar = canvas.toDataURL('image/jpeg', 0.82);
+          updateAvatarFormPreview();
+          renderAvatarPresets();
+          toast('เลือกรูปโปรไฟล์เรียบร้อยแล้วค่ะ');
+        }catch(err){
+          console.error(err);
+          currentMemberAvatar = evt.target.result;
+          updateAvatarFormPreview();
+        }
+      };
+      img.src = evt.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function clearMemberAvatar(){
+    currentMemberAvatar = '';
+    const fileInput = document.getElementById('mem-avatar-file');
+    if(fileInput) fileInput.value = '';
+    updateAvatarFormPreview();
+    renderAvatarPresets();
+  }
+
+  /* ---- Member Welcome Banner ---- */
+  let welcomeBannerTimer = null;
+  function showMemberWelcomeBanner(profile){
+    const banner = document.getElementById('member-welcome-banner');
+    if(!banner) return;
+    const p = profile || readMemberProfile() || readSavedMember();
+    if(!p || (!p.fullname && !p.phone)) return;
+
+    const nameEl = document.getElementById('mwt-username');
+    const avEl = document.getElementById('mwt-avatar');
+    if(nameEl) nameEl.textContent = p.nickname || p.fullname || 'สมาชิก';
+
+    if(avEl){
+      if(p.avatar && (p.avatar.startsWith('data:') || p.avatar.startsWith('http'))){
+        avEl.innerHTML = `<img src="${esc(p.avatar)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      } else {
+        avEl.textContent = p.avatar || '🌟';
+      }
+    }
+
+    banner.classList.add('show');
+    clearTimeout(welcomeBannerTimer);
+    welcomeBannerTimer = setTimeout(()=>{ closeMemberWelcomeBanner(); }, 5000);
+  }
+
+  function closeMemberWelcomeBanner(){
+    const banner = document.getElementById('member-welcome-banner');
+    if(banner) banner.classList.remove('show');
+    clearTimeout(welcomeBannerTimer);
   }
 
   function openLogin(){
@@ -2363,6 +2599,8 @@
       const mcAddr = document.getElementById('mc-address');
       const mcSocialWrap = document.getElementById('mc-social-wrap');
       const mcSocial = document.getElementById('mc-social');
+      const mcAvImg = document.getElementById('mc-avatar-img');
+      const mcAvFb = document.getElementById('mc-avatar-fallback');
 
       const name = (mem && mem.fullname) || id.name || 'ผู้ใช้';
       const nick = (mem && mem.nickname && mem.nickname !== mem.fullname) ? (' (' + mem.nickname + ')') : '';
@@ -2370,6 +2608,24 @@
       if(mcId) mcId.textContent = (mem && mem.memberId) || ('YT-' + String(Date.now()).slice(-6));
       if(mcPhone) mcPhone.textContent = (mem && mem.phone) ? mem.phone : 'ยังไม่ระบุเบอร์โทร (กดแก้ไขเพื่อเพิ่ม)';
       if(mcAddr) mcAddr.textContent = (mem && mem.address) ? mem.address : 'ยังไม่ระบุที่อยู่จัดส่ง';
+
+      // แสดงรูปโปรไฟล์บนบัตรสมาชิก
+      const photo = (mem && mem.avatar) || id.photo || '';
+      if(mcAvImg && mcAvFb){
+        if(photo && (photo.startsWith('data:') || photo.startsWith('http'))){
+          mcAvImg.src = photo;
+          mcAvImg.style.display = 'block';
+          mcAvFb.style.display = 'none';
+        } else if(photo) {
+          mcAvImg.style.display = 'none';
+          mcAvFb.textContent = photo;
+          mcAvFb.style.display = 'block';
+        } else {
+          mcAvImg.style.display = 'none';
+          mcAvFb.textContent = (name.charAt(0) || '🌟');
+          mcAvFb.style.display = 'block';
+        }
+      }
 
       let socialLabel = '';
       if(lineProfile && lineProfile.displayName) socialLabel = 'LINE: ' + lineProfile.displayName;
@@ -2383,6 +2639,29 @@
     } else {
       document.getElementById('login-choices').style.display = 'flex';
       document.getElementById('login-profile').style.display = 'none';
+
+      // ตรวจสอบข้อมูลสมาชิกที่จำไว้ในเครื่อง
+      const saved = readSavedMember();
+      const savedBox = document.getElementById('saved-member-box');
+      if(savedBox){
+        if(saved && (saved.fullname || saved.phone)){
+          savedBox.style.display = 'flex';
+          const sn = document.getElementById('smb-name');
+          const sp = document.getElementById('smb-sub');
+          const sa = document.getElementById('smb-avatar');
+          if(sn) sn.textContent = 'คุณ ' + (saved.nickname || saved.fullname || 'สมาชิก');
+          if(sp) sp.textContent = 'เบอร์โทร: ' + (saved.phone || '-');
+          if(sa){
+            if(saved.avatar && (saved.avatar.startsWith('data:') || saved.avatar.startsWith('http'))){
+              sa.innerHTML = `<img src="${esc(saved.avatar)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+            } else {
+              sa.textContent = saved.avatar || '🌟';
+            }
+          }
+        } else {
+          savedBox.style.display = 'none';
+        }
+      }
     }
 
     document.getElementById('login-backdrop').classList.add('open');
@@ -2397,10 +2676,10 @@
     if(wrap) wrap.style.display = 'flex';
 
     const subBtn = document.getElementById('mem-submit-text');
-    if(subBtn) subBtn.textContent = 'บันทึกและสมัครสมาชิก 🌟';
+    if(subBtn) subBtn.textContent = 'ลงทะเบียนสมัครสมาชิก YATEEM TV';
 
-    // กรอกข้อมูลเดิมถ้ามี
-    const mem = readMemberProfile() || {};
+    // กรอกข้อมูลเดิมถ้ามี (จากสมาชิกปัจจุบัน หรือข้อมูลที่จำไว้ในเครื่อง)
+    const mem = readMemberProfile() || readSavedMember() || {};
     const id = currentIdentity();
     const fn = document.getElementById('mem-fullname');
     const ph = document.getElementById('mem-phone');
@@ -2410,6 +2689,11 @@
     if(ph) ph.value = mem.phone || '';
     if(ad) ad.value = mem.address || '';
     if(nk) nk.value = mem.nickname || '';
+
+    currentMemberAvatar = mem.avatar || '';
+    updateAvatarFormPreview();
+    renderAvatarPresets();
+
     setTimeout(() => { if(fn) fn.focus(); }, 150);
   }
 
@@ -2446,7 +2730,7 @@
     if(!fullname){ toast('กรุณาระบุชื่อ-นามสกุลค่ะ'); return; }
     if(!phone || phone.length < 9){ toast('กรุณาระบุเบอร์โทรศัพท์ 9-10 หลักให้ถูกต้องค่ะ'); return; }
 
-    const old = readMemberProfile() || {};
+    const old = readMemberProfile() || readSavedMember() || {};
     const memberId = old.memberId || genMemberId(phone);
 
     const profile = {
@@ -2455,6 +2739,7 @@
       phone: phone,
       address: address,
       nickname: nickname || fullname.split(' ')[0],
+      avatar: currentMemberAvatar || old.avatar || '',
       registeredAt: old.registeredAt || Date.now(),
       updatedAt: Date.now()
     };
@@ -2464,6 +2749,7 @@
     // จำในระบบ Yateem Kitchen ด้วย (แชร์ localStorage บนโดเมนเดียวกัน)
     try{
       localStorage.setItem('yateemMemberProfile', JSON.stringify(profile));
+      localStorage.setItem('yateemSavedMemberInfo', JSON.stringify(profile));
       // เซฟโปรไฟล์สั่งอาหารสำหรับ auto-prefill ในร้านค้า
       const uid = 'member_' + phone;
       localStorage.setItem('yateemProfile_' + uid, JSON.stringify({ fullname:fullname, phone:phone, address:address }));
@@ -2472,8 +2758,41 @@
 
     updateProfileBtn(firebase.auth && firebase.auth().currentUser);
     updateChatNote();
-    toast('บันทึกข้อมูลสมาชิกเรียบร้อยแล้วค่ะ 🌟');
+    showMemberWelcomeBanner(profile);
+    toast('ลงทะเบียนสมาชิก YATEEM TV เรียบร้อยแล้วค่ะ 🌟');
     openLogin(); // แสดงบัตรสมาชิก
+  }
+
+  function restoreSavedMember(){
+    const saved = readSavedMember();
+    if(!saved){ toast('ไม่พบข้อมูลสมาชิกที่จำไว้ค่ะ'); return; }
+    saveMemberProfile(saved);
+    try{
+      localStorage.setItem('yateemMemberProfile', JSON.stringify(saved));
+      const uid = 'member_' + (saved.phone||'');
+      localStorage.setItem('yateemProfile_' + uid, JSON.stringify({ fullname:saved.fullname, phone:saved.phone, address:saved.address }));
+      localStorage.setItem('yateemLastLineUid', uid);
+    }catch(e){}
+    updateProfileBtn(firebase.auth && firebase.auth().currentUser);
+    updateChatNote();
+    showMemberWelcomeBanner(saved);
+    toast('ยินดีต้อนรับกลับ คุณ ' + (saved.nickname || saved.fullname) + ' 🌟');
+    openLogin();
+  }
+
+  function forgetSavedMember(){
+    if(!confirm('ต้องการลบข้อมูลสมาชิกที่จำไว้ในเครื่องนี้ทั้งหมดหรือไม่?')) return;
+    try{
+      localStorage.removeItem(SAVED_MEMBER_KEY);
+      localStorage.removeItem(MEMBER_PROFILE_KEY);
+      localStorage.removeItem('yateemMemberProfile');
+      localStorage.removeItem('yt_nick');
+    }catch(e){}
+    currentMemberAvatar = '';
+    updateProfileBtn(null);
+    updateChatNote();
+    toast('ลบข้อมูลสมาชิกที่จำไว้เรียบร้อยแล้วค่ะ');
+    openLogin();
   }
 
   function openKitchenFromMember(){
@@ -2547,7 +2866,7 @@
   }
 
   async function logoutUser(){
-    if(!confirm('ต้องการออกจากระบบและลบข้อมูลสมาชิกในเครื่องนี้หรือไม่?')) return;
+    if(!confirm('ต้องการออกจากระบบหรือไม่?\n(ระบบจะยังจำข้อมูลสมาชิกไว้ในเครื่อง เพื่อให้คุณเข้าสู่ระบบใหม่ได้ทันทีโดยไม่ต้องพิมพ์ใหม่)')) return;
     try{
       if(lineProfile){
         lineProfile=null;
@@ -2560,8 +2879,12 @@
         localStorage.removeItem(MEMBER_PROFILE_KEY);
         localStorage.removeItem('yt_nick');
         localStorage.removeItem('yateemMemberProfile');
+        // สังเกต: เราคง SAVED_MEMBER_KEY ไว้ตามความต้องการ เพื่อไม่ต้องพิมพ์ใหม่
       }catch(e){}
-      toast('ออกจากระบบแล้วค่ะ'); closeLogin(); location.hash=''; location.reload();
+      toast('ออกจากระบบแล้วค่ะ (จำข้อมูลสมาชิกไว้ในเครื่อง)');
+      updateProfileBtn(null);
+      updateChatNote();
+      openLogin(); // แสดงหน้าเลือกพร้อมกล่องเข้าสู่ระบบต่อด้วยชื่อเดิม
     }catch(e){ toast('ออกจากระบบไม่สำเร็จค่ะ'); console.error(e); }
   }
 
@@ -2574,8 +2897,14 @@
       btn.classList.add('in');
       if(mem && (mem.fullname || mem.phone)) btn.classList.add('is-member');
       else btn.classList.remove('is-member');
-      btn.innerHTML = id.photo ? `<img src="${esc(id.photo)}" alt="">` : (mem ? '🌟' : esc((id.name||'👤').charAt(0)));
-      btn.title=(id.name||'โปรไฟล์') + (mem ? ' (สมาชิก Yateem)' : '');
+      if(id.photo) {
+        btn.innerHTML = `<img src="${esc(id.photo)}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+      } else if(id.avatarIcon) {
+        btn.innerHTML = `<span style="font-size:18px;">${id.avatarIcon}</span>`;
+      } else {
+        btn.innerHTML = mem ? '🌟' : esc((id.name||'👤').charAt(0));
+      }
+      btn.title=(id.name||'โปรไฟล์') + (mem ? ' (สมาชิก YATEEM TV)' : '');
     }else{
       btn.classList.remove('in', 'is-member');
       btn.textContent='👤';
@@ -5677,6 +6006,14 @@
     initPrayerUI();        // เวลาละหมาด
     setInterval(updateLiveClock, 1000);  // นาฬิกาเวลาปัจจุบันแบบเรียลไทม์
     setInterval(updateNowChip, 60000);   // อัปเดต "กำลังออกอากาศ" ทุกนาที
+
+    // ต้อนรับสมาชิกทุกครั้งเมื่อเข้าใช้งาน
+    setTimeout(()=>{
+      const m = readMemberProfile() || readSavedMember();
+      if(m && (m.fullname || m.phone)){
+        showMemberWelcomeBanner(m);
+      }
+    }, 1200);
   })();
   </script>
 </body>
