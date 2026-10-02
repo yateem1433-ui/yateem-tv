@@ -752,6 +752,32 @@
     .lp-name{ font-weight:700; font-size:17px; } .lp-sub{ font-size:13px; color:var(--muted); }
     .chat-note .login-link{ color:var(--accent); cursor:pointer; text-decoration:underline; }
 
+    /* ---- member styles ---- */
+    .login-btn.member-signup-btn{ background:linear-gradient(135deg, rgba(234,185,52,.25), rgba(234,185,52,.08)); border-color:var(--accent); color:#fff; font-weight:700; box-shadow:0 4px 18px -4px var(--glow); }
+    .login-btn.member-signup-btn .lb-ic{ background:var(--accent); color:#070B14; }
+    .login-btn.kitchen-btn{ background:linear-gradient(135deg, rgba(27,79,216,.25), rgba(27,79,216,.08)); border-color:var(--blue); color:#fff; }
+    .login-btn.kitchen-btn .lb-ic{ background:var(--blue); }
+    .login-btn.track-btn{ background:rgba(234,185,52,.12); border-color:rgba(234,185,52,.3); color:var(--text); }
+    .login-btn.track-btn .lb-ic{ background:var(--accent); color:#070B14; }
+    .member-card{ border-radius:18px; padding:16px; background:linear-gradient(135deg, rgba(234,185,52,.15), rgba(7,11,20,.6)); border:1px solid rgba(234,185,52,.35); box-shadow:0 8px 24px -6px var(--glow); margin-top:12px; position:relative; overflow:hidden; }
+    .member-card::before{ content:''; position:absolute; top:-50%; right:-50%; width:100%; height:100%; background:radial-gradient(circle, var(--glow) 0%, transparent 60%); pointer-events:none; opacity:.4; }
+    .mc-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .mc-badge{ display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--accent); background:rgba(234,185,52,.15); padding:4px 10px; border-radius:20px; border:1px solid rgba(234,185,52,.3); }
+    .mc-id{ font-size:12px; color:var(--muted); font-family:monospace; font-weight:600; }
+    .mc-name{ font-size:18px; font-weight:700; color:#fff; margin-bottom:4px; }
+    .mc-info{ font-size:13px; color:var(--muted); display:flex; flex-direction:column; gap:6px; margin-top:10px; line-height:1.4; }
+    .mc-info-item{ display:flex; gap:8px; align-items:flex-start; }
+    .mc-info-item .icon{ flex-shrink:0; font-size:14px; margin-top:1px; }
+    #member-form-wrap{ display:none; flex-direction:column; gap:11px; margin-top:14px; text-align:left; }
+    .mem-field{ display:flex; flex-direction:column; gap:5px; }
+    .mem-field label{ font-size:12px; font-weight:600; color:var(--muted); }
+    .mem-input{ width:100%; box-sizing:border-box; background:var(--glass-2); border:1px solid var(--stroke); border-radius:12px; padding:10px 12px; color:var(--text); font-family:inherit; font-size:14px; outline:none; transition:border-color .15s; }
+    .mem-input:focus{ border-color:var(--accent); }
+    .mem-input::placeholder{ color:rgba(255,255,255,.3); }
+    .mem-divider{ display:flex; align-items:center; gap:10px; color:var(--muted); font-size:12px; margin:4px 0; }
+    .mem-divider::before, .mem-divider::after{ content:''; flex:1; height:1px; background:var(--stroke); }
+    .profile-btn.is-member{ border-color:var(--accent) !important; box-shadow:0 0 12px var(--glow); }
+
     /* ---- admin stats dashboard ---- */
     .stats-overview-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-top:8px; }
     .stat-card{ padding:14px 12px; border-radius:14px; text-align:center; border:1px solid var(--stroke); display:flex; flex-direction:column; align-items:center; }
@@ -1172,20 +1198,65 @@
 
   <!-- LOGIN SHEET -->
   <div class="backdrop" id="login-backdrop" onclick="if(event.target===this)closeLogin()">
-    <div class="sheet glass" style="position:relative">
+    <div class="sheet glass" style="position:relative; max-height:85vh; overflow-y:auto">
       <button class="close" onclick="closeLogin()">×</button>
-      <h2 data-lbl="loginTitle">👤 เข้าสู่ระบบ</h2>
-      <div style="color:var(--muted);font-size:14px" data-lbl="loginDesc">เข้าสู่ระบบเพื่อแชทและสั่งซื้อด้วยชื่อจริง (ไม่บังคับ)</div>
+      <h2 id="login-title" data-lbl="loginTitle">👤 สมาชิก & เข้าสู่ระบบ</h2>
+      <div id="login-desc" style="color:var(--muted);font-size:14px" data-lbl="loginDesc">สมัครสมาชิกครั้งเดียว จำชื่อและที่อยู่สำหรับสั่งอาหาร Yateem Kitchen อัตโนมัติ</div>
+
+      <!-- Choices View -->
       <div id="login-choices">
+        <button class="login-btn member-signup-btn" onclick="showMemberRegisterForm()"><span class="lb-ic">🌟</span> <span>ลงทะเบียนสมัครสมาชิก Yateem</span></button>
+        <div class="mem-divider">หรือเข้าสู่ระบบด้วยโซเชียล</div>
         <button class="login-btn line"   onclick="loginLine()"><span class="lb-ic">💬</span> <span data-lbl="loginLineBtn">เข้าสู่ระบบด้วย LINE</span></button>
         <button class="login-btn google" onclick="loginGoogle()"><span class="lb-ic">G</span> <span data-lbl="loginGoogleBtn">เข้าสู่ระบบด้วย Google</span></button>
         <button class="login-btn guest"  onclick="closeLogin()" data-lbl="loginGuestBtn">แชทแบบไม่ล็อกอิน</button>
       </div>
-      <div class="legal-links">การเข้าสู่ระบบถือว่ายอมรับ <a href="terms.html">ข้อกำหนด</a> และ <a href="privacy.html">นโยบายความเป็นส่วนตัว</a></div>
+
+      <!-- Registration / Edit Form View -->
+      <form id="member-form-wrap" onsubmit="event.preventDefault(); submitMemberForm();">
+        <div class="mem-field">
+          <label for="mem-fullname">ชื่อ-นามสกุลจริง* (สำหรับจัดส่งอาหาร/พัสดุ)</label>
+          <input type="text" id="mem-fullname" class="mem-input" placeholder="เช่น อับดุลเลาะห์ สมาน" required>
+        </div>
+        <div class="mem-field">
+          <label for="mem-phone">เบอร์โทรศัพท์มือถือ* (สำหรับคนขับติดต่อ & ค้นหาออเดอร์)</label>
+          <input type="tel" id="mem-phone" class="mem-input" placeholder="เช่น 0825705207" inputmode="numeric" required>
+        </div>
+        <div class="mem-field">
+          <label for="mem-address">ที่อยู่จัดส่งสินค้า (จำไว้สำหรับสั่งอาหารไม่ต้องพิมพ์ซ้ำ)</label>
+          <textarea id="mem-address" class="mem-input" rows="2" placeholder="เช่น 123/45 ซอย 8 ถ.ประชาอุทิศ แขวงบางมด เขตทุ่งครุ กทม. 10140"></textarea>
+        </div>
+        <div class="mem-field">
+          <label for="mem-nickname">ชื่อเล่นในแชททีวี (ไม่บังคับ — หากเว้นไว้จะใช้ชื่อจริง)</label>
+          <input type="text" id="mem-nickname" class="mem-input" placeholder="เช่น บังเลาะห์">
+        </div>
+        <button type="submit" class="login-btn member-signup-btn" style="margin-top:6px"><span class="lb-ic">💾</span> <span id="mem-submit-text">บันทึกและสมัครสมาชิก</span></button>
+        <button type="button" class="login-btn guest" onclick="cancelMemberForm()">ย้อนกลับ</button>
+      </form>
+
+      <!-- Member Profile / Logged In View -->
       <div id="login-profile" style="display:none">
-        <div class="lp-row"><img id="lp-photo" alt=""><div><div class="lp-name" id="lp-name"></div><div class="lp-sub" id="lp-sub"></div></div></div>
-        <button class="login-btn guest" onclick="logoutUser()" data-lbl="logoutBtn">ออกจากระบบ</button>
+        <div class="member-card" id="mem-card-view">
+          <div class="mc-header">
+            <span class="mc-badge">🌟 สมาชิก Yateem Member</span>
+            <span class="mc-id" id="mc-member-id">YT-XXXX</span>
+          </div>
+          <div class="mc-name" id="mc-fullname">ชื่อสมาชิก</div>
+          <div class="mc-info">
+            <div class="mc-info-item"><span class="icon">📞</span><span id="mc-phone">-</span></div>
+            <div class="mc-info-item"><span class="icon">📍</span><span id="mc-address">ยังไม่ระบุที่อยู่</span></div>
+            <div class="mc-info-item" id="mc-social-wrap" style="display:none"><span class="icon">🔗</span><span id="mc-social">-</span></div>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:8px; margin-top:12px;">
+          <button class="login-btn kitchen-btn" onclick="openKitchenFromMember()"><span class="lb-ic">🛒</span> <span>สั่งอาหาร Yateem Kitchen</span></button>
+          <button class="login-btn track-btn" onclick="openTrackFromMember()"><span class="lb-ic">📦</span> <span>ติดตามสถานะออเดอร์</span></button>
+          <button class="login-btn guest" onclick="showMemberEditForm()"><span class="lb-ic">✏️</span> <span>แก้ไขข้อมูลสมาชิก</span></button>
+          <button class="login-btn guest" onclick="logoutUser()" data-lbl="logoutBtn">ออกจากระบบ</button>
+        </div>
       </div>
+      <div class="legal-links">การเข้าสู่ระบบถือว่ายอมรับ <a href="terms.html">ข้อกำหนด</a> และ <a href="privacy.html">นโยบายความเป็นส่วนตัว</a></div>
     </div>
   </div>
 
@@ -2080,9 +2151,18 @@
     updateChatNote();
   }
 
-  // ---- identity: ชื่อ/รูป สำหรับแชท (social user → LINE → ชื่อเล่น) ----
+  // ---- identity: ชื่อ/รูป สำหรับแชท (สมาชิก Yateem → social user → LINE → ชื่อเล่น) ----
   function currentIdentity(){
+    const mem = readMemberProfile();
     const u=(typeof firebase!=='undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if(mem && (mem.nickname || mem.fullname)) {
+      return {
+        name: mem.nickname || mem.fullname,
+        photo: (lineProfile && lineProfile.pictureUrl) || (u && u.photoURL) || '',
+        isMember: true,
+        member: mem
+      };
+    }
     if(u && !u.isAnonymous && u.displayName) return { name:u.displayName, photo:u.photoURL||'' };
     if(lineProfile && lineProfile.displayName) return { name:lineProfile.displayName, photo:lineProfile.pictureUrl||'' };
     return { name:(localStorage.getItem('yt_nick')||''), photo:'' };
@@ -2232,22 +2312,182 @@
   }
 
   /* ============================================================
-     4b) ล็อกอินผู้ชม (Google / Facebook / LINE) — แชทด้วยชื่อจริง (ไม่บังคับ)
+     4b) ล็อกอิน & สมาชิก Yateem (จำข้อมูลข้ามไปยัง Yateem Kitchen)
      ============================================================ */
-  function openLogin(){
-    const u=(typeof firebase!=='undefined'&&firebase.auth)?firebase.auth().currentUser:null;
-    const id=currentIdentity();
-    const loggedIn=(u && !u.isAnonymous) || (lineProfile && lineProfile.displayName);
-    document.getElementById('login-choices').style.display=loggedIn?'none':'flex';
-    const prof=document.getElementById('login-profile'); prof.style.display=loggedIn?'flex':'none';
-    if(loggedIn){
-      const ph=document.getElementById('lp-photo'); ph.src=id.photo||'icon.jpg'; ph.onerror=function(){this.src='icon.jpg';};
-      document.getElementById('lp-name').textContent=id.name||'ผู้ใช้';
-      document.getElementById('lp-sub').textContent=isAdmin?'ผู้ดูแลระบบ':lbl('viewerRole');
+  const MEMBER_PROFILE_KEY = 'yateemMemberProfile';
+
+  function readMemberProfile(){
+    try{ return JSON.parse(localStorage.getItem(MEMBER_PROFILE_KEY)||'null'); }catch(e){ return null; }
+  }
+
+  function saveMemberProfile(p){
+    if(!p) return;
+    try{
+      localStorage.setItem(MEMBER_PROFILE_KEY, JSON.stringify(p));
+      if(p.nickname || p.fullname) localStorage.setItem('yt_nick', p.nickname || p.fullname);
+      syncMemberToIframe(p);
+    }catch(e){}
+  }
+
+  function syncMemberToIframe(p){
+    const f = document.querySelector('#market-preview iframe');
+    if(f && f.contentWindow){
+      try{ f.contentWindow.postMessage({ type:'YATEEM_MEMBER_SYNC', profile:p }, '*'); }catch(e){}
     }
+  }
+
+  function genMemberId(phone){
+    const clean = String(phone||'').replace(/\D/g,'');
+    const tail = clean.length >= 4 ? clean.slice(-4) : String(Math.floor(1000 + Math.random()*9000));
+    const rnd = Math.floor(100 + Math.random()*900);
+    return 'YT-' + tail + '-' + rnd;
+  }
+
+  function openLogin(){
+    const u = (typeof firebase!=='undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    const mem = readMemberProfile();
+    const id = currentIdentity();
+    const loggedIn = !!((u && !u.isAnonymous) || (lineProfile && lineProfile.displayName) || (mem && (mem.fullname || mem.phone)));
+
+    const formWrap = document.getElementById('member-form-wrap');
+    if(formWrap) formWrap.style.display = 'none';
+
+    if(loggedIn){
+      document.getElementById('login-choices').style.display = 'none';
+      document.getElementById('login-profile').style.display = 'flex';
+
+      // อัปเดตข้อมูลบนบัตรสมาชิก
+      const mcId = document.getElementById('mc-member-id');
+      const mcName = document.getElementById('mc-fullname');
+      const mcPhone = document.getElementById('mc-phone');
+      const mcAddr = document.getElementById('mc-address');
+      const mcSocialWrap = document.getElementById('mc-social-wrap');
+      const mcSocial = document.getElementById('mc-social');
+
+      const name = (mem && mem.fullname) || id.name || 'ผู้ใช้';
+      const nick = (mem && mem.nickname && mem.nickname !== mem.fullname) ? (' (' + mem.nickname + ')') : '';
+      if(mcName) mcName.textContent = name + nick;
+      if(mcId) mcId.textContent = (mem && mem.memberId) || ('YT-' + String(Date.now()).slice(-6));
+      if(mcPhone) mcPhone.textContent = (mem && mem.phone) ? mem.phone : 'ยังไม่ระบุเบอร์โทร (กดแก้ไขเพื่อเพิ่ม)';
+      if(mcAddr) mcAddr.textContent = (mem && mem.address) ? mem.address : 'ยังไม่ระบุที่อยู่จัดส่ง';
+
+      let socialLabel = '';
+      if(lineProfile && lineProfile.displayName) socialLabel = 'LINE: ' + lineProfile.displayName;
+      else if(u && !u.isAnonymous) socialLabel = (u.displayName || u.email || 'Google');
+      if(socialLabel && mcSocialWrap && mcSocial){
+        mcSocial.textContent = socialLabel;
+        mcSocialWrap.style.display = 'flex';
+      } else if(mcSocialWrap) {
+        mcSocialWrap.style.display = 'none';
+      }
+    } else {
+      document.getElementById('login-choices').style.display = 'flex';
+      document.getElementById('login-profile').style.display = 'none';
+    }
+
     document.getElementById('login-backdrop').classList.add('open');
   }
+
   function closeLogin(){ document.getElementById('login-backdrop').classList.remove('open'); }
+
+  function showMemberRegisterForm(){
+    document.getElementById('login-choices').style.display = 'none';
+    document.getElementById('login-profile').style.display = 'none';
+    const wrap = document.getElementById('member-form-wrap');
+    if(wrap) wrap.style.display = 'flex';
+
+    const subBtn = document.getElementById('mem-submit-text');
+    if(subBtn) subBtn.textContent = 'บันทึกและสมัครสมาชิก 🌟';
+
+    // กรอกข้อมูลเดิมถ้ามี
+    const mem = readMemberProfile() || {};
+    const id = currentIdentity();
+    const fn = document.getElementById('mem-fullname');
+    const ph = document.getElementById('mem-phone');
+    const ad = document.getElementById('mem-address');
+    const nk = document.getElementById('mem-nickname');
+    if(fn) fn.value = mem.fullname || (id.name && !id.isMember ? id.name : '');
+    if(ph) ph.value = mem.phone || '';
+    if(ad) ad.value = mem.address || '';
+    if(nk) nk.value = mem.nickname || '';
+    setTimeout(() => { if(fn) fn.focus(); }, 150);
+  }
+
+  function showMemberEditForm(){
+    showMemberRegisterForm();
+    const subBtn = document.getElementById('mem-submit-text');
+    if(subBtn) subBtn.textContent = 'บันทึกการแก้ไขข้อมูล';
+  }
+
+  function cancelMemberForm(){
+    const mem = readMemberProfile();
+    const u = (typeof firebase!=='undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    const loggedIn = !!((u && !u.isAnonymous) || (lineProfile && lineProfile.displayName) || (mem && (mem.fullname || mem.phone)));
+    const wrap = document.getElementById('member-form-wrap');
+    if(wrap) wrap.style.display = 'none';
+    if(loggedIn){
+      document.getElementById('login-profile').style.display = 'flex';
+    } else {
+      document.getElementById('login-choices').style.display = 'flex';
+    }
+  }
+
+  function submitMemberForm(){
+    const fnEl = document.getElementById('mem-fullname');
+    const phEl = document.getElementById('mem-phone');
+    const adEl = document.getElementById('mem-address');
+    const nkEl = document.getElementById('mem-nickname');
+
+    const fullname = fnEl ? fnEl.value.trim() : '';
+    const phone = phEl ? phEl.value.trim().replace(/\D/g, '') : '';
+    const address = adEl ? adEl.value.trim() : '';
+    const nickname = nkEl ? nkEl.value.trim() : '';
+
+    if(!fullname){ toast('กรุณาระบุชื่อ-นามสกุลค่ะ'); return; }
+    if(!phone || phone.length < 9){ toast('กรุณาระบุเบอร์โทรศัพท์ 9-10 หลักให้ถูกต้องค่ะ'); return; }
+
+    const old = readMemberProfile() || {};
+    const memberId = old.memberId || genMemberId(phone);
+
+    const profile = {
+      memberId: memberId,
+      fullname: fullname,
+      phone: phone,
+      address: address,
+      nickname: nickname || fullname.split(' ')[0],
+      registeredAt: old.registeredAt || Date.now(),
+      updatedAt: Date.now()
+    };
+
+    saveMemberProfile(profile);
+
+    // จำในระบบ Yateem Kitchen ด้วย (แชร์ localStorage บนโดเมนเดียวกัน)
+    try{
+      localStorage.setItem('yateemMemberProfile', JSON.stringify(profile));
+      // เซฟโปรไฟล์สั่งอาหารสำหรับ auto-prefill ในร้านค้า
+      const uid = 'member_' + phone;
+      localStorage.setItem('yateemProfile_' + uid, JSON.stringify({ fullname:fullname, phone:phone, address:address }));
+      localStorage.setItem('yateemLastLineUid', uid);
+    }catch(e){}
+
+    updateProfileBtn(firebase.auth && firebase.auth().currentUser);
+    updateChatNote();
+    toast('บันทึกข้อมูลสมาชิกเรียบร้อยแล้วค่ะ 🌟');
+    openLogin(); // แสดงบัตรสมาชิก
+  }
+
+  function openKitchenFromMember(){
+    closeLogin();
+    showTab('market');
+    setMarketPage('shop');
+  }
+
+  function openTrackFromMember(){
+    closeLogin();
+    showTab('market');
+    setMarketPage('track');
+  }
+
   // แปลง error ของ Firebase เป็นข้อความไทย - คืน '' ถ้าไม่ต้องแจ้ง
   function loginErrorText(e){
     const code=(e&&e.code)||'';
@@ -2257,8 +2497,7 @@
     if(code==='auth/network-request-failed') return 'เชื่อมต่ออินเทอร์เน็ตไม่สำเร็จ กรุณาลองใหม่อีกครั้งค่ะ';
     return 'เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้งค่ะ'+(code?' ('+code+')':'');
   }
-  // popup ก่อน: ล็อกอินเสร็จในหน้าเดิมและจำไว้ในเครื่อง (redirect ข้ามโดเมน github.io ↔ firebaseapp.com
-  // มักหายกลางทางใน Safari/เบราว์เซอร์ที่บล็อก third-party storage = กดแล้วกลับมาไม่ติด) — โดนบล็อกค่อย redirect
+
   async function socialLogin(provider){
     if(!initFirebaseApp()){ toast('ระบบยังไม่พร้อมค่ะ'); return; }
     try{
@@ -2274,8 +2513,6 @@
     }
   }
 
-  // ---- จำโปรไฟล์ LINE ไว้ในเครื่อง: เปิดแอปครั้งหน้าโชว์ชื่อ/รูปได้ทันที ไม่ต้องรอ/พึ่ง LIFF ----
-  // ในทีวี LINE ใช้แค่ชื่อ/รูปในแชท (ไม่ใช่สิทธิ์ใดๆ) จึงใช้โปรไฟล์ที่จำไว้ได้แม้ LIFF จะหลุดไป — ออกจากระบบ = ลบทิ้ง
   const LINE_PROFILE_KEY='yt_line_profile', LINE_PROFILE_MAX_AGE=90*24*3600*1000;
   function saveLineProfile(p){
     if(!p || !p.userId) return;
@@ -2288,15 +2525,13 @@
     }catch(e){}
   }
   function loginGoogle(){ socialLogin(new firebase.auth.GoogleAuthProvider()); }
-  // ปิดปุ่มไว้ชั่วคราว รอ Meta ยืนยันธุรกิจ (แอป Facebook ยังไม่ Live) - ใส่ปุ่มกลับในหน้าล็อกอินเมื่อพร้อม
   function loginFacebook(){ socialLogin(new firebase.auth.FacebookAuthProvider()); }
   async function loginLine(){
     try{
       if(!liffReady){
         toast('กำลังเชื่อมต่อ LINE…');
-        await initLiff();                                   // ลองโหลด/เริ่ม LIFF ใหม่อีกรอบ
+        await initLiff();
         if(!liffReady){
-          // ยังไม่ได้ → เปิดผ่านลิงก์ LIFF แทน: มือถือจะเข้าแอป LINE และล็อกอินให้อัตโนมัติ
           const code=liffErr||'unknown';
           if(CONFIG.liffId && !/[?&]liffFallback=1/.test(location.search)){
             location.href='https://liff.line.me/'+CONFIG.liffId+'?liffFallback=1'; return;
@@ -2304,37 +2539,62 @@
           toast('เชื่อมต่อ LINE ไม่สำเร็จ ('+code+') กรุณาลองใหม่ค่ะ'); return;
         }
       }
-      if(!liff.isLoggedIn()){ localStorage.setItem('yt_line','1'); liff.login(); return; }  // redirect ไป LINE
+      if(!liff.isLoggedIn()){ localStorage.setItem('yt_line','1'); liff.login(); return; }
       lineProfile=await liff.getProfile(); localStorage.setItem('yt_line','1'); saveLineProfile(lineProfile);
       applyUserState((firebase.auth&&firebase.auth().currentUser)||null);
       closeLogin(); toast('เข้าสู่ระบบ LINE แล้วค่ะ');
     }catch(e){ toast('เข้าสู่ระบบ LINE ไม่สำเร็จค่ะ'); console.error(e); }
   }
+
   async function logoutUser(){
+    if(!confirm('ต้องการออกจากระบบและลบข้อมูลสมาชิกในเครื่องนี้หรือไม่?')) return;
     try{
-      if(lineProfile){ lineProfile=null; try{ localStorage.removeItem('yt_line'); localStorage.removeItem(LINE_PROFILE_KEY); }catch(e){}
-        try{ if(liffReady && !inClient && liff.isLoggedIn()) liff.logout(); }catch(e){} }
-      const u=firebase.auth().currentUser;
+      if(lineProfile){
+        lineProfile=null;
+        try{ localStorage.removeItem('yt_line'); localStorage.removeItem(LINE_PROFILE_KEY); }catch(e){}
+        try{ if(liffReady && !inClient && liff.isLoggedIn()) liff.logout(); }catch(e){}
+      }
+      const u=firebase.auth && firebase.auth().currentUser;
       if(u && !u.isAnonymous){ await firebase.auth().signOut(); }
+      try{
+        localStorage.removeItem(MEMBER_PROFILE_KEY);
+        localStorage.removeItem('yt_nick');
+        localStorage.removeItem('yateemMemberProfile');
+      }catch(e){}
       toast('ออกจากระบบแล้วค่ะ'); closeLogin(); location.hash=''; location.reload();
     }catch(e){ toast('ออกจากระบบไม่สำเร็จค่ะ'); console.error(e); }
   }
+
   function updateProfileBtn(user){
     const btn=document.getElementById('profile-btn'); if(!btn) return;
     const id=currentIdentity();
-    const loggedIn=(user && !user.isAnonymous) || (lineProfile && lineProfile.displayName);
+    const mem=readMemberProfile();
+    const loggedIn=(user && !user.isAnonymous) || (lineProfile && lineProfile.displayName) || (mem && (mem.fullname || mem.phone));
     if(loggedIn){
       btn.classList.add('in');
-      btn.innerHTML = id.photo ? `<img src="${esc(id.photo)}" alt="">` : esc((id.name||'👤').charAt(0));
-      btn.title=id.name||'โปรไฟล์';
-    }else{ btn.classList.remove('in'); btn.textContent='👤'; btn.title='เข้าสู่ระบบ'; }
+      if(mem && (mem.fullname || mem.phone)) btn.classList.add('is-member');
+      else btn.classList.remove('is-member');
+      btn.innerHTML = id.photo ? `<img src="${esc(id.photo)}" alt="">` : (mem ? '🌟' : esc((id.name||'👤').charAt(0)));
+      btn.title=(id.name||'โปรไฟล์') + (mem ? ' (สมาชิก Yateem)' : '');
+    }else{
+      btn.classList.remove('in', 'is-member');
+      btn.textContent='👤';
+      btn.title='เข้าสู่ระบบ & สมาชิก';
+    }
   }
+
   function updateChatNote(){
     const note=document.getElementById('chat-note'); if(!note) return;
     if(!chatOn) return;
     const id=currentIdentity();
-    if(id.name){ note.innerHTML=esc(lbl('chatAs'))+' <b>'+esc(id.name)+'</b>'; }
-    else { note.innerHTML=esc(lbl('chatGuestHint'))+' <span class="login-link" onclick="openLogin()">'+esc(lbl('chatLoginLink'))+'</span>'; }
+    const mem=readMemberProfile();
+    if(mem && mem.fullname){
+      note.innerHTML='🌟 แชทในชื่อสมาชิก <b>'+esc(id.name)+'</b>';
+    } else if(id.name){
+      note.innerHTML=esc(lbl('chatAs'))+' <b>'+esc(id.name)+'</b>';
+    } else {
+      note.innerHTML=esc(lbl('chatGuestHint'))+' <span class="login-link" onclick="openLogin()">'+esc(lbl('chatLoginLink'))+'</span>';
+    }
   }
 
   /* ============================================================
