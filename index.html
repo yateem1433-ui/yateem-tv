@@ -1320,7 +1320,7 @@
       <div id="login-profile" style="display:none">
         <div class="member-card" id="mem-card-view">
           <div class="mc-header">
-            <span class="mc-badge">🌟 สมาชิก VIP YATEEM TV</span>
+            <span class="mc-badge" id="mc-badge">🌟 สมาชิก YATEEM TV</span>
             <span class="mc-id" id="mc-member-id">YT-XXXX</span>
           </div>
           <div class="mc-identity-row">
@@ -1330,7 +1330,7 @@
             </div>
             <div>
               <div class="mc-name" id="mc-fullname">ชื่อสมาชิก</div>
-              <div style="font-size:12px;color:var(--accent);">✅ สมาชิกระบบเชื่อมต่อ Yateem Kitchen</div>
+              <div id="mc-tier-desc" style="font-size:12px;color:var(--accent);line-height:1.4">✅ สมาชิกระบบเชื่อมต่อ Yateem Kitchen</div>
             </div>
           </div>
           <div class="mc-info">
@@ -2569,7 +2569,13 @@
 
     const nameEl = document.getElementById('mwt-username');
     const avEl = document.getElementById('mwt-avatar');
+    const isVip = !!(p && (p.isVip || p.tier === 'VIP'));
+    const badgeEl = banner.querySelector('.mwt-badge');
+    const subEl = banner.querySelector('.mwt-sub');
+
     if(nameEl) nameEl.textContent = p.nickname || p.fullname || 'สมาชิก';
+    if(badgeEl) badgeEl.textContent = isVip ? '👑 สมาชิก VIP YATEEM TV' : '✨ สมาชิก YATEEM TV';
+    if(subEl) subEl.textContent = isVip ? 'สมาชิก VIP · ดูสดและสั่งอาหารได้ทันที (แตะดูบัตร) 👑' : 'สมาชิกทั่วไป · สั่งอาหารครบ 2,000 บ./ด. รับสิทธิ์ VIP 🌟';
 
     if(avEl){
       if(p.avatar && (p.avatar.startsWith('data:') || p.avatar.startsWith('http'))){
@@ -2612,6 +2618,30 @@
       const mcSocial = document.getElementById('mc-social');
       const mcAvImg = document.getElementById('mc-avatar-img');
       const mcAvFb = document.getElementById('mc-avatar-fallback');
+      const mcBadge = document.getElementById('mc-badge');
+      const mcTierDesc = document.getElementById('mc-tier-desc');
+
+      const isVip = !!(mem && (mem.isVip || mem.tier === 'VIP'));
+      if(mcBadge){
+        if(isVip){
+          mcBadge.innerHTML = '👑 สมาชิก VIP YATEEM TV';
+          mcBadge.style.background = 'linear-gradient(135deg, rgba(234,185,52,.35), rgba(234,185,52,.12))';
+          mcBadge.style.borderColor = 'var(--accent)';
+          mcBadge.style.boxShadow = '0 0 12px var(--glow)';
+        } else {
+          mcBadge.innerHTML = '🌟 สมาชิกทั่วไป YATEEM';
+          mcBadge.style.background = 'rgba(255,255,255,.08)';
+          mcBadge.style.borderColor = 'var(--stroke)';
+          mcBadge.style.boxShadow = 'none';
+        }
+      }
+      if(mcTierDesc){
+        if(isVip){
+          mcTierDesc.innerHTML = '👑 <strong style="color:var(--accent)">สิทธิพิเศษสมาชิก VIP</strong> (ยอด &ge; 2,000 บ./ด. หรือ 12,000 บ./ปี)';
+        } else {
+          mcTierDesc.innerHTML = '🌟 สั่งซื้อสะสมครบ 2,000 บ./เดือน หรือ 12,000 บ./ปี รับสิทธิ์ VIP 👑';
+        }
+      }
 
       const name = (mem && mem.fullname) || id.name || 'ผู้ใช้';
       const nick = (mem && mem.nickname && mem.nickname !== mem.fullname) ? (' (' + mem.nickname + ')') : '';
@@ -2906,16 +2936,19 @@
     const loggedIn=(user && !user.isAnonymous) || (lineProfile && lineProfile.displayName) || (mem && (mem.fullname || mem.phone));
     if(loggedIn){
       btn.classList.add('in');
+      const isVip = !!(mem && (mem.isVip || mem.tier === 'VIP'));
       if(mem && (mem.fullname || mem.phone)) btn.classList.add('is-member');
       else btn.classList.remove('is-member');
+      if(isVip) btn.classList.add('is-vip');
+      else btn.classList.remove('is-vip');
       if(id.photo) {
-        btn.innerHTML = `<img src="${esc(id.photo)}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+        btn.innerHTML = `<img src="${esc(id.photo)}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;${isVip ? 'border:2px solid var(--accent);' : ''}">`;
       } else if(id.avatarIcon) {
         btn.innerHTML = `<span style="font-size:18px;">${id.avatarIcon}</span>`;
       } else {
-        btn.innerHTML = mem ? '🌟' : esc((id.name||'👤').charAt(0));
+        btn.innerHTML = isVip ? '👑' : (mem ? '🌟' : esc((id.name||'👤').charAt(0)));
       }
-      btn.title=(id.name||'โปรไฟล์') + (mem ? ' (สมาชิก YATEEM TV)' : '');
+      btn.title=(id.name||'โปรไฟล์') + (isVip ? ' (👑 สมาชิก VIP YATEEM TV)' : (mem ? ' (🌟 สมาชิก YATEEM TV)' : ''));
     }else{
       btn.classList.remove('in', 'is-member');
       btn.textContent='👤';
