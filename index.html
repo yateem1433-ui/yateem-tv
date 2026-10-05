@@ -2503,7 +2503,12 @@
     if(!e.data) return;
     if(e.data.type === 'YATEEM_REQUEST_MEMBER'){
       const p = readMemberProfile() || readSavedMember();
-      if(p) syncMemberToIframe(p);
+      if(p){
+        if(e.source && e.source.postMessage){
+          try{ e.source.postMessage({ type:'YATEEM_MEMBER_SYNC', profile:p }, '*'); }catch(err){}
+        }
+        syncMemberToIframe(p);
+      }
       return;
     }
     // สมาชิกแก้ไขล่าสุดจากหน้าเว็บ YATEEM TV เท่านั้นทั้งสองเว็บ - รักษาชื่อ ที่อยู่ เบอร์โทรเดิมของ YATEEM TV ไว้เสมอ
