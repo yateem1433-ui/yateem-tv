@@ -134,7 +134,9 @@
     .chip.live .dot{ width:9px; height:9px; border-radius:50%; background:#ff3b46;
       box-shadow:0 0 0 0 rgba(255,59,70,.7); animation:pulse 1.6s infinite; }
     @keyframes pulse{ 0%{box-shadow:0 0 0 0 rgba(255,59,70,.6)} 70%{box-shadow:0 0 0 10px rgba(255,59,70,0)} 100%{box-shadow:0 0 0 0 rgba(255,59,70,0)} }
-    .chip.viewers{ color:var(--text); }
+    .chip.viewers{ color:var(--text); cursor:pointer; user-select:none; transition:transform .15s ease, background .2s ease, border-color .2s ease; }
+    .chip.viewers:hover{ background:rgba(255,255,255,0.14); border-color:var(--accent); transform:translateY(-1px); }
+    .chip.viewers:active{ transform:scale(0.96); }
     /* คลัสเตอร์ ผู้ชม + โปรไฟล์ บนหัวจอ */
     header .live-cluster{ margin-left:auto; display:flex; align-items:center; gap:8px; }
     header .live-cluster .chip{ padding:5px 10px; font-size:12px; background:var(--glass); }
@@ -1397,16 +1399,6 @@
         <button class="share-btn" onclick="shareSite()" data-lbl="shareBtn">🔗 แชร์</button>
       </div>
 
-      <!-- แถบรายชื่อผู้รับชมสด (สไตล์ Facebook Live: แสดงอวาตาร์คนดูสด + แตะดูรายชื่อ) -->
-      <div class="viewers-bar glass" id="viewers-bar" onclick="openViewersModal()" role="button" tabindex="0" title="แตะเพื่อดูรายชื่อผู้รับชมทั้งหมด">
-        <div class="vb-lead">
-          <span class="vb-dot"></span>
-          <span class="vb-lbl">👥 ผู้ชมสด:</span>
-        </div>
-        <div class="vb-avatars" id="vb-avatars"></div>
-        <span class="vb-more" id="vb-more">ดูทั้งหมด ›</span>
-      </div>
-
       <!-- แจ้งเตือนเมื่อมีคนส่งความรู้สึกถึงเจ้าของข้อความ -->
       <div class="rx-notify-layer" id="rx-notify-layer"></div>
 
@@ -1419,7 +1411,7 @@
         <div class="live-join-toast-layer" id="live-join-toast-layer"></div>
         <!-- แถบระบุและแก้ไขชื่อผู้ส่ง (แชทได้ทันที ไม่ต้องพึ่ง prompt) -->
         <div class="chat-identity-bar" id="chat-identity-bar">
-          <span>💬 ส่งในชื่อ: <b id="ci-name">ผู้ชม</b></span>
+          <span>💬 ส่งในชื่อ: <b id="ci-name">แอดไม่ประสงค์ออกนาม</b></span>
           <button type="button" class="cib-edit-btn" onclick="openEditNickModal()" title="แตะเพื่อเปลี่ยนชื่อ">✏️ เปลี่ยนชื่อ</button>
         </div>
         <!-- แถบพรีวิวการตอบกลับข้อความ -->
@@ -2582,21 +2574,21 @@
     updateProfileBtn(user);
     updateChatNote();
     updateIdentityBar();
+    syncMyPresence();
   }
 
-  // ---- identity: ชื่อ/รูป สำหรับแชท (สมาชิก Yateem → social user → LINE → ชื่อเล่น / Guest) ----
+  // ---- identity: ชื่อ/รูป สำหรับแชท (สมาชิก Yateem → social user → LINE → ชื่อเล่น / แอดไม่ประสงค์ออกนาม) ----
   function getOrInitGuestName(){
-    let n = localStorage.getItem('yt_nick') || '';
-    if(!n){
-      const rnd = Math.floor(1000 + Math.random() * 9000);
-      n = 'ผู้ชม #' + rnd;
+    let n = (localStorage.getItem('yt_nick') || '').trim();
+    if(!n || n === 'ผู้ชม' || n.startsWith('ผู้ชม #') || n.startsWith('ผู้ชม#')){
+      n = 'แอดไม่ประสงค์ออกนาม';
       localStorage.setItem('yt_nick', n);
     }
     return n;
   }
 
   function currentIdentity(){
-    const mem = readMemberProfile();
+    const mem = readMemberProfile() || (typeof readSavedMember === 'function' ? readSavedMember() : null);
     const u=(typeof firebase!=='undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if(mem && (mem.fullname || mem.nickname)) {
       const av = mem.avatar || '';
@@ -2606,21 +2598,56 @@
         photo: isImgUrl ? av : ((lineProfile && lineProfile.pictureUrl) || (u && u.photoURL) || ''),
         avatarIcon: !isImgUrl ? (av || '🌟') : '',
         isMember: true,
-        member: mem
+        member: mem,
+        role: (isAdmin || (u && isAdminUser(u))) ? 'admin' : 'member'
       };
     }
-    if(u && !u.isAnonymous && u.displayName) return { name:u.displayName, photo:u.photoURL||'' };
-    if(lineProfile && lineProfile.displayName) return { name:lineProfile.displayName, photo:lineProfile.pictureUrl||'' };
-    return { name: getOrInitGuestName(), photo:'' };
+    if(u && !u.isAnonymous && u.displayName) {
+      return {
+        name: u.displayName,
+        photo: u.photoURL || '',
+        role: (isAdmin || isAdminUser(u)) ? 'admin' : 'member'
+      };
+    }
+    if(lineProfile && lineProfile.displayName) {
+      return {
+        name: lineProfile.displayName,
+        photo: lineProfile.pictureUrl || '',
+        role: 'member'
+      };
+    }
+    if(isAdmin || (u && isAdminUser(u))) {
+      const saved = (localStorage.getItem('yt_nick') || '').trim();
+      const admName = (saved && !saved.startsWith('ผู้ชม')) ? saved : 'แอดมิน (ผู้ดูแล)';
+      return { name: admName, photo: (u && u.photoURL) || '', role: 'admin' };
+    }
+    return { name: getOrInitGuestName(), photo:'', role: getViewerRole() };
   }
   function displayName(){ return currentIdentity().name; }
   function ensureName(){ return displayName() || getOrInitGuestName(); }
 
   let myPresenceRef = null;
 
+  function syncMyPresence(){
+    if(!myPresenceRef || typeof firebase === 'undefined' || !firebase.database) return;
+    const ident = currentIdentity();
+    const role = getViewerRole();
+    const myName = (ident.name || 'แอดไม่ประสงค์ออกนาม').slice(0, 40);
+    myPresenceRef.set({
+      uid: (typeof myUid !== 'undefined' && myUid) ? myUid : '',
+      name: myName,
+      photo: (ident.photo || '').slice(0, 500),
+      avatarIcon: ident.avatarIcon || '',
+      role: role,
+      joinedAt: firebase.database.ServerValue.TIMESTAMP
+    }).catch(() => {
+      myPresenceRef.set(true).catch(()=>{});
+    });
+  }
+
   function updateIdentityBar(){
     const el = document.getElementById('ci-name');
-    if(el) el.textContent = displayName() || 'ผู้ชม';
+    if(el) el.textContent = displayName() || 'แอดไม่ประสงค์ออกนาม';
   }
 
   function openEditNickModal(){
@@ -2648,9 +2675,7 @@
     updateIdentityBar();
     toast('บันทึกชื่อเป็น "' + val + '" เรียบร้อยแล้วค่ะ');
     broadcastJoinEvent(true);
-    if(myPresenceRef){
-      myPresenceRef.update({ name: val }).catch(()=>{});
-    }
+    syncMyPresence();
   }
 
   /* ============================================================
@@ -2659,6 +2684,7 @@
 
   // ---- 1. จำแนกสถานะผู้ชม (Viewer Role & Stats) ----
   const VIEWER_ROLES = {
+    admin:     { key: 'admin',     label: 'ผู้ดูแลระบบ', icon: '🛡️', color: '#FF4D4D', bg: 'rgba(255,77,77,0.18)' },
     top_fan:   { key: 'top_fan',   label: 'แฟนตัวยง',   icon: '👑', color: '#FFB800', bg: 'rgba(255,184,0,0.18)' },
     member:    { key: 'member',    label: 'สมาชิก',     icon: '⭐', color: '#38EF7D', bg: 'rgba(56,239,125,0.18)' },
     returning: { key: 'returning', label: 'ผู้ชมประจำ', icon: '🔄', color: '#38A2FF', bg: 'rgba(56,162,255,0.18)' },
@@ -2677,8 +2703,12 @@
   }
 
   function getViewerRole(){
-    const mem = readMemberProfile();
+    if(isAdmin) return 'admin';
+    const mem = readMemberProfile() || (typeof readSavedMember === 'function' ? readSavedMember() : null);
     if(mem && (mem.fullname || mem.phone || mem.nickname)) return 'member';
+    const u = (typeof firebase!=='undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if(u && !u.isAnonymous) return isAdminUser(u) ? 'admin' : 'member';
+    if(lineProfile && lineProfile.displayName) return 'member';
     try {
       if(localStorage.getItem('yt_top_fan') === '1' || (typeof walletBal !== 'undefined' && walletBal > 0)) return 'top_fan';
     }catch(e){}
@@ -3074,7 +3104,7 @@
     try {
       if(!force && sessionStorage.getItem('yt_join_broadcasted')) return;
       sessionStorage.setItem('yt_join_broadcasted', '1');
-      const name = currentIdentity().name || 'ผู้ชม';
+      const name = currentIdentity().name || 'แอดไม่ประสงค์ออกนาม';
       const role = getViewerRole();
       const ref = db.ref(`rooms/${CONFIG.chat.roomId}/joins`).push();
       ref.set({
@@ -3123,14 +3153,16 @@
     const layer = document.getElementById('live-join-toast-layer');
     if(!layer) return;
     const r = VIEWER_ROLES[j.role] || VIEWER_ROLES.new;
+    const rawName = String(j.name || '').trim();
+    const cleanName = (!rawName || rawName === 'ผู้ชม' || rawName.startsWith('ผู้ชม #') || rawName.startsWith('ผู้ชม#')) ? 'แอดไม่ประสงค์ออกนาม' : rawName;
     const el = document.createElement('div');
     el.className = 'join-toast';
-    const initial = (j.name || '?').trim().charAt(0) || '?';
+    const initial = cleanName.charAt(0) || '?';
     const av = j.photo ? `<img class="jt-av" src="${esc(j.photo)}" alt="">` : `<div class="jt-av">${esc(initial)}</div>`;
     el.innerHTML = `
       ${av}
       <div class="jt-info">
-        <div class="jt-nm"><b>${esc(j.name)}</b> เข้าร่วมชมการถ่ายทอดสด</div>
+        <div class="jt-nm"><b>${esc(cleanName)}</b> เข้าร่วมชมการถ่ายทอดสด</div>
         <span class="viewer-badge badge-${esc(r.key)}" style="--bdg-col:${r.color};--bdg-bg:${r.bg}">
           <span class="vbi">${r.icon}</span>${esc(r.label)}
         </span>
@@ -3214,9 +3246,9 @@
 
     let filtered = currentViewersList;
     if(viewersTab === 'vip'){
-      filtered = currentViewersList.filter(v => v.role === 'top_fan' || v.role === 'member');
+      filtered = currentViewersList.filter(v => v.role === 'top_fan' || v.role === 'member' || v.role === 'admin');
     } else if(viewersTab === 'new'){
-      filtered = currentViewersList.filter(v => v.role === 'new');
+      filtered = currentViewersList.filter(v => v.role === 'new' || v.role === 'returning');
     }
 
     if(filtered.length === 0){
@@ -3226,7 +3258,9 @@
 
     listEl.innerHTML = filtered.map(v => {
       const r = VIEWER_ROLES[v.role] || VIEWER_ROLES.new;
-      const initial = (v.name || '?').trim().charAt(0) || '?';
+      const rawName = String(v.name || '').trim();
+      const cleanName = (!rawName || rawName === 'ผู้ชม' || rawName.startsWith('ผู้ชม #') || rawName.startsWith('ผู้ชม#')) ? 'แอดไม่ประสงค์ออกนาม' : rawName;
+      const initial = cleanName.charAt(0) || '?';
       let avHtml = `<div class="av">${esc(initial)}</div>`;
       if(v.photo && (v.photo.startsWith('http') || v.photo.startsWith('data:'))){
         avHtml = `<img class="av" src="${esc(v.photo)}" alt="">`;
@@ -3237,7 +3271,7 @@
         <div class="vs-item">
           ${avHtml}
           <div class="vs-cnt">
-            <div class="vs-name">${esc(v.name || 'ผู้ชม')}</div>
+            <div class="vs-name">${esc(cleanName)}</div>
             <div class="vs-sub">
               <span class="viewer-badge badge-${esc(r.key)}" style="--bdg-col:${r.color};--bdg-bg:${r.bg}">
                 <span class="vbi">${r.icon}</span>${esc(r.label)}
@@ -3259,19 +3293,7 @@
         const my=listRef.push();
         myPresenceRef = my;
         my.onDisconnect().remove();
-        const ident = currentIdentity();
-        const role = getViewerRole();
-        // ส่ง object ข้อมูลผู้ชม; หากกฎเดิมของเซิร์ฟเวอร์ยังไม่รองรับ ให้ fallback เป็น boolean true อัตโนมัติ
-        my.set({
-          uid: myUid || '',
-          name: (ident.name || 'ผู้ชม').slice(0, 40),
-          photo: (ident.photo || '').slice(0, 500),
-          avatarIcon: ident.avatarIcon || '',
-          role: role,
-          joinedAt: firebase.database.ServerValue.TIMESTAMP
-        }).catch(() => {
-          my.set(true).catch(()=>{});
-        });
+        syncMyPresence();
       }
     });
     listRef.on('value',snap=>{
@@ -3282,23 +3304,38 @@
 
       const raw = snap.val() || {};
       const list = [];
-      let guestIndex = 1;
       for(const k in raw){
         const v = raw[k];
+        let vUid = '';
+        let vName = '';
+        let vPhoto = '';
+        let vAvatarIcon = '';
+        let vRole = 'new';
+        let vJoinedAt = 0;
+
         if(v && typeof v === 'object'){
-          list.push({
-            key: k,
-            uid: v.uid || '',
-            name: v.name || ('ผู้ชม #' + (1000 + guestIndex)),
-            photo: v.photo || '',
-            avatarIcon: v.avatarIcon || '',
-            role: v.role || 'new',
-            joinedAt: v.joinedAt || 0
-          });
-        } else if(v === true){
-          list.push({ key: k, uid: '', name: 'ผู้ชม #' + (1000 + guestIndex), role: 'returning', joinedAt: 0 });
+          vUid = v.uid || '';
+          vName = (v.name || '').trim();
+          vPhoto = v.photo || '';
+          vAvatarIcon = v.avatarIcon || '';
+          vRole = v.role || 'new';
+          vJoinedAt = v.joinedAt || 0;
         }
-        guestIndex++;
+
+        // หากไม่มีชื่อ หรือชื่อขึ้นต้นด้วย "ผู้ชม #" หรือ "ผู้ชม#" หรือเป็น "ผู้ชม" ให้เปลี่ยนเป็น "แอดไม่ประสงค์ออกนาม"
+        if(!vName || vName === 'ผู้ชม' || vName.startsWith('ผู้ชม #') || vName.startsWith('ผู้ชม#')){
+          vName = 'แอดไม่ประสงค์ออกนาม';
+        }
+
+        list.push({
+          key: k,
+          uid: vUid,
+          name: vName,
+          photo: vPhoto,
+          avatarIcon: vAvatarIcon,
+          role: vRole,
+          joinedAt: vJoinedAt
+        });
       }
       currentViewersList = list;
       renderViewersBar();
@@ -3561,6 +3598,8 @@
       }
       if(p.nickname || p.fullname) localStorage.setItem('yt_nick', p.nickname || p.fullname);
       syncMemberToIframe(p);
+      updateIdentityBar();
+      syncMyPresence();
     }catch(e){}
   }
 
@@ -4093,6 +4132,8 @@
       toast('ออกจากระบบแล้วค่ะ (จำข้อมูลสมาชิกไว้ในเครื่อง)');
       updateProfileBtn(null);
       updateChatNote();
+      updateIdentityBar();
+      syncMyPresence();
       openLogin(); // แสดงหน้าเลือกพร้อมกล่องเข้าสู่ระบบต่อด้วยชื่อเดิม
     }catch(e){ toast('ออกจากระบบไม่สำเร็จค่ะ'); console.error(e); }
   }
