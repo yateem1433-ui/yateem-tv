@@ -2589,39 +2589,54 @@
 
   function currentIdentity(){
     const mem = readMemberProfile() || (typeof readSavedMember === 'function' ? readSavedMember() : null);
-    const u=(typeof firebase!=='undefined' && firebase.auth) ? firebase.auth().currentUser : null;
-    if(mem && (mem.fullname || mem.nickname)) {
+    const u = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+
+    // ตรวจสอบชื่อที่ผู้ใช้ตั้งเองในเครื่อง (Custom Nickname)
+    const customNick = (localStorage.getItem('yt_nick') || '').trim();
+    const hasCustomNick = !!(customNick && 
+      customNick !== 'ไม่ประสงค์ออกนาม' && 
+      customNick !== 'แอดไม่ประสงค์ออกนาม' && 
+      customNick !== 'ผู้ชม' && 
+      !customNick.startsWith('ผู้ชม #') && 
+      !customNick.startsWith('ผู้ชม#'));
+
+    let name = '';
+    let photo = '';
+    let avatarIcon = '';
+    let isMember = false;
+    let role = getViewerRole();
+
+    if(mem && (mem.fullname || mem.nickname || mem.phone)) {
+      isMember = true;
       const av = mem.avatar || '';
       const isImgUrl = av.startsWith('data:') || av.startsWith('http');
-      return {
-        name: mem.fullname || mem.nickname,
-        photo: isImgUrl ? av : ((lineProfile && lineProfile.pictureUrl) || (u && u.photoURL) || ''),
-        avatarIcon: !isImgUrl ? (av || '🌟') : '',
-        isMember: true,
-        member: mem,
-        role: (isAdmin || (u && isAdminUser(u))) ? 'admin' : 'member'
-      };
+      photo = isImgUrl ? av : ((lineProfile && lineProfile.pictureUrl) || (u && u.photoURL) || '');
+      avatarIcon = !isImgUrl ? (av || '🌟') : '';
+      name = hasCustomNick ? customNick : (mem.nickname || mem.fullname || '');
+    } else if(lineProfile && lineProfile.displayName) {
+      photo = lineProfile.pictureUrl || '';
+      name = hasCustomNick ? customNick : lineProfile.displayName;
+    } else if(u && !u.isAnonymous) {
+      photo = u.photoURL || '';
+      name = hasCustomNick ? customNick : (u.displayName || (u.email ? u.email.split('@')[0] : ''));
+    } else if(isAdmin || (u && isAdminUser(u))) {
+      role = 'admin';
+      photo = (u && u.photoURL) || '';
+      name = hasCustomNick ? customNick : 'แอดมิน (ผู้ดูแล)';
+    } else {
+      name = hasCustomNick ? customNick : getOrInitGuestName();
     }
-    if(u && !u.isAnonymous && u.displayName) {
-      return {
-        name: u.displayName,
-        photo: u.photoURL || '',
-        role: (isAdmin || isAdminUser(u)) ? 'admin' : 'member'
-      };
-    }
-    if(lineProfile && lineProfile.displayName) {
-      return {
-        name: lineProfile.displayName,
-        photo: lineProfile.pictureUrl || '',
-        role: 'member'
-      };
-    }
-    if(isAdmin || (u && isAdminUser(u))) {
-      const saved = (localStorage.getItem('yt_nick') || '').trim();
-      const admName = (saved && !saved.startsWith('ผู้ชม') && saved !== 'ไม่ประสงค์ออกนาม' && saved !== 'แอดไม่ประสงค์ออกนาม') ? saved : 'แอดมิน (ผู้ดูแล)';
-      return { name: admName, photo: (u && u.photoURL) || '', role: 'admin' };
-    }
-    return { name: getOrInitGuestName(), photo:'', role: getViewerRole() };
+
+    if(!name) name = 'ไม่ประสงค์ออกนาม';
+
+    return {
+      name: name,
+      photo: photo,
+      avatarIcon: avatarIcon,
+      isMember: isMember,
+      member: mem,
+      role: role
+    };
   }
   function displayName(){ return currentIdentity().name; }
   function ensureName(){ return displayName() || getOrInitGuestName(); }
@@ -2654,7 +2669,8 @@
     const bd = document.getElementById('nick-backdrop');
     const inp = document.getElementById('nick-input');
     if(bd && inp){
-      inp.value = displayName() || '';
+      const cur = displayName();
+      inp.value = (cur === 'ไม่ประสงค์ออกนาม' || cur === 'แอดไม่ประสงค์ออกนาม' || cur.startsWith('ผู้ชม')) ? '' : cur;
       bd.classList.add('open');
       setTimeout(() => { inp.focus(); inp.select(); }, 120);
     }
@@ -2671,11 +2687,31 @@
     const val = inp.value.trim().slice(0, 35);
     if(!val){ toast('กรุณาระบุชื่อของคุณค่ะ'); return; }
     localStorage.setItem('yt_nick', val);
+
+    // หากมีข้อมูลสมาชิก ให้อัปเดตชื่อเล่นในโปรไฟล์สมาชิกด้วย
+    try {
+      const mem = readMemberProfile() || (typeof readSavedMember === 'function' ? readSavedMember() : null);
+      if(mem){
+        mem.nickname = val;
+        saveMemberProfile(mem);
+      }
+    }catch(e){}
+
+    // หากมี Firebase Auth user พยายามอัปเดต displayName
+    try {
+      const u = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+      if(u && typeof u.updateProfile === 'function'){
+        u.updateProfile({ displayName: val }).catch(()=>{});
+      }
+    }catch(e){}
+
     closeEditNickModal();
     updateIdentityBar();
     toast('บันทึกชื่อเป็น "' + val + '" เรียบร้อยแล้วค่ะ');
     broadcastJoinEvent(true);
     syncMyPresence();
+    if(typeof renderViewersBar === 'function') renderViewersBar();
+    if(typeof renderViewersModalContent === 'function') renderViewersModalContent();
   }
 
   /* ============================================================
@@ -3210,6 +3246,7 @@
   // ---- 5. รายชื่อผู้รับชมสด (Facebook Live Style Viewers Bar & Modal) ----
   let currentViewersList = [];
   let viewersTab = 'all';
+  const knownViewerProfiles = {}; // uid -> { name, photo, avatarIcon, role, lastSeen }
 
   function renderViewersBar(){
     const bar = document.getElementById('viewers-bar');
@@ -3229,12 +3266,14 @@
     displayList.forEach(v => {
       const initial = (v.name || '?').trim().charAt(0) || '?';
       const roleCls = (v.role === 'top_fan') ? 'gold' : (v.role === 'member' ? 'green' : (v.role === 'new' ? 'blue' : ''));
+      const meBorder = v.isMe ? 'border:2px solid var(--accent);box-shadow:0 0 6px var(--accent);' : '';
+      const titleName = (v.name || 'ไม่ประสงค์ออกนาม') + (v.isMe ? ' (คุณ)' : '');
       if(v.photo && (v.photo.startsWith('http') || v.photo.startsWith('data:'))){
-        html += `<img class="vb-av ${roleCls}" src="${esc(v.photo)}" alt="${esc(v.name)}" title="${esc(v.name)}">`;
+        html += `<img class="vb-av ${roleCls}" style="${meBorder}" src="${esc(v.photo)}" alt="${esc(titleName)}" title="${esc(titleName)}">`;
       } else if(v.avatarIcon){
-        html += `<div class="vb-av ${roleCls}" title="${esc(v.name)}">${esc(v.avatarIcon)}</div>`;
+        html += `<div class="vb-av ${roleCls}" style="${meBorder}" title="${esc(titleName)}">${esc(v.avatarIcon)}</div>`;
       } else {
-        html += `<div class="vb-av ${roleCls}" title="${esc(v.name)}">${esc(initial)}</div>`;
+        html += `<div class="vb-av ${roleCls}" style="${meBorder}" title="${esc(titleName)}">${esc(initial)}</div>`;
       }
     });
 
@@ -3299,11 +3338,12 @@
       } else if(v.avatarIcon){
         avHtml = `<div class="av">${esc(v.avatarIcon)}</div>`;
       }
+      const isMeTag = v.isMe ? '<span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:10px;font-size:10px;font-weight:700;background:var(--accent);color:#070B14;vertical-align:middle;">คุณ</span>' : '';
       return `
-        <div class="vs-item">
+        <div class="vs-item${v.isMe ? ' vs-is-me' : ''}">
           ${avHtml}
           <div class="vs-cnt">
-            <div class="vs-name">${esc(cleanName)}</div>
+            <div class="vs-name">${esc(cleanName)}${isMeTag}</div>
             <div class="vs-sub">
               <span class="viewer-badge badge-${esc(r.key)}" style="--bdg-col:${r.color};--bdg-bg:${r.bg}">
                 <span class="vbi">${r.icon}</span>${esc(r.label)}
@@ -3336,14 +3376,20 @@
 
       const raw = snap.val() || {};
       const list = [];
+      let foundMe = false;
+      const myKey = myPresenceRef ? myPresenceRef.key : null;
+      const myId = currentIdentity();
+
       for(const k in raw){
         const v = raw[k];
+        const isMyKey = !!(myKey && k === myKey);
         let vUid = '';
         let vName = '';
         let vPhoto = '';
         let vAvatarIcon = '';
         let vRole = 'new';
         let vJoinedAt = 0;
+        let isMe = false;
 
         if(v && typeof v === 'object'){
           vUid = v.uid || '';
@@ -3354,9 +3400,29 @@
           vJoinedAt = v.joinedAt || 0;
         }
 
-        // หากไม่มีชื่อ หรือชื่อขึ้นต้นด้วย "ผู้ชม #" หรือ "ผู้ชม#" หรือเป็น "ผู้ชม" ให้เปลี่ยนเป็น "ไม่ประสงค์ออกนาม"
+        // ตรวจสอบว่าเป็นตัวผู้ใช้เองหรือไม่ (จาก connection key หรือ uid)
+        if(isMyKey || (myUid && vUid === myUid)){
+          isMe = true;
+          foundMe = true;
+          vUid = myUid || '';
+          vName = myId.name || displayName();
+          vPhoto = myId.photo || '';
+          vAvatarIcon = myId.avatarIcon || '';
+          vRole = myId.role || getViewerRole();
+        } else {
+          // หากเป็นผู้ชมอื่น และเคยมีแคชชื่อไว้
+          if(vUid && knownViewerProfiles[vUid]){
+            const kp = knownViewerProfiles[vUid];
+            if(!vName || vName === 'ไม่ประสงค์ออกนาม') vName = kp.name;
+            if(!vPhoto) vPhoto = kp.photo || '';
+            if(!vAvatarIcon) vAvatarIcon = kp.avatarIcon || '';
+            if(kp.role) vRole = kp.role;
+          }
+        }
+
+        // กรองชื่อ ถ้าไม่มีหรือเป็นชื่อระบบเริ่มต้น
         if(!vName || vName === 'ผู้ชม' || vName.startsWith('ผู้ชม #') || vName.startsWith('ผู้ชม#') || vName === 'แอดไม่ประสงค์ออกนาม'){
-          vName = 'ไม่ประสงค์ออกนาม';
+          vName = isMe ? (displayName() || 'ไม่ประสงค์ออกนาม') : 'ไม่ประสงค์ออกนาม';
         }
 
         list.push({
@@ -3366,9 +3432,35 @@
           photo: vPhoto,
           avatarIcon: vAvatarIcon,
           role: vRole,
-          joinedAt: vJoinedAt
+          joinedAt: vJoinedAt,
+          isMe: isMe
         });
       }
+
+      // หากตนเองออนไลน์อยู่แต่ Firebase ยังไม่รวมคีย์ ให้ใส่ตัวเองไว้ด้านบน
+      if(!foundMe && (myPresenceRef || chatOn)){
+        list.unshift({
+          key: myKey || 'me',
+          uid: myUid || '',
+          name: myId.name || displayName() || 'ไม่ประสงค์ออกนาม',
+          photo: myId.photo || '',
+          avatarIcon: myId.avatarIcon || '',
+          role: myId.role || getViewerRole(),
+          joinedAt: Date.now(),
+          isMe: true
+        });
+      }
+
+      // จัดลำดับ: ตนเองอยู่ลำดับแรกสุดเสมอ -> ผู้ชมที่มีชื่อ -> ผู้ชมที่ไม่ประสงค์ออกนาม
+      list.sort((a, b) => {
+        if(a.isMe && !b.isMe) return -1;
+        if(!a.isMe && b.isMe) return 1;
+        const aNamed = (a.name && a.name !== 'ไม่ประสงค์ออกนาม') ? 1 : 0;
+        const bNamed = (b.name && b.name !== 'ไม่ประสงค์ออกนาม') ? 1 : 0;
+        if(aNamed !== bNamed) return bNamed - aNamed;
+        return 0;
+      });
+
       currentViewersList = list;
       renderViewersBar();
       renderViewersModalContent();
@@ -3427,6 +3519,15 @@
         ts: m.ts || 0,
         badge: parsed.badge || ''
       };
+      if(m.uid && m.name && m.name !== 'ไม่ประสงค์ออกนาม' && m.name !== 'แอดไม่ประสงค์ออกนาม' && !m.name.startsWith('ผู้ชม')){
+        knownViewerProfiles[m.uid] = {
+          name: m.name,
+          photo: m.photo || '',
+          avatarIcon: m.avatarIcon || '',
+          role: parsed.badge || 'member',
+          lastSeen: m.ts || Date.now()
+        };
+      }
       if(m.uid === myUid){
         recordMySentMessage(snap.key);
       }
@@ -3515,6 +3616,15 @@
       db.ref(`rooms/${CONFIG.chat.roomId}/reactions`).orderByChild('ts').startAt(since)
         .on('child_added',snap=>{
           const r=snap.val()||{};
+          if(r.uid && r.name && r.name !== 'ไม่ประสงค์ออกนาม' && !r.name.startsWith('ผู้ชม')){
+            knownViewerProfiles[r.uid] = {
+              name: r.name,
+              photo: '',
+              avatarIcon: '',
+              role: 'member',
+              lastSeen: r.ts || Date.now()
+            };
+          }
           if(r.uid===myUid || !REACT_SET.has(r.e)) return;   // ของตัวเองลอยไปแล้วตอนกด
           spawnFloat(r.e, r.name);
         });
@@ -3593,7 +3703,14 @@
     firebase.auth().signInWithEmailAndPassword(email,pass)
       .then(cred=>{
         myUid=cred.user.uid; isAdmin=true; document.body.classList.add('is-mod');
+        const admName = 'แอดมิน (' + (cred.user.email ? cred.user.email.split('@')[0] : 'ผู้ดูแล') + ')';
+        const curNick = (localStorage.getItem('yt_nick') || '').trim();
+        if(!curNick || curNick === 'ไม่ประสงค์ออกนาม' || curNick === 'แอดไม่ประสงค์ออกนาม' || curNick.startsWith('ผู้ชม')){
+          localStorage.setItem('yt_nick', admName);
+        }
+        applyUserState(cred.user);
         toast('เข้าสู่ระบบแอดมินแล้ว (จำไว้ในเครื่องนี้)');
+        broadcastJoinEvent(true);
         if(openPanel) openAdmin();
       })
       .catch(()=>toast('ล็อกอินแอดมินไม่สำเร็จ'));
@@ -3643,6 +3760,8 @@
       syncMemberToIframe(p);
       updateIdentityBar();
       syncMyPresence();
+      if(typeof renderViewersBar === 'function') renderViewersBar();
+      if(typeof renderViewersModalContent === 'function') renderViewersModalContent();
     }catch(e){}
   }
 
@@ -4021,18 +4140,20 @@
     const memberId = old.memberId || genMemberId(phone);
 
     // ข้อมูลสมาชิกแก้ไขล่าสุดจากหน้าเว็บ YATEEM TV เท่านั้น (Master Source of Truth ทั้งสองเว็บ)
+    const chosenNick = nickname || fullname.split(' ')[0] || fullname;
     const profile = {
       memberId: memberId,
       fullname: fullname,
       phone: phone,
       address: address,
-      nickname: nickname || fullname.split(' ')[0],
+      nickname: chosenNick,
       avatar: currentMemberAvatar || old.avatar || '',
       source: 'YATEEM_TV',
       registeredAt: old.registeredAt || Date.now(),
       updatedAt: Date.now()
     };
 
+    localStorage.setItem('yt_nick', chosenNick);
     saveMemberProfile(profile);
 
     // จำในระบบ Yateem Kitchen ด้วย (แชร์ localStorage บนโดเมนเดียวกัน)
@@ -4046,16 +4167,18 @@
       localStorage.setItem('yateemLastLineUid', uid);
     }catch(e){}
 
-    updateProfileBtn(firebase.auth && firebase.auth().currentUser);
-    updateChatNote();
+    applyUserState(firebase.auth && firebase.auth().currentUser);
     showMemberWelcomeBanner(profile, true);
     toast('ลงทะเบียนสมาชิก YATEEM TV เรียบร้อยแล้วค่ะ 🌟');
+    broadcastJoinEvent(true);
     openLogin(); // แสดงบัตรสมาชิก
   }
 
   function restoreSavedMember(){
     const saved = readSavedMember();
     if(!saved){ toast('ไม่พบข้อมูลสมาชิกที่จำไว้ค่ะ'); return; }
+    const chosenNick = saved.nickname || saved.fullname;
+    if(chosenNick) localStorage.setItem('yt_nick', chosenNick);
     saveMemberProfile(saved);
     try{
       localStorage.setItem('yateemMemberProfile', JSON.stringify(saved));
@@ -4063,10 +4186,10 @@
       localStorage.setItem('yateemProfile_' + uid, JSON.stringify({ fullname:saved.fullname, phone:saved.phone, address:saved.address }));
       localStorage.setItem('yateemLastLineUid', uid);
     }catch(e){}
-    updateProfileBtn(firebase.auth && firebase.auth().currentUser);
-    updateChatNote();
+    applyUserState(firebase.auth && firebase.auth().currentUser);
     showMemberWelcomeBanner(saved, false);
-    toast('ยินดีต้อนรับกลับ คุณ ' + (saved.nickname || saved.fullname) + ' 🌟');
+    toast('ยินดีต้อนรับกลับ คุณ ' + chosenNick + ' 🌟');
+    broadcastJoinEvent(true);
     openLogin();
   }
 
@@ -4082,6 +4205,10 @@
     currentMemberAvatar = '';
     updateProfileBtn(null);
     updateChatNote();
+    updateIdentityBar();
+    syncMyPresence();
+    if(typeof renderViewersBar === 'function') renderViewersBar();
+    if(typeof renderViewersModalContent === 'function') renderViewersModalContent();
     toast('ลบข้อมูลสมาชิกที่จำไว้เรียบร้อยแล้วค่ะ');
     openLogin();
   }
@@ -4111,8 +4238,18 @@
   async function socialLogin(provider){
     if(!initFirebaseApp()){ toast('ระบบยังไม่พร้อมค่ะ'); return; }
     try{
-      await firebase.auth().signInWithPopup(provider);
+      const cred = await firebase.auth().signInWithPopup(provider);
+      const user = (cred && cred.user) || firebase.auth().currentUser;
+      if(user){
+        const curNick = (localStorage.getItem('yt_nick') || '').trim();
+        if(!curNick || curNick === 'ไม่ประสงค์ออกนาม' || curNick === 'แอดไม่ประสงค์ออกนาม' || curNick.startsWith('ผู้ชม')){
+          const newName = user.displayName || (user.email ? user.email.split('@')[0] : '');
+          if(newName) localStorage.setItem('yt_nick', newName);
+        }
+        applyUserState(user);
+      }
       closeLogin(); toast('เข้าสู่ระบบแล้วค่ะ');
+      broadcastJoinEvent(true);
     }catch(e){
       const code=(e&&e.code)||'';
       if(code==='auth/popup-blocked'||code==='auth/operation-not-supported-in-this-environment'){
@@ -4151,8 +4288,15 @@
       }
       if(!liff.isLoggedIn()){ localStorage.setItem('yt_line','1'); liff.login(); return; }
       lineProfile=await liff.getProfile(); localStorage.setItem('yt_line','1'); saveLineProfile(lineProfile);
+      if(lineProfile && lineProfile.displayName){
+        const curNick = (localStorage.getItem('yt_nick') || '').trim();
+        if(!curNick || curNick === 'ไม่ประสงค์ออกนาม' || curNick === 'แอดไม่ประสงค์ออกนาม' || curNick.startsWith('ผู้ชม')){
+          localStorage.setItem('yt_nick', lineProfile.displayName);
+        }
+      }
       applyUserState((firebase.auth&&firebase.auth().currentUser)||null);
       closeLogin(); toast('เข้าสู่ระบบ LINE แล้วค่ะ');
+      broadcastJoinEvent(true);
     }catch(e){ toast('เข้าสู่ระบบ LINE ไม่สำเร็จค่ะ'); console.error(e); }
   }
 
@@ -4177,6 +4321,8 @@
       updateChatNote();
       updateIdentityBar();
       syncMyPresence();
+      if(typeof renderViewersBar === 'function') renderViewersBar();
+      if(typeof renderViewersModalContent === 'function') renderViewersModalContent();
       openLogin(); // แสดงหน้าเลือกพร้อมกล่องเข้าสู่ระบบต่อด้วยชื่อเดิม
     }catch(e){ toast('ออกจากระบบไม่สำเร็จค่ะ'); console.error(e); }
   }
