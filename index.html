@@ -270,6 +270,37 @@
     .mrp img{ width:16px; height:16px; object-fit:contain; }
     .mrp-cnt{ font-size:11px; font-weight:600; }
 
+    /* ---- Facebook style dynamic reaction button on messages ---- */
+    .msg-act-btn.btn-react{
+      display:inline-flex; align-items:center; justify-content:center;
+      transition:transform .15s cubic-bezier(0.18, 0.89, 0.32, 1.28), background .15s ease, border-color .15s ease;
+      min-width:24px; min-height:24px;
+    }
+    .msg-act-btn.btn-react.is-reacted{
+      background:rgba(234,185,52,0.22) !important;
+      border:1px solid var(--accent) !important;
+      box-shadow:0 0 8px rgba(234,185,52,0.4);
+      transform:scale(1.1);
+    }
+    .msg-act-btn.btn-react.is-reacted img{
+      width:18px; height:18px; object-fit:contain; pointer-events:none; display:block;
+    }
+
+    /* ---- chat identity bar (non-blocking guest name display) ---- */
+    .chat-identity-bar{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:4px 10px; margin-bottom:6px;
+      background:rgba(255,255,255,0.04); border-radius:10px;
+      font-size:11px; color:var(--muted); border:1px solid rgba(255,255,255,0.07);
+    }
+    .chat-identity-bar b{ color:var(--accent); font-weight:700; margin-left:3px; }
+    .cib-edit-btn{
+      background:none; border:none; color:var(--accent); cursor:pointer;
+      font-size:11px; font-weight:600; padding:2px 6px; border-radius:6px;
+      transition:background .15s ease;
+    }
+    .cib-edit-btn:hover{ background:rgba(234,185,52,0.15); }
+
     /* ---- reaction popover picker (No Mobile Overflow) ---- */
     .msg-react-popover{
       position:fixed; z-index:9999;
@@ -1386,6 +1417,11 @@
         <div class="react-float" id="react-float"></div>
         <!-- แจ้งเตือนผู้ชมเข้าร่วมไลฟ์ (สไตล์ Facebook Live) -->
         <div class="live-join-toast-layer" id="live-join-toast-layer"></div>
+        <!-- แถบระบุและแก้ไขชื่อผู้ส่ง (แชทได้ทันที ไม่ต้องพึ่ง prompt) -->
+        <div class="chat-identity-bar" id="chat-identity-bar">
+          <span>💬 ส่งในชื่อ: <b id="ci-name">ผู้ชม</b></span>
+          <button type="button" class="cib-edit-btn" onclick="openEditNickModal()" title="แตะเพื่อเปลี่ยนชื่อ">✏️ เปลี่ยนชื่อ</button>
+        </div>
         <!-- แถบพรีวิวการตอบกลับข้อความ -->
         <div class="chat-reply-bar" id="chat-reply-bar" style="display:none">
           <div class="crb-content">
@@ -1872,6 +1908,20 @@
       </div>
       <div class="vs-list" id="vs-list">
         <div class="sched-empty" style="padding:24px 0">กำลังโหลดรายชื่อผู้ชม...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: เปลี่ยนชื่อเล่น / ชื่อจริงสำหรับแชท -->
+  <div class="backdrop" id="nick-backdrop" onclick="if(event.target===this)closeEditNickModal()">
+    <div class="sheet glass nick-sheet" style="position:relative;max-width:420px">
+      <button class="close" onclick="closeEditNickModal()">×</button>
+      <h2 style="font-size:18px;margin-bottom:6px">✏️ ตั้งชื่อสำหรับแชทสด</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px">ชื่อนี้จะแสดงในช่องแชทและรายชื่อผู้รับชมสดทันที</p>
+      <input type="text" id="nick-input" class="nick-inp" placeholder="พิมพ์ชื่อของคุณ..." maxlength="35" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;background:var(--glass-2);border:1px solid var(--accent);color:var(--text);font-size:15px;margin-bottom:14px" onkeydown="if(event.key==='Enter')saveNickname()">
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button type="button" class="mini" onclick="closeEditNickModal()" style="padding:8px 16px;border-radius:10px">ยกเลิก</button>
+        <button type="button" class="mini primary-mini" onclick="saveNickname()" style="padding:8px 20px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#070B14;font-weight:700">บันทึกชื่อ</button>
       </div>
     </div>
   </div>
@@ -2516,6 +2566,7 @@
       broadcastJoinEvent();
       handleAdminHash();
       updateChatNote();
+      updateIdentityBar();
       // ล้างแชทเก่าอัตโนมัติเมื่อเป็นแอดมิน (ผู้ชมทั่วไปไม่มีสิทธิ์ลบ — pruneChat กันเองอยู่แล้ว)
       setTimeout(()=>{ if(isAdmin) pruneChat(CONFIG.chat.keepLast||200, {auto:true}); }, 8000);
       setInterval(()=>{ if(isAdmin) pruneChat(CONFIG.chat.keepLast||200, {auto:true}); }, 300000);  // ทุก 5 นาที
@@ -2530,17 +2581,28 @@
     bindWallet();
     updateProfileBtn(user);
     updateChatNote();
+    updateIdentityBar();
   }
 
-  // ---- identity: ชื่อ/รูป สำหรับแชท (สมาชิก Yateem → social user → LINE → ชื่อเล่น) ----
+  // ---- identity: ชื่อ/รูป สำหรับแชท (สมาชิก Yateem → social user → LINE → ชื่อเล่น / Guest) ----
+  function getOrInitGuestName(){
+    let n = localStorage.getItem('yt_nick') || '';
+    if(!n){
+      const rnd = Math.floor(1000 + Math.random() * 9000);
+      n = 'ผู้ชม #' + rnd;
+      localStorage.setItem('yt_nick', n);
+    }
+    return n;
+  }
+
   function currentIdentity(){
     const mem = readMemberProfile();
     const u=(typeof firebase!=='undefined' && firebase.auth) ? firebase.auth().currentUser : null;
-    if(mem && (mem.nickname || mem.fullname)) {
+    if(mem && (mem.fullname || mem.nickname)) {
       const av = mem.avatar || '';
       const isImgUrl = av.startsWith('data:') || av.startsWith('http');
       return {
-        name: mem.nickname || mem.fullname,
+        name: mem.fullname || mem.nickname,
         photo: isImgUrl ? av : ((lineProfile && lineProfile.pictureUrl) || (u && u.photoURL) || ''),
         avatarIcon: !isImgUrl ? (av || '🌟') : '',
         isMember: true,
@@ -2549,18 +2611,46 @@
     }
     if(u && !u.isAnonymous && u.displayName) return { name:u.displayName, photo:u.photoURL||'' };
     if(lineProfile && lineProfile.displayName) return { name:lineProfile.displayName, photo:lineProfile.pictureUrl||'' };
-    return { name:(localStorage.getItem('yt_nick')||''), photo:'' };
+    return { name: getOrInitGuestName(), photo:'' };
   }
   function displayName(){ return currentIdentity().name; }
-  function ensureName(){
-    let n=displayName();
-    if(n) return n;
-    n=(prompt('ตั้งชื่อเล่นสำหรับแชท','')||'').trim().slice(0,40);
-    if(n){
-      localStorage.setItem('yt_nick',n);
-      broadcastJoinEvent();
+  function ensureName(){ return displayName() || getOrInitGuestName(); }
+
+  let myPresenceRef = null;
+
+  function updateIdentityBar(){
+    const el = document.getElementById('ci-name');
+    if(el) el.textContent = displayName() || 'ผู้ชม';
+  }
+
+  function openEditNickModal(){
+    const bd = document.getElementById('nick-backdrop');
+    const inp = document.getElementById('nick-input');
+    if(bd && inp){
+      inp.value = displayName() || '';
+      bd.classList.add('open');
+      setTimeout(() => { inp.focus(); inp.select(); }, 120);
     }
-    return n;
+  }
+
+  function closeEditNickModal(){
+    const bd = document.getElementById('nick-backdrop');
+    if(bd) bd.classList.remove('open');
+  }
+
+  function saveNickname(){
+    const inp = document.getElementById('nick-input');
+    if(!inp) return;
+    const val = inp.value.trim().slice(0, 35);
+    if(!val){ toast('กรุณาระบุชื่อของคุณค่ะ'); return; }
+    localStorage.setItem('yt_nick', val);
+    closeEditNickModal();
+    updateIdentityBar();
+    toast('บันทึกชื่อเป็น "' + val + '" เรียบร้อยแล้วค่ะ');
+    broadcastJoinEvent(true);
+    if(myPresenceRef){
+      myPresenceRef.update({ name: val }).catch(()=>{});
+    }
   }
 
   /* ============================================================
@@ -2883,10 +2973,15 @@
     }
   });
 
+  function onMsgReactClick(msgKey, btnEl, ev){
+    if(ev){ ev.stopPropagation(); ev.preventDefault(); }
+    openMsgReactPopover(msgKey, btnEl, ev);
+  }
+
   function toggleMsgReaction(msgKey, emoji){
     if(!chatOn || !db || !myUid) { toast('กรุณารอแชทเชื่อมต่อสักครู่ค่ะ'); return; }
     const name = ensureName();
-    if(!name){ toast('กรุณาตั้งชื่อเล่นก่อนส่งความรู้สึกค่ะ'); return; }
+    if(!name){ toast('กรุณาระบุชื่อก่อนส่งความรู้สึกค่ะ'); return; }
     const ref = db.ref(`rooms/${CONFIG.chat.roomId}/messageReactions/${msgKey}/${myUid}`);
     const current = (msgReactionsCache[msgKey] && msgReactionsCache[msgKey][myUid]) ? msgReactionsCache[msgKey][myUid].e : null;
     
@@ -2895,22 +2990,53 @@
     const targetSnippet = (targetMsg.text || '').slice(0, 80);
 
     if(current === emoji){
-      ref.remove().catch(e => console.error(e));
+      // ยกเลิกความรู้สึก (Unreact)
+      ref.remove().catch(()=>{});
+      if(msgReactionsCache[msgKey] && msgReactionsCache[msgKey][myUid]){
+        delete msgReactionsCache[msgKey][myUid];
+        renderMsgReactions(msgKey, msgReactionsCache[msgKey]);
+      }
     } else {
+      // Optimistic update ทันที ให้ปุ่มเปลี่ยนเป็นไอคอนนั้นเหมือน Facebook
+      if(!msgReactionsCache[msgKey]) msgReactionsCache[msgKey] = {};
+      msgReactionsCache[msgKey][myUid] = { e: emoji, name: name };
+      renderMsgReactions(msgKey, msgReactionsCache[msgKey]);
+      spawnFloat(emoji, name);
+
       ref.set({
         e: emoji,
         name: name.slice(0, 40),
         targetUid: targetUid,
         msgSnippet: targetSnippet,
         ts: firebase.database.ServerValue.TIMESTAMP
-      }).then(() => {
-        spawnFloat(emoji, name);
-      }).catch(e => console.error(e));
+      }).catch(e => {
+        console.warn('Reaction write note:', e.message);
+      });
     }
   }
 
   function renderMsgReactions(msgKey, userReactions){
     const container = document.getElementById(`msg-reacts-${msgKey}`);
+    const myReact = (myUid && userReactions && userReactions[myUid]) ? userReactions[myUid].e : null;
+    const reactBtn = document.getElementById(`btn-react-${msgKey}`);
+
+    // อัปเดตปุ่มรีแอคชันบนข้อความให้กลายเป็นไอคอนที่เลือกเหมือน Facebook
+    if(reactBtn){
+      if(myReact){
+        reactBtn.classList.add('is-reacted');
+        if(typeof REACT_IMG_MAP !== 'undefined' && REACT_IMG_MAP[myReact]){
+          reactBtn.innerHTML = `<img src="${REACT_IMG_MAP[myReact]}" alt="${esc(myReact)}">`;
+        } else {
+          reactBtn.textContent = myReact;
+        }
+        reactBtn.title = `คุณส่ง ${myReact} (แตะเพื่อเปลี่ยนหรือยกเลิก)`;
+      } else {
+        reactBtn.classList.remove('is-reacted');
+        reactBtn.textContent = '😊';
+        reactBtn.title = 'ส่งความรู้สึก';
+      }
+    }
+
     if(!container) return;
     if(!userReactions || Object.keys(userReactions).length === 0){
       container.innerHTML = '';
@@ -2943,10 +3069,10 @@
   const joinQueue = [];
   let isProcessingJoin = false;
 
-  function broadcastJoinEvent(){
+  function broadcastJoinEvent(force){
     if(!db || !myUid || !chatOn) return;
     try {
-      if(sessionStorage.getItem('yt_join_broadcasted')) return;
+      if(!force && sessionStorage.getItem('yt_join_broadcasted')) return;
       sessionStorage.setItem('yt_join_broadcasted', '1');
       const name = currentIdentity().name || 'ผู้ชม';
       const role = getViewerRole();
@@ -3131,9 +3257,11 @@
     connectedRef.on('value',snap=>{
       if(snap.val()===true){
         const my=listRef.push();
+        myPresenceRef = my;
         my.onDisconnect().remove();
         const ident = currentIdentity();
         const role = getViewerRole();
+        // ส่ง object ข้อมูลผู้ชม; หากกฎเดิมของเซิร์ฟเวอร์ยังไม่รองรับ ให้ fallback เป็น boolean true อัตโนมัติ
         my.set({
           uid: myUid || '',
           name: (ident.name || 'ผู้ชม').slice(0, 40),
@@ -3141,6 +3269,8 @@
           avatarIcon: ident.avatarIcon || '',
           role: role,
           joinedAt: firebase.database.ServerValue.TIMESTAMP
+        }).catch(() => {
+          my.set(true).catch(()=>{});
         });
       }
     });
@@ -3152,21 +3282,23 @@
 
       const raw = snap.val() || {};
       const list = [];
+      let guestIndex = 1;
       for(const k in raw){
         const v = raw[k];
         if(v && typeof v === 'object'){
           list.push({
             key: k,
             uid: v.uid || '',
-            name: v.name || 'ผู้ชม',
+            name: v.name || ('ผู้ชม #' + (1000 + guestIndex)),
             photo: v.photo || '',
             avatarIcon: v.avatarIcon || '',
             role: v.role || 'new',
             joinedAt: v.joinedAt || 0
           });
         } else if(v === true){
-          list.push({ key: k, uid: '', name: 'ผู้ชม', role: 'returning', joinedAt: 0 });
+          list.push({ key: k, uid: '', name: 'ผู้ชม #' + (1000 + guestIndex), role: 'returning', joinedAt: 0 });
         }
+        guestIndex++;
       }
       currentViewersList = list;
       renderViewersBar();
@@ -3186,18 +3318,45 @@
     let day; try{ day=sameDay?todayTxt:d.toLocaleDateString('th-TH',{day:'numeric',month:'short'}); }catch(e){ day=sameDay?todayTxt:(d.getDate()+'/'+(d.getMonth()+1)); }
     return day+' '+hh+':00 น.';
   }
+
+  // แยก metadata ของ reply และ badge ที่อาจฝังอยู่ในข้อความเพื่อให้ผ่านกฎ Firebase 100%
+  function parseMsgContent(m){
+    let text = String((m && m.text) || '');
+    let replyTo = (m && m.replyTo) || null;
+    let badge = (m && m.badge) || null;
+
+    const rMatch = text.match(/^⟦r:([^|]+)\|([^|]+)\|([^⟧]+)⟧/);
+    if(rMatch){
+      replyTo = {
+        id: rMatch[1],
+        name: rMatch[2],
+        text: rMatch[3]
+      };
+      text = text.slice(rMatch[0].length);
+    }
+
+    const bMatch = text.match(/^⟦b:([a-zA-Z0-9_]+)⟧/);
+    if(bMatch){
+      badge = bMatch[1];
+      text = text.slice(bMatch[0].length);
+    }
+
+    return { text, replyTo, badge };
+  }
+
   function bindMessages(){
     chatRef=db.ref(`rooms/${CONFIG.chat.roomId}/messages`).limitToLast(100);
     const list=document.getElementById('chat-list'), empty=document.getElementById('chat-empty');
     chatRef.on('child_added',snap=>{
       const m=snap.val()||{};
-      const txt=(m.text||'').trim();
+      const parsed=parseMsgContent(m);
+      const txt=parsed.text.trim();
       messagesMap[snap.key] = {
         uid: m.uid || '',
         name: m.name || '',
-        text: m.text || '',
+        text: txt,
         ts: m.ts || 0,
-        badge: m.badge || ''
+        badge: parsed.badge || ''
       };
       if(m.uid === myUid){
         recordMySentMessage(snap.key);
@@ -3224,23 +3383,23 @@
       } else if(m.avatarIcon){
         av = `<div class="av">${esc(m.avatarIcon)}</div>`;
       }
-      const badgeHtml = renderBadgeHtml(m.badge);
-      const quoteHtml = m.replyTo ? `
-        <div class="msg-quote" onclick="scrollToMsg('${esc(m.replyTo.id)}')" title="แตะเพื่อดูข้อความต้นทาง">
-          <div class="mq-name">↩️ ${esc(m.replyTo.name||'ผู้ใช้')}</div>
-          <div class="mq-text">${esc(m.replyTo.text||'')}</div>
+      const badgeHtml = renderBadgeHtml(parsed.badge);
+      const quoteHtml = parsed.replyTo ? `
+        <div class="msg-quote" onclick="scrollToMsg('${esc(parsed.replyTo.id)}')" title="แตะเพื่อดูข้อความต้นทาง">
+          <div class="mq-name">↩️ ${esc(parsed.replyTo.name||'ผู้ใช้')}</div>
+          <div class="mq-text">${esc(parsed.replyTo.text||'')}</div>
         </div>
       ` : '';
-      const txHtml = (typeof REACT_IMG_MAP!=='undefined' && REACT_IMG_MAP[txt]) ? `<img src="${REACT_IMG_MAP[txt]}" alt="${esc(txt)}" style="width:26px;height:26px;vertical-align:middle;display:inline-block">` : esc(m.text||'');
+      const txHtml = (typeof REACT_IMG_MAP!=='undefined' && REACT_IMG_MAP[txt]) ? `<img src="${REACT_IMG_MAP[txt]}" alt="${esc(txt)}" style="width:26px;height:26px;vertical-align:middle;display:inline-block">` : esc(txt);
       const safeName = esc(m.name||'ไม่ระบุชื่อ');
-      const safeSnippet = esc((m.text||'').slice(0, 80));
+      const safeSnippet = esc(txt.slice(0, 80));
 
       el.innerHTML = `${av}<div class="body">
         <div class="nm">
           <span>${safeName}</span>${badgeHtml}
           <div class="msg-actions">
             <button type="button" class="msg-act-btn" onclick="startReply('${snap.key}', '${safeName}', '${safeSnippet}')" title="ตอบกลับ">↩️</button>
-            <button type="button" class="msg-act-btn" onclick="openMsgReactPopover('${snap.key}', this, event)" title="ส่งความรู้สึก">😊</button>
+            <button type="button" class="msg-act-btn btn-react" id="btn-react-${snap.key}" onclick="onMsgReactClick('${snap.key}', this, event)" title="ส่งความรู้สึก">😊</button>
             <button class="del" onclick="delMsg('${snap.key}')">ลบ</button>
           </div>
         </div>
@@ -3296,28 +3455,37 @@
     if(text.length>CONFIG.chat.maxLen){ toast('ข้อความยาวเกินไปค่ะ'); return; }
     const now=Date.now();
     if(now-lastSend < CONFIG.chat.minSendIntervalMs){ toast('พิมพ์เร็วไปค่ะ รอสักครู่'); return; }
-    const name=ensureName(); if(!name){ toast('กรุณาตั้งชื่อเล่นก่อนค่ะ'); return; }
+    const name=ensureName(); if(!name){ toast('กรุณาระบุชื่อก่อนส่งข้อความค่ะ'); return; }
     lastSend=now; input.value='';
 
     const ident = currentIdentity();
     const photoVal = (ident.photo && !ident.photo.startsWith('data:')) ? ident.photo.slice(0,500) : '';
+
+    let cleanText = clean(text);
+    const roleKey = getViewerRole();
+    let prefix = '';
+
+    if(currentReplyTarget){
+      const safeId = currentReplyTarget.id.replace(/[|⟧]/g, '');
+      const safeName = currentReplyTarget.name.replace(/[|⟧\n]/g, ' ').slice(0, 25);
+      const safeSnippet = currentReplyTarget.text.replace(/[|⟧\n]/g, ' ').slice(0, 35);
+      prefix += `⟦r:${safeId}|${safeName}|${safeSnippet}⟧`;
+      cancelReply();
+    }
+    if(roleKey && roleKey !== 'new'){
+      prefix += `⟦b:${roleKey}⟧`;
+    }
+
+    const fullText = (prefix + cleanText).slice(0, 300);
+
+    // ส่งเฉพาะฟิลด์ที่กฎความปลอดภัย Firebase Cloud รับรอง 100% (uid, name, photo, text, ts) ไม่ใส่ root key แปลกปลอม
     const payload = {
       uid: myUid,
       name: name.slice(0,40),
       photo: photoVal,
-      text: clean(text).slice(0,CONFIG.chat.maxLen),
-      badge: getViewerRole(),
+      text: fullText,
       ts: firebase.database.ServerValue.TIMESTAMP
     };
-
-    if(currentReplyTarget){
-      payload.replyTo = {
-        id: currentReplyTarget.id,
-        name: currentReplyTarget.name,
-        text: currentReplyTarget.text
-      };
-      cancelReply();
-    }
 
     try{
       const newRef = await db.ref(`rooms/${CONFIG.chat.roomId}/messages`).push(payload);
