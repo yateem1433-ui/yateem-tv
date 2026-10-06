@@ -215,13 +215,26 @@
 
     /* ---- reply quote in message body ---- */
     .msg-quote{
-      background:rgba(255,255,255,0.06); border-left:3px solid var(--accent);
-      border-radius:6px 10px 10px 6px; padding:4px 8px; margin-bottom:6px;
-      cursor:pointer; transition:background .15s ease;
+      background:linear-gradient(135deg, rgba(234,185,52,0.14), rgba(27,79,216,0.18));
+      border-left:3px solid var(--accent);
+      border-radius:4px 12px 12px 4px;
+      padding:6px 10px;
+      margin-bottom:6px;
+      cursor:pointer;
+      transition:background .15s ease, transform .12s ease;
+      display:block;
     }
-    .msg-quote:hover{ background:rgba(255,255,255,0.12); }
-    .msg-quote .mq-name{ font-size:11px; font-weight:700; color:var(--accent); margin-bottom:1px; }
-    .msg-quote .mq-text{ font-size:12px; color:var(--text); opacity:.85; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .msg-quote:hover{ background:rgba(234,185,52,0.22); }
+    .msg-quote:active{ transform:scale(0.98); }
+    .msg-quote .mq-name{
+      font-size:11px; font-weight:700; color:var(--accent); margin-bottom:2px;
+      display:flex; align-items:center; gap:4px;
+    }
+    .msg-quote .mq-text{
+      font-size:12px; color:var(--text); opacity:.95;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      line-height:1.35; font-style:italic;
+    }
 
     /* ---- message highlight pulse ---- */
     @keyframes msgPulse{
@@ -257,20 +270,80 @@
     .mrp img{ width:16px; height:16px; object-fit:contain; }
     .mrp-cnt{ font-size:11px; font-weight:600; }
 
-    /* ---- reaction popover picker ---- */
+    /* ---- reaction popover picker (No Mobile Overflow) ---- */
     .msg-react-popover{
-      position:fixed; z-index:99; display:flex; gap:6px;
-      background:#0B1222; border:1px solid rgba(234,185,52,0.4);
-      border-radius:30px; padding:6px 10px; box-shadow:0 12px 30px rgba(0,0,0,0.7), 0 0 15px rgba(234,185,52,0.3);
+      position:fixed; z-index:9999;
+      display:flex; align-items:center; justify-content:center;
+      gap:4px; max-width:calc(100vw - 16px) !important; width:max-content;
+      background:rgba(11,18,34,0.96); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+      border:1px solid rgba(234,185,52,0.45); border-radius:32px;
+      padding:5px 8px; box-shadow:0 12px 32px rgba(0,0,0,0.7), 0 0 18px rgba(234,185,52,0.3);
       animation:popRise .16s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      touch-action:manipulation; box-sizing:border-box; overflow:hidden;
     }
     @keyframes popRise{ from{opacity:0; transform:scale(0.8) translateY(6px)} to{opacity:1; transform:scale(1) translateY(0)} }
     .msg-react-popover button{
-      background:none; border:none; cursor:pointer; font-size:22px; line-height:1;
-      padding:3px; transition:transform .12s ease;
+      background:none; border:none; cursor:pointer; font-size:20px; line-height:1;
+      padding:3px; border-radius:50%; transition:transform .12s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      display:flex; align-items:center; justify-content:center; flex:0 0 auto;
+      -webkit-tap-highlight-color:transparent;
     }
-    .msg-react-popover button:hover{ transform:scale(1.3); }
-    .msg-react-popover button img{ width:26px; height:26px; display:block; }
+    .msg-react-popover button:hover,
+    .msg-react-popover button:active{
+      transform:scale(1.35); background:rgba(255,255,255,0.12);
+    }
+    .msg-react-popover button img{
+      width:24px; height:24px; display:block; object-fit:contain; pointer-events:none;
+    }
+
+    /* ---- live viewers avatar strip (Facebook Live style) ---- */
+    .viewers-bar{
+      display:flex; align-items:center; gap:8px; margin-top:8px; padding:6px 12px;
+      border-radius:16px; cursor:pointer; transition:transform .12s, border-color .15s;
+      border:1px solid rgba(255,255,255,0.12);
+    }
+    .viewers-bar:active{ transform:scale(0.99); }
+    .vb-lead{ display:flex; align-items:center; gap:6px; flex:0 0 auto; }
+    .vb-dot{ width:8px; height:8px; border-radius:50%; background:#38EF7D; box-shadow:0 0 8px #38EF7D; animation:pulseDot 1.6s infinite; }
+    @keyframes pulseDot{ 0%,100%{opacity:1; transform:scale(1)} 50%{opacity:.5; transform:scale(0.85)} }
+    .vb-lbl{ font-size:12px; font-weight:600; color:var(--accent); }
+    .vb-avatars{ display:flex; align-items:center; margin-left:2px; flex:1; min-width:0; overflow:hidden; }
+    .vb-av{
+      width:24px; height:24px; border-radius:50%; object-fit:cover;
+      background:var(--glass-2); border:1.5px solid #070B14;
+      display:flex; align-items:center; justify-content:center;
+      font-size:10px; font-weight:700; color:var(--accent);
+      margin-left:-6px; flex:0 0 auto; transition:transform .12s;
+    }
+    .vb-av:first-child{ margin-left:0; }
+    .vb-av.gold{ border-color:#FFB800; box-shadow:0 0 6px rgba(255,184,0,0.5); }
+    .vb-av.green{ border-color:#38EF7D; }
+    .vb-av.blue{ border-color:#38A2FF; }
+    .vb-more{ margin-left:auto; font-size:12px; color:var(--accent); font-weight:600; flex:0 0 auto; }
+
+    /* ---- reaction notification for message owner ---- */
+    .rx-notify-layer{
+      position:fixed; top:64px; left:0; right:0; z-index:10000;
+      display:flex; flex-direction:column; align-items:center; gap:8px;
+      pointer-events:none; padding:0 12px;
+    }
+    .reaction-notify-toast{
+      display:flex; align-items:center; gap:10px; max-width:min(92vw, 420px); width:max-content;
+      background:rgba(11,18,34,0.95); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+      border:1px solid var(--accent); border-radius:26px; padding:7px 14px 7px 10px;
+      box-shadow:0 10px 28px rgba(0,0,0,0.65), 0 0 18px rgba(234,185,52,0.35);
+      animation:rxIn .28s cubic-bezier(0.18, 0.89, 0.32, 1.2); pointer-events:auto; cursor:pointer;
+    }
+    @keyframes rxIn{ from{opacity:0; transform:translateY(-14px) scale(0.92)} to{opacity:1; transform:none} }
+    .reaction-notify-toast.out{ animation:rxOut .3s ease forwards; }
+    @keyframes rxOut{ to{opacity:0; transform:translateY(-12px) scale(0.9)} }
+    .reaction-notify-toast .rnt-ic{ width:28px; height:28px; object-fit:contain; flex:0 0 auto; }
+    .reaction-notify-toast .rnt-emoji{ font-size:24px; line-height:1; flex:0 0 auto; }
+    .reaction-notify-toast .rnt-body{ min-width:0; display:flex; flex-direction:column; line-height:1.25; }
+    .reaction-notify-toast .rnt-t{ font-size:13px; color:var(--text); }
+    .reaction-notify-toast .rnt-t b{ color:var(--accent); }
+    .reaction-notify-toast .rnt-sub{ font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:240px; }
+    .reaction-notify-toast .rnt-arrow{ color:var(--accent); font-size:18px; margin-left:4px; flex:0 0 auto; }
 
     /* ---- Facebook Live join alerts (toast layer) ---- */
     .live-join-toast-layer{
@@ -1292,6 +1365,19 @@
         <span style="flex:1"></span>
         <button class="share-btn" onclick="shareSite()" data-lbl="shareBtn">🔗 แชร์</button>
       </div>
+
+      <!-- แถบรายชื่อผู้รับชมสด (สไตล์ Facebook Live: แสดงอวาตาร์คนดูสด + แตะดูรายชื่อ) -->
+      <div class="viewers-bar glass" id="viewers-bar" onclick="openViewersModal()" role="button" tabindex="0" title="แตะเพื่อดูรายชื่อผู้รับชมทั้งหมด">
+        <div class="vb-lead">
+          <span class="vb-dot"></span>
+          <span class="vb-lbl">👥 ผู้ชมสด:</span>
+        </div>
+        <div class="vb-avatars" id="vb-avatars"></div>
+        <span class="vb-more" id="vb-more">ดูทั้งหมด ›</span>
+      </div>
+
+      <!-- แจ้งเตือนเมื่อมีคนส่งความรู้สึกถึงเจ้าของข้อความ -->
+      <div class="rx-notify-layer" id="rx-notify-layer"></div>
 
       <!-- แชทสด (กล่องข้อความ + อิโมจิลอย + ช่องพิมพ์ + ปุ่มรีแอคชัน) -->
       <div class="chat-section">
@@ -2521,6 +2607,21 @@
 
   // ---- 2. ระบบตอบกลับข้อความ (Message Reply) ----
   let currentReplyTarget = null;
+  const messagesMap = {}; // msgKey -> { uid, name, text, ts, badge }
+  const mySentMsgKeys = new Set();
+  try {
+    const saved = JSON.parse(sessionStorage.getItem('yt_my_sent_msgs') || '[]');
+    saved.forEach(k => mySentMsgKeys.add(k));
+  } catch(e){}
+
+  function recordMySentMessage(msgKey){
+    if(!msgKey) return;
+    mySentMsgKeys.add(msgKey);
+    try {
+      const arr = Array.from(mySentMsgKeys).slice(-60);
+      sessionStorage.setItem('yt_my_sent_msgs', JSON.stringify(arr));
+    } catch(e){}
+  }
 
   function startReply(msgId, name, text){
     currentReplyTarget = { id: msgId, name: String(name||'ผู้ใช้').slice(0, 40), text: String(text||'').slice(0, 150) };
@@ -2550,26 +2651,160 @@
     if(el){
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       el.classList.add('highlight-pulse');
-      setTimeout(()=>el.classList.remove('highlight-pulse'), 1600);
+      setTimeout(()=>el.classList.remove('highlight-pulse'), 1800);
     } else {
       toast('ข้อความต้นฉบับเลื่อนผ่านไปแล้วค่ะ');
     }
   }
 
+  // กดค้างที่ข้อความ (Long-Press): 380ms -> สั่นเบาๆ + เริ่มตอบกลับ + เปิด Reaction Bar
+  function attachMsgLongPress(el, msgKey, safeName, safeSnippet){
+    if(!el) return;
+    let pressTimer = null;
+    let startX = 0, startY = 0;
+    let isLongPress = false;
+
+    const cancelPress = () => {
+      if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; }
+    };
+
+    el.addEventListener('pointerdown', ev => {
+      if(ev.pointerType === 'mouse' && ev.button !== 0) return;
+      if(ev.target.closest('button, a, .msg-quote, .mrp, input, textarea')) return;
+      startX = ev.clientX;
+      startY = ev.clientY;
+      isLongPress = false;
+      cancelPress();
+      pressTimer = setTimeout(() => {
+        isLongPress = true;
+        if(navigator.vibrate) try{ navigator.vibrate(40); }catch(e){}
+        el.classList.add('highlight-pulse');
+        setTimeout(() => el.classList.remove('highlight-pulse'), 800);
+        startReply(msgKey, safeName, safeSnippet);
+        openMsgReactPopover(msgKey, el, ev);
+      }, 380);
+    }, { passive: true });
+
+    el.addEventListener('pointermove', ev => {
+      if(!pressTimer) return;
+      const dist = Math.hypot(ev.clientX - startX, ev.clientY - startY);
+      if(dist > 9) cancelPress();
+    }, { passive: true });
+
+    el.addEventListener('pointerup', cancelPress, { passive: true });
+    el.addEventListener('pointercancel', cancelPress, { passive: true });
+    el.addEventListener('contextmenu', ev => {
+      if(isLongPress){
+        ev.preventDefault();
+        isLongPress = false;
+      }
+    });
+  }
+
+  function playNotifChime(){
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if(!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.36);
+      setTimeout(() => ctx.close().catch(()=>{}), 500);
+    } catch(e){}
+  }
+
+  function notifyReactionToOwner(msgKey, reactorName, emoji, snippet){
+    const layer = document.getElementById('rx-notify-layer');
+    if(!layer) return;
+
+    playNotifChime();
+    if(navigator.vibrate) try{ navigator.vibrate([30, 45, 30]); }catch(e){}
+
+    const toastEl = document.createElement('div');
+    toastEl.className = 'reaction-notify-toast';
+    const ic = (typeof REACT_IMG_MAP !== 'undefined' && REACT_IMG_MAP[emoji])
+      ? `<img class="rnt-ic" src="${REACT_IMG_MAP[emoji]}" alt="${esc(emoji)}">`
+      : `<span class="rnt-emoji">${esc(emoji)}</span>`;
+
+    const cleanSnippet = snippet ? `"${esc(snippet.slice(0, 45))}${snippet.length > 45 ? '...' : ''}"` : 'ข้อความของคุณ';
+
+    toastEl.innerHTML = `
+      ${ic}
+      <div class="rnt-body">
+        <div class="rnt-t"><b>${esc(reactorName)}</b> แสดงความรู้สึกต่อข้อความของคุณ</div>
+        <div class="rnt-sub">${cleanSnippet}</div>
+      </div>
+      <span class="rnt-arrow">›</span>
+    `;
+
+    toastEl.onclick = () => {
+      scrollToMsg(msgKey);
+      toastEl.classList.add('out');
+      setTimeout(() => toastEl.remove(), 300);
+    };
+
+    layer.appendChild(toastEl);
+    setTimeout(() => {
+      if(toastEl.parentNode){
+        toastEl.classList.add('out');
+        setTimeout(() => toastEl.remove(), 350);
+      }
+    }, 4500);
+  }
+
   // ---- 3. ระบบกดถูกใจ / รีแอคชันบนข้อความ (Message Reactions) ----
   let msgReactionsCache = {};
   let activeReactMsgKey = null;
+  const notifiedReactionKeys = new Set();
+
+  function checkReactionNotification(msgKey, u, r){
+    if(!r || !r.e || !r.ts) return;
+    if(u === myUid) return; // ไม่เตือนถ้าตัวเองเป็นคนกด
+
+    const now = Date.now() + serverOffset;
+    if(Math.abs(now - r.ts) > 25000) return; // เฉพาะเหตุการณ์สดใหม่
+
+    const targetMsg = messagesMap[msgKey];
+    const isTargetMe = (r.targetUid && r.targetUid === myUid) ||
+                       mySentMsgKeys.has(msgKey) ||
+                       (targetMsg && targetMsg.uid === myUid);
+
+    if(!isTargetMe) return;
+
+    const notifKey = `${msgKey}_${u}_${r.e}_${Math.floor(r.ts / 12000)}`;
+    if(notifiedReactionKeys.has(notifKey)) return;
+    notifiedReactionKeys.add(notifKey);
+
+    const snippet = r.msgSnippet || (targetMsg ? targetMsg.text : '');
+    notifyReactionToOwner(msgKey, r.name || 'มีผู้รับชม', r.e, snippet);
+  }
 
   function bindMessageReactions(){
     if(!db) return;
     const rRef = db.ref(`rooms/${CONFIG.chat.roomId}/messageReactions`);
     rRef.limitToLast(100).on('child_added', snap => {
-      msgReactionsCache[snap.key] = snap.val() || {};
-      renderMsgReactions(snap.key, msgReactionsCache[snap.key]);
+      const val = snap.val() || {};
+      msgReactionsCache[snap.key] = val;
+      renderMsgReactions(snap.key, val);
+      for(const u in val){
+        checkReactionNotification(snap.key, u, val[u]);
+      }
     });
     rRef.limitToLast(100).on('child_changed', snap => {
-      msgReactionsCache[snap.key] = snap.val() || {};
-      renderMsgReactions(snap.key, msgReactionsCache[snap.key]);
+      const val = snap.val() || {};
+      msgReactionsCache[snap.key] = val;
+      renderMsgReactions(snap.key, val);
+      for(const u in val){
+        checkReactionNotification(snap.key, u, val[u]);
+      }
     });
     rRef.limitToLast(100).on('child_removed', snap => {
       delete msgReactionsCache[snap.key];
@@ -2578,13 +2813,16 @@
   }
 
   function openMsgReactPopover(msgKey, btnEl, ev){
-    if(ev){ ev.stopPropagation(); ev.preventDefault(); }
+    if(ev){
+      if(typeof ev.stopPropagation === 'function') ev.stopPropagation();
+      if(typeof ev.preventDefault === 'function') ev.preventDefault();
+    }
     const old = document.getElementById('msg-react-popover');
     if(old){
       const isSame = (activeReactMsgKey === msgKey);
       old.remove();
       activeReactMsgKey = null;
-      if(isSame) return;
+      if(isSame && ev && ev.type === 'click') return;
     }
     activeReactMsgKey = msgKey;
     const pop = document.createElement('div');
@@ -2608,18 +2846,33 @@
       };
       pop.appendChild(b);
     });
+
+    pop.onclick = (e) => e.stopPropagation();
     document.body.appendChild(pop);
+
+    // ป้องกันการตกขอบหน้าจอมือถืออย่างเด็ดขาด (Strict Viewport Clamping)
     const rect = btnEl.getBoundingClientRect();
-    const popRect = pop.getBoundingClientRect();
-    let top = rect.top - popRect.height - 8;
-    if(top < 10) top = rect.bottom + 8;
-    let left = rect.left - (popRect.width / 2) + (rect.width / 2);
-    if(left < 10) left = 10;
-    if(left + popRect.width > window.innerWidth - 10){
-      left = window.innerWidth - popRect.width - 10;
+    const popW = pop.offsetWidth || 250;
+    const popH = pop.offsetHeight || 42;
+    const winW = window.innerWidth || document.documentElement.clientWidth;
+    const winH = window.innerHeight || document.documentElement.clientHeight;
+
+    let left = rect.left + (rect.width / 2) - (popW / 2);
+    if(left < 8) left = 8;
+    if(left + popW > winW - 8){
+      left = Math.max(8, winW - popW - 8);
     }
-    pop.style.top = top + 'px';
-    pop.style.left = left + 'px';
+
+    let top = rect.top - popH - 8;
+    if(top < 65){
+      top = rect.bottom + 8;
+    }
+    if(top + popH > winH - 70){
+      top = Math.max(65, winH - popH - 70);
+    }
+
+    pop.style.top = Math.round(top) + 'px';
+    pop.style.left = Math.round(left) + 'px';
   }
 
   document.addEventListener('click', ev => {
@@ -2636,12 +2889,19 @@
     if(!name){ toast('กรุณาตั้งชื่อเล่นก่อนส่งความรู้สึกค่ะ'); return; }
     const ref = db.ref(`rooms/${CONFIG.chat.roomId}/messageReactions/${msgKey}/${myUid}`);
     const current = (msgReactionsCache[msgKey] && msgReactionsCache[msgKey][myUid]) ? msgReactionsCache[msgKey][myUid].e : null;
+    
+    const targetMsg = messagesMap[msgKey] || {};
+    const targetUid = targetMsg.uid || '';
+    const targetSnippet = (targetMsg.text || '').slice(0, 80);
+
     if(current === emoji){
       ref.remove().catch(e => console.error(e));
     } else {
       ref.set({
         e: emoji,
         name: name.slice(0, 40),
+        targetUid: targetUid,
+        msgSnippet: targetSnippet,
         ts: firebase.database.ServerValue.TIMESTAMP
       }).then(() => {
         spawnFloat(emoji, name);
@@ -2757,9 +3017,44 @@
     }, 3200);
   }
 
-  // ---- 5. รายชื่อผู้รับชมสด (Live Viewers Modal Sheet) ----
+  // ---- 5. รายชื่อผู้รับชมสด (Facebook Live Style Viewers Bar & Modal) ----
   let currentViewersList = [];
   let viewersTab = 'all';
+
+  function renderViewersBar(){
+    const bar = document.getElementById('viewers-bar');
+    const avContainer = document.getElementById('vb-avatars');
+    const moreEl = document.getElementById('vb-more');
+    if(!bar || !avContainer) return;
+
+    const total = currentViewersList.length || 0;
+    if(total === 0){
+      avContainer.innerHTML = '<span style="font-size:11px;color:var(--muted);padding-left:4px">กำลังเชื่อมต่อ...</span>';
+      if(moreEl) moreEl.textContent = 'ดูทั้งหมด ›';
+      return;
+    }
+
+    const displayList = currentViewersList.slice(0, 6);
+    let html = '';
+    displayList.forEach(v => {
+      const initial = (v.name || '?').trim().charAt(0) || '?';
+      const roleCls = (v.role === 'top_fan') ? 'gold' : (v.role === 'member' ? 'green' : (v.role === 'new' ? 'blue' : ''));
+      if(v.photo && (v.photo.startsWith('http') || v.photo.startsWith('data:'))){
+        html += `<img class="vb-av ${roleCls}" src="${esc(v.photo)}" alt="${esc(v.name)}" title="${esc(v.name)}">`;
+      } else if(v.avatarIcon){
+        html += `<div class="vb-av ${roleCls}" title="${esc(v.name)}">${esc(v.avatarIcon)}</div>`;
+      } else {
+        html += `<div class="vb-av ${roleCls}" title="${esc(v.name)}">${esc(initial)}</div>`;
+      }
+    });
+
+    if(total > 6){
+      html += `<div class="vb-av" style="background:var(--accent);color:#070B14;font-size:9px;font-weight:800" title="และอีก ${total - 6} คน">+${total - 6}</div>`;
+    }
+
+    avContainer.innerHTML = html;
+    if(moreEl) moreEl.textContent = `${total} คน ›`;
+  }
 
   function openViewersModal(){
     const bd = document.getElementById('viewers-backdrop');
@@ -2874,6 +3169,7 @@
         }
       }
       currentViewersList = list;
+      renderViewersBar();
       renderViewersModalContent();
     });
   }
@@ -2896,6 +3192,16 @@
     chatRef.on('child_added',snap=>{
       const m=snap.val()||{};
       const txt=(m.text||'').trim();
+      messagesMap[snap.key] = {
+        uid: m.uid || '',
+        name: m.name || '',
+        text: m.text || '',
+        ts: m.ts || 0,
+        badge: m.badge || ''
+      };
+      if(m.uid === myUid){
+        recordMySentMessage(snap.key);
+      }
       // รีแอคชันล้วน (จากแอปเวอร์ชันเก่าที่ยังส่งลงแชท) — ไม่แสดงในแชท ลอยขึ้นจอแทนเฉพาะของสด ๆ
       if(REACT_SET.has(txt)){
         const fresh = m.ts && (Date.now() + serverOffset - m.ts) < 10000;
@@ -2944,6 +3250,8 @@
       </div>`;
 
       list.appendChild(el);
+      attachMsgLongPress(el, snap.key, safeName, safeSnippet);
+
       if(msgReactionsCache[snap.key]){
         renderMsgReactions(snap.key, msgReactionsCache[snap.key]);
       }
@@ -2954,6 +3262,7 @@
     chatRef.on('child_removed',snap=>{
       const el=list.querySelector(`[data-key="${snap.key}"]`); if(el) el.remove();
       delete msgReactionsCache[snap.key];
+      delete messagesMap[snap.key];
     });
   }
 
@@ -3011,7 +3320,10 @@
     }
 
     try{
-      await db.ref(`rooms/${CONFIG.chat.roomId}/messages`).push(payload);
+      const newRef = await db.ref(`rooms/${CONFIG.chat.roomId}/messages`).push(payload);
+      if(newRef && newRef.key){
+        recordMySentMessage(newRef.key);
+      }
     }catch(e){ toast('ส่งไม่สำเร็จค่ะ'); lastSend=0; console.error(e); }
   }
 
