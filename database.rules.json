@@ -9,6 +9,10 @@
             ".write": "(!data.exists() && auth != null && newData.child('uid').val() === auth.uid) || (data.exists() && !newData.exists() && auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true'))",
             ".validate": "newData.hasChildren(['uid','name','text','ts']) && newData.child('uid').isString() && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('text').isString() && newData.child('text').val().length >= 1 && newData.child('text').val().length <= 300 && newData.child('ts').val() === now",
             "photo": { ".validate": "newData.isString() && newData.val().length <= 500" },
+            "badge": { ".validate": "newData.isString() && newData.val().length <= 30" },
+            "replyTo": {
+              ".validate": "newData.hasChildren(['id','name','text']) && newData.child('id').isString() && newData.child('id').val().length <= 60 && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('text').isString() && newData.child('text').val().length <= 300"
+            },
             "uid":   { ".validate": true },
             "name":  { ".validate": true },
             "text":  { ".validate": true },
@@ -29,11 +33,38 @@
             "$other": { ".validate": false }
           }
         },
+        "messageReactions": {
+          ".read": true,
+          "$msg": {
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid",
+              ".validate": "!newData.exists() || (newData.hasChildren(['e','name','ts']) && newData.child('e').isString() && newData.child('e').val().length <= 8 && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('ts').val() === now)",
+              "e":    { ".validate": true },
+              "name": { ".validate": true },
+              "ts":   { ".validate": true },
+              "$other": { ".validate": false }
+            }
+          }
+        },
+        "joins": {
+          ".read": true,
+          ".indexOn": ["ts"],
+          "$j": {
+            ".write": "(!data.exists() && auth != null && newData.child('uid').val() === auth.uid) || (data.exists() && !newData.exists() && auth != null)",
+            ".validate": "newData.hasChildren(['uid','name','role','ts']) && newData.child('uid').isString() && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('role').isString() && newData.child('role').val().length <= 20 && newData.child('ts').val() === now",
+            "uid":   { ".validate": true },
+            "name":  { ".validate": true },
+            "role":  { ".validate": true },
+            "photo": { ".validate": "newData.isString() && newData.val().length <= 500" },
+            "ts":    { ".validate": true },
+            "$other": { ".validate": false }
+          }
+        },
         "presence": {
           ".read": true,
           "$conn": {
             ".write": "auth != null",
-            ".validate": "newData.isBoolean()"
+            ".validate": "newData.isBoolean() || (newData.child('name').isString() && newData.child('name').val().length <= 40)"
           }
         }
       }

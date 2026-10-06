@@ -172,9 +172,11 @@
       justify-content:center; font-size:14px; color:var(--accent); font-weight:600; }
     .msg .body{ background:var(--glass-2); border:1px solid var(--stroke); border-radius:14px;
       padding:8px 12px; max-width:80%; }
-    .msg .nm{ font-size:12px; color:var(--accent); font-weight:600; margin-bottom:2px; }
-    .msg .tx{ font-size:15px; line-height:1.4; word-break:break-word; }
-    .msg .del{ margin-left:6px; background:none; border:none; color:#ff6b73; font-size:12px; cursor:pointer; display:none; }
+    .msg .nm{ font-size:12px; color:var(--accent); font-weight:600; margin-bottom:2px; display:flex; align-items:center; gap:4px; flex-wrap:wrap; }
+    .msg-actions{ margin-left:auto; display:inline-flex; align-items:center; gap:4px; }
+    .msg-act-btn{ background:none; border:none; color:var(--muted); font-size:12px; cursor:pointer; padding:1px 4px; border-radius:6px; font-family:inherit; transition:color .12s, transform .12s; }
+    .msg-act-btn:hover{ color:var(--accent); transform:scale(1.15); }
+    .msg .del{ margin-left:2px; background:none; border:none; color:#ff6b73; font-size:12px; cursor:pointer; display:none; }
     body.is-mod .msg .del{ display:inline; }
     .legal-links{ text-align:center; font-size:12px; color:var(--muted); margin:10px 0 4px; }
     .legal-links a{ color:var(--muted); }
@@ -193,6 +195,129 @@
       transition:transform .12s ease; }
     .chat-input .chat-send-btn:active{ transform:scale(.95); }
     .chat-note{ font-size:12px; color:var(--muted); margin-top:8px; text-align:center; }
+
+    /* ---- reply preview bar ---- */
+    .chat-reply-bar{
+      display:flex; align-items:center; justify-content:space-between;
+      background:linear-gradient(135deg, rgba(234,185,52,0.14), rgba(27,79,216,0.22));
+      border:1px solid rgba(234,185,52,0.35); border-bottom:none;
+      border-radius:14px 14px 0 0; padding:8px 12px; margin-top:8px;
+      animation:slideReply .18s ease;
+    }
+    @keyframes slideReply{ from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
+    .crb-content{ display:flex; align-items:center; gap:8px; min-width:0; flex:1; }
+    .crb-icon{ font-size:16px; color:var(--accent); flex:0 0 auto; }
+    .crb-text{ min-width:0; display:flex; flex-direction:column; line-height:1.2; }
+    .crb-name{ font-size:12px; font-weight:700; color:var(--accent); }
+    .crb-msg{ font-size:13px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:.85; }
+    .crb-cancel{ background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; padding:2px 6px; border-radius:50%; }
+    .crb-cancel:hover{ color:#fff; }
+
+    /* ---- reply quote in message body ---- */
+    .msg-quote{
+      background:rgba(255,255,255,0.06); border-left:3px solid var(--accent);
+      border-radius:6px 10px 10px 6px; padding:4px 8px; margin-bottom:6px;
+      cursor:pointer; transition:background .15s ease;
+    }
+    .msg-quote:hover{ background:rgba(255,255,255,0.12); }
+    .msg-quote .mq-name{ font-size:11px; font-weight:700; color:var(--accent); margin-bottom:1px; }
+    .msg-quote .mq-text{ font-size:12px; color:var(--text); opacity:.85; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    /* ---- message highlight pulse ---- */
+    @keyframes msgPulse{
+      0%{ background:transparent; }
+      30%{ background:rgba(234,185,52,0.35); box-shadow:0 0 16px rgba(234,185,52,0.5); border-radius:14px; }
+      100%{ background:transparent; }
+    }
+    .highlight-pulse{ animation:msgPulse 1.5s ease; }
+
+    /* ---- viewer badge ---- */
+    .viewer-badge{
+      display:inline-flex; align-items:center; gap:3px;
+      font-size:10px; font-weight:600; padding:1px 6px; border-radius:10px;
+      color:var(--bdg-col, var(--accent)); background:var(--bdg-bg, rgba(234,185,52,0.15));
+      border:1px solid color-mix(in srgb, var(--bdg-col, var(--accent)) 35%, transparent);
+      margin-left:4px; vertical-align:middle; line-height:1.3;
+    }
+    .viewer-badge .vbi{ font-size:10px; }
+
+    /* ---- message reactions container ---- */
+    .msg-reacts{ display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; }
+    .mrp{
+      display:inline-flex; align-items:center; gap:3px;
+      background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.14);
+      border-radius:12px; padding:2px 7px; font-size:12px; color:var(--text);
+      cursor:pointer; transition:transform .12s ease, border-color .12s ease; font-family:inherit;
+    }
+    .mrp:hover{ transform:scale(1.06); }
+    .mrp.on{
+      border-color:var(--accent); background:rgba(234,185,52,0.18); color:var(--accent);
+      box-shadow:0 0 6px rgba(234,185,52,0.3);
+    }
+    .mrp img{ width:16px; height:16px; object-fit:contain; }
+    .mrp-cnt{ font-size:11px; font-weight:600; }
+
+    /* ---- reaction popover picker ---- */
+    .msg-react-popover{
+      position:fixed; z-index:99; display:flex; gap:6px;
+      background:#0B1222; border:1px solid rgba(234,185,52,0.4);
+      border-radius:30px; padding:6px 10px; box-shadow:0 12px 30px rgba(0,0,0,0.7), 0 0 15px rgba(234,185,52,0.3);
+      animation:popRise .16s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+    @keyframes popRise{ from{opacity:0; transform:scale(0.8) translateY(6px)} to{opacity:1; transform:scale(1) translateY(0)} }
+    .msg-react-popover button{
+      background:none; border:none; cursor:pointer; font-size:22px; line-height:1;
+      padding:3px; transition:transform .12s ease;
+    }
+    .msg-react-popover button:hover{ transform:scale(1.3); }
+    .msg-react-popover button img{ width:26px; height:26px; display:block; }
+
+    /* ---- Facebook Live join alerts (toast layer) ---- */
+    .live-join-toast-layer{
+      position:absolute; bottom:64px; left:12px; z-index:18;
+      display:flex; flex-direction:column; gap:6px; pointer-events:none; max-width:85%;
+    }
+    .join-toast{
+      display:inline-flex; align-items:center; gap:8px;
+      background:rgba(10, 16, 30, 0.9); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+      border:1px solid rgba(234,185,52,0.35); border-radius:24px; padding:6px 12px 6px 6px;
+      box-shadow:0 8px 24px rgba(0,0,0,0.5), 0 0 12px rgba(234,185,52,0.2);
+      animation:jtIn .3s cubic-bezier(0.18, 0.89, 0.32, 1.2); pointer-events:auto;
+    }
+    @keyframes jtIn{ from{opacity:0; transform:translateX(-20px) scale(0.9)} to{opacity:1; transform:none} }
+    .join-toast.out{ animation:jtOut .35s ease forwards; }
+    @keyframes jtOut{ to{opacity:0; transform:translateY(-10px) scale(0.92)} }
+    .jt-av{
+      width:28px; height:28px; border-radius:50%; object-fit:cover;
+      background:var(--glass-2); border:1px solid var(--stroke); display:flex; align-items:center;
+      justify-content:center; font-size:12px; color:var(--accent); font-weight:700; flex:0 0 auto;
+    }
+    .jt-info{ display:flex; flex-direction:column; gap:2px; }
+    .jt-nm{ font-size:12px; color:var(--text); line-height:1.2; }
+    .jt-nm b{ color:var(--accent); font-weight:600; }
+
+    /* ---- Live Viewers sheet ---- */
+    .viewers-sheet{ max-height:85vh; display:flex; flex-direction:column; }
+    .vs-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; padding-right:32px; }
+    .vs-count-badge{
+      font-size:13px; font-weight:700; color:#04150E; background:linear-gradient(135deg,var(--accent),var(--accent-2));
+      padding:2px 10px; border-radius:12px;
+    }
+    .vs-tabs{ display:flex; gap:8px; border-bottom:1px solid var(--stroke); padding-bottom:10px; margin-bottom:12px; overflow-x:auto; }
+    .vs-tab{
+      background:none; border:1px solid transparent; color:var(--muted); font-size:13px; font-family:inherit;
+      padding:6px 12px; border-radius:12px; cursor:pointer; white-space:nowrap; transition:all .15s ease;
+    }
+    .vs-tab.on{ color:var(--accent); border-color:var(--accent); background:rgba(234,185,52,0.12); font-weight:600; }
+    .vs-list{ display:flex; flex-direction:column; gap:8px; overflow-y:auto; max-height:55vh; padding-right:4px; }
+    .vs-item{
+      display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:16px;
+      background:var(--glass-2); border:1px solid var(--stroke); transition:transform .12s;
+    }
+    .vs-item .av{ width:36px; height:36px; border-radius:50%; object-fit:cover; font-size:14px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.08); color:var(--accent); border:1px solid var(--stroke); flex:0 0 auto; }
+    .vs-item .vs-name{ font-size:14px; font-weight:600; color:var(--text); }
+    .vs-item .vs-sub{ font-size:11px; color:var(--muted); }
+    .vs-dot-live{ width:8px; height:8px; border-radius:50%; background:#38EF7D; box-shadow:0 0 6px #38EF7D; margin-left:auto; flex:0 0 auto; }
 
     /* ---- rails (Netflix rows) ---- */
     .rail{ display:flex; gap:14px; overflow-x:auto; padding:4px 4px 12px; scroll-snap-type:x mandatory;
@@ -1131,7 +1256,7 @@
     <img id="brand-logo" src="logo.png" alt="Yateem TV" onerror="this.onerror=null;this.src='icon.jpg'">
     <div class="brand" data-lbl="brandName">Yateem TV</div>
     <div class="live-cluster">
-      <span class="chip viewers" id="viewers">👁 <span id="viewer-count">–</span> <span data-lbl="viewersSuffix">กำลังชม</span></span>
+      <span class="chip viewers" id="viewers" onclick="openViewersModal()" role="button" tabindex="0" title="แตะเพื่อดูรายชื่อผู้ชมสดขณะนี้" style="cursor:pointer">👁 <span id="viewer-count">–</span> <span data-lbl="viewersSuffix">กำลังชม</span></span>
       <button class="hdr-install" id="hdr-install-btn" onclick="doInstall()" style="display:none" data-lbl="hdrInstallBtn">📲 ติดตั้ง</button>
       <button class="profile-btn" id="profile-btn" onclick="openLogin()" aria-label="เข้าสู่ระบบ" title="เข้าสู่ระบบ">👤</button>
     </div>
@@ -1173,6 +1298,19 @@
         <div class="chat-list glass" id="chat-list"><div class="chat-empty" id="chat-empty" data-lbl="chatEmpty">ยังไม่มีข้อความ — มาเป็นคนแรกที่ทักทายกันเลยค่ะ 👋</div></div>
         <!-- อิโมจิลอย (ลอยจากบริเวณพิมพ์ข้อความขึ้นไปบนช่องแชท) -->
         <div class="react-float" id="react-float"></div>
+        <!-- แจ้งเตือนผู้ชมเข้าร่วมไลฟ์ (สไตล์ Facebook Live) -->
+        <div class="live-join-toast-layer" id="live-join-toast-layer"></div>
+        <!-- แถบพรีวิวการตอบกลับข้อความ -->
+        <div class="chat-reply-bar" id="chat-reply-bar" style="display:none">
+          <div class="crb-content">
+            <span class="crb-icon">↩️</span>
+            <div class="crb-text">
+              <span class="crb-name" id="crb-name">ตอบกลับ</span>
+              <span class="crb-msg" id="crb-msg">ข้อความ</span>
+            </div>
+          </div>
+          <button type="button" class="crb-cancel" onclick="cancelReply()" aria-label="ยกเลิกการตอบกลับ">✕</button>
+        </div>
         <!-- ช่องพิมพ์แชท + ปุ่มรีแอคชัน -->
         <div class="chat-input glass">
           <button type="button" class="lb-btn" onclick="openLeaderboard()" aria-label="อันดับผู้สนับสนุน" title="อันดับผู้สนับสนุน">🏆</button>
@@ -1629,6 +1767,25 @@
       <div class="rail" id="share-links" style="margin-top:14px"></div>
       <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--stroke)">
         <button type="button" class="mini" onclick="closeShare();promptInstallModal(true)" style="width:100%;padding:10px;background:var(--glass-2);border:1px solid var(--accent);color:var(--accent);font-weight:700;border-radius:10px;font-size:13px" data-lbl="shareInstallBtn">📲 ติดตั้ง Yateem TV ลงหน้าจอโฮมเครื่องนี้</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIVE VIEWERS SHEET (รายชื่อผู้รับชมสด — สไตล์ Facebook Live) -->
+  <div class="backdrop" id="viewers-backdrop" onclick="if(event.target===this)closeViewersModal()">
+    <div class="sheet glass viewers-sheet" style="position:relative">
+      <button class="close" onclick="closeViewersModal()">×</button>
+      <div class="vs-header">
+        <h2>👥 ผู้รับชมสดขณะนี้</h2>
+        <span class="vs-count-badge" id="vs-total-badge">0 คน</span>
+      </div>
+      <div class="vs-tabs">
+        <button type="button" class="vs-tab on" id="vs-tab-all" onclick="setViewersTab('all')">ทั้งหมด</button>
+        <button type="button" class="vs-tab" id="vs-tab-vip" onclick="setViewersTab('vip')">👑 แฟนตัวยง & สมาชิก</button>
+        <button type="button" class="vs-tab" id="vs-tab-new" onclick="setViewersTab('new')">🌱 ผู้ชมใหม่</button>
+      </div>
+      <div class="vs-list" id="vs-list">
+        <div class="sched-empty" style="padding:24px 0">กำลังโหลดรายชื่อผู้ชม...</div>
       </div>
     </div>
   </div>
@@ -2262,11 +2419,15 @@
       try{ trackVisitor(); }catch(e){}   // บันทึกสถิติหลัง auth พร้อมแล้ว (กัน PERMISSION_DENIED ตอน anon ยังไม่เสร็จ)
       // อัปเดตสถานะเมื่อผู้ใช้ล็อกอิน/ออกภายหลัง (social redirect กลับมา ฯลฯ)
       firebase.auth().onAuthStateChanged(u=>{ if(u){ myUid=u.uid; } applyUserState(u); });
+      recordVisitStats();
       chatOn=true; note.textContent='ใส่ชื่อเล่นแล้วพิมพ์ได้เลยค่ะ';
       bindPresence();
       bindMessages();
       bindReactions();
+      bindMessageReactions();
+      bindJoinAlerts();
       bindGifts();
+      broadcastJoinEvent();
       handleAdminHash();
       updateChatNote();
       // ล้างแชทเก่าอัตโนมัติเมื่อเป็นแอดมิน (ผู้ชมทั่วไปไม่มีสิทธิ์ลบ — pruneChat กันเองอยู่แล้ว)
@@ -2309,8 +2470,363 @@
     let n=displayName();
     if(n) return n;
     n=(prompt('ตั้งชื่อเล่นสำหรับแชท','')||'').trim().slice(0,40);
-    if(n){ localStorage.setItem('yt_nick',n); }
+    if(n){
+      localStorage.setItem('yt_nick',n);
+      broadcastJoinEvent();
+    }
     return n;
+  }
+
+  /* ============================================================
+     LIVE CHAT EXTENSIONS: REPLIES, REACTIONS, VIEWER PRESENCE
+     ============================================================ */
+
+  // ---- 1. จำแนกสถานะผู้ชม (Viewer Role & Stats) ----
+  const VIEWER_ROLES = {
+    top_fan:   { key: 'top_fan',   label: 'แฟนตัวยง',   icon: '👑', color: '#FFB800', bg: 'rgba(255,184,0,0.18)' },
+    member:    { key: 'member',    label: 'สมาชิก',     icon: '⭐', color: '#38EF7D', bg: 'rgba(56,239,125,0.18)' },
+    returning: { key: 'returning', label: 'ผู้ชมประจำ', icon: '🔄', color: '#38A2FF', bg: 'rgba(56,162,255,0.18)' },
+    new:       { key: 'new',       label: 'ผู้ชมใหม่',   icon: '🌱', color: '#11D3BC', bg: 'rgba(17,211,188,0.18)' }
+  };
+
+  function recordVisitStats(){
+    try {
+      let count = parseInt(localStorage.getItem('yt_visit_count') || '0', 10);
+      count++;
+      localStorage.setItem('yt_visit_count', String(count));
+      if(!localStorage.getItem('yt_first_visit')){
+        localStorage.setItem('yt_first_visit', String(Date.now()));
+      }
+    }catch(e){}
+  }
+
+  function getViewerRole(){
+    const mem = readMemberProfile();
+    if(mem && (mem.fullname || mem.phone || mem.nickname)) return 'member';
+    try {
+      if(localStorage.getItem('yt_top_fan') === '1' || (typeof walletBal !== 'undefined' && walletBal > 0)) return 'top_fan';
+    }catch(e){}
+    try {
+      const count = parseInt(localStorage.getItem('yt_visit_count') || '0', 10);
+      if(count > 1) return 'returning';
+    }catch(e){}
+    return 'new';
+  }
+
+  function renderBadgeHtml(roleKey){
+    const r = VIEWER_ROLES[roleKey];
+    if(!r) return '';
+    return `<span class="viewer-badge badge-${esc(r.key)}" style="--bdg-col:${r.color};--bdg-bg:${r.bg}"><span class="vbi">${r.icon}</span>${esc(r.label)}</span>`;
+  }
+
+  // ---- 2. ระบบตอบกลับข้อความ (Message Reply) ----
+  let currentReplyTarget = null;
+
+  function startReply(msgId, name, text){
+    currentReplyTarget = { id: msgId, name: String(name||'ผู้ใช้').slice(0, 40), text: String(text||'').slice(0, 150) };
+    const bar = document.getElementById('chat-reply-bar');
+    const nameEl = document.getElementById('crb-name');
+    const msgEl = document.getElementById('crb-msg');
+    if(bar && nameEl && msgEl){
+      nameEl.textContent = 'ตอบกลับ @' + currentReplyTarget.name;
+      msgEl.textContent = currentReplyTarget.text;
+      bar.style.display = 'flex';
+    }
+    const inp = document.getElementById('chat-text');
+    if(inp){
+      inp.focus();
+      try{ inp.scrollIntoView({ behavior: 'smooth', block: 'center' }); }catch(e){}
+    }
+  }
+
+  function cancelReply(){
+    currentReplyTarget = null;
+    const bar = document.getElementById('chat-reply-bar');
+    if(bar) bar.style.display = 'none';
+  }
+
+  function scrollToMsg(msgId){
+    const el = document.querySelector(`.msg[data-key="${msgId}"]`);
+    if(el){
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('highlight-pulse');
+      setTimeout(()=>el.classList.remove('highlight-pulse'), 1600);
+    } else {
+      toast('ข้อความต้นฉบับเลื่อนผ่านไปแล้วค่ะ');
+    }
+  }
+
+  // ---- 3. ระบบกดถูกใจ / รีแอคชันบนข้อความ (Message Reactions) ----
+  let msgReactionsCache = {};
+  let activeReactMsgKey = null;
+
+  function bindMessageReactions(){
+    if(!db) return;
+    const rRef = db.ref(`rooms/${CONFIG.chat.roomId}/messageReactions`);
+    rRef.limitToLast(100).on('child_added', snap => {
+      msgReactionsCache[snap.key] = snap.val() || {};
+      renderMsgReactions(snap.key, msgReactionsCache[snap.key]);
+    });
+    rRef.limitToLast(100).on('child_changed', snap => {
+      msgReactionsCache[snap.key] = snap.val() || {};
+      renderMsgReactions(snap.key, msgReactionsCache[snap.key]);
+    });
+    rRef.limitToLast(100).on('child_removed', snap => {
+      delete msgReactionsCache[snap.key];
+      renderMsgReactions(snap.key, {});
+    });
+  }
+
+  function openMsgReactPopover(msgKey, btnEl, ev){
+    if(ev){ ev.stopPropagation(); ev.preventDefault(); }
+    const old = document.getElementById('msg-react-popover');
+    if(old){
+      const isSame = (activeReactMsgKey === msgKey);
+      old.remove();
+      activeReactMsgKey = null;
+      if(isSame) return;
+    }
+    activeReactMsgKey = msgKey;
+    const pop = document.createElement('div');
+    pop.id = 'msg-react-popover';
+    pop.className = 'msg-react-popover';
+    REACTIONS.forEach(r => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.title = r.t;
+      b.setAttribute('aria-label', r.t);
+      if(r.img){
+        b.innerHTML = `<img src="${r.img}" alt="${r.e}">`;
+      } else {
+        b.textContent = r.e;
+      }
+      b.onclick = (e) => {
+        e.stopPropagation();
+        toggleMsgReaction(msgKey, r.e);
+        pop.remove();
+        activeReactMsgKey = null;
+      };
+      pop.appendChild(b);
+    });
+    document.body.appendChild(pop);
+    const rect = btnEl.getBoundingClientRect();
+    const popRect = pop.getBoundingClientRect();
+    let top = rect.top - popRect.height - 8;
+    if(top < 10) top = rect.bottom + 8;
+    let left = rect.left - (popRect.width / 2) + (rect.width / 2);
+    if(left < 10) left = 10;
+    if(left + popRect.width > window.innerWidth - 10){
+      left = window.innerWidth - popRect.width - 10;
+    }
+    pop.style.top = top + 'px';
+    pop.style.left = left + 'px';
+  }
+
+  document.addEventListener('click', ev => {
+    const pop = document.getElementById('msg-react-popover');
+    if(pop && !pop.contains(ev.target)){
+      pop.remove();
+      activeReactMsgKey = null;
+    }
+  });
+
+  function toggleMsgReaction(msgKey, emoji){
+    if(!chatOn || !db || !myUid) { toast('กรุณารอแชทเชื่อมต่อสักครู่ค่ะ'); return; }
+    const name = ensureName();
+    if(!name){ toast('กรุณาตั้งชื่อเล่นก่อนส่งความรู้สึกค่ะ'); return; }
+    const ref = db.ref(`rooms/${CONFIG.chat.roomId}/messageReactions/${msgKey}/${myUid}`);
+    const current = (msgReactionsCache[msgKey] && msgReactionsCache[msgKey][myUid]) ? msgReactionsCache[msgKey][myUid].e : null;
+    if(current === emoji){
+      ref.remove().catch(e => console.error(e));
+    } else {
+      ref.set({
+        e: emoji,
+        name: name.slice(0, 40),
+        ts: firebase.database.ServerValue.TIMESTAMP
+      }).then(() => {
+        spawnFloat(emoji, name);
+      }).catch(e => console.error(e));
+    }
+  }
+
+  function renderMsgReactions(msgKey, userReactions){
+    const container = document.getElementById(`msg-reacts-${msgKey}`);
+    if(!container) return;
+    if(!userReactions || Object.keys(userReactions).length === 0){
+      container.innerHTML = '';
+      return;
+    }
+    const counts = {};
+    for(const u in userReactions){
+      const r = userReactions[u];
+      if(!r || !r.e) continue;
+      if(!counts[r.e]) counts[r.e] = { count: 0, names: [], hasMine: false };
+      counts[r.e].count++;
+      if(r.name) counts[r.e].names.push(r.name);
+      if(u === myUid) counts[r.e].hasMine = true;
+    }
+    if(Object.keys(counts).length === 0){
+      container.innerHTML = '';
+      return;
+    }
+    let html = '';
+    for(const e in counts){
+      const item = counts[e];
+      const ic = REACT_IMG_MAP[e] ? `<img src="${REACT_IMG_MAP[e]}" alt="${esc(e)}">` : esc(e);
+      const tip = item.names.slice(0, 5).join(', ') + (item.names.length > 5 ? ` และอีก ${item.names.length - 5} คน` : '');
+      html += `<button type="button" class="mrp ${item.hasMine ? 'on' : ''}" onclick="toggleMsgReaction('${msgKey}', '${e}')" title="${esc(tip)}" aria-label="${esc(e)} ${item.count}">${ic} <span class="mrp-cnt">${item.count}</span></button>`;
+    }
+    container.innerHTML = html;
+  }
+
+  // ---- 4. แจ้งเตือนผู้ชมเข้าร่วมไลฟ์ (Facebook Live Join Alerts) ----
+  const joinQueue = [];
+  let isProcessingJoin = false;
+
+  function broadcastJoinEvent(){
+    if(!db || !myUid || !chatOn) return;
+    try {
+      if(sessionStorage.getItem('yt_join_broadcasted')) return;
+      sessionStorage.setItem('yt_join_broadcasted', '1');
+      const name = currentIdentity().name || 'ผู้ชม';
+      const role = getViewerRole();
+      const ref = db.ref(`rooms/${CONFIG.chat.roomId}/joins`).push();
+      ref.set({
+        uid: myUid,
+        name: name.slice(0, 40),
+        role: role,
+        photo: (currentIdentity().photo || '').slice(0, 500),
+        ts: firebase.database.ServerValue.TIMESTAMP
+      }).then(() => {
+        setTimeout(() => ref.remove().catch(()=>{}), 15000);
+      }).catch(()=>{});
+    }catch(e){}
+  }
+
+  function bindJoinAlerts(){
+    if(!db) return;
+    const offRef = db.ref('.info/serverTimeOffset');
+    offRef.once('value', s => {
+      const since = Date.now() + (s.val() || 0) - 5000;
+      db.ref(`rooms/${CONFIG.chat.roomId}/joins`).orderByChild('ts').startAt(since)
+        .on('child_added', snap => {
+          const j = snap.val() || {};
+          if(!j.name) return;
+          enqueueJoinAlert(j);
+        });
+    });
+  }
+
+  function enqueueJoinAlert(joinItem){
+    joinQueue.push(joinItem);
+    processJoinQueue();
+  }
+
+  function processJoinQueue(){
+    if(isProcessingJoin || joinQueue.length === 0) return;
+    isProcessingJoin = true;
+    const item = joinQueue.shift();
+    spawnJoinToast(item);
+    setTimeout(() => {
+      isProcessingJoin = false;
+      processJoinQueue();
+    }, 2200);
+  }
+
+  function spawnJoinToast(j){
+    const layer = document.getElementById('live-join-toast-layer');
+    if(!layer) return;
+    const r = VIEWER_ROLES[j.role] || VIEWER_ROLES.new;
+    const el = document.createElement('div');
+    el.className = 'join-toast';
+    const initial = (j.name || '?').trim().charAt(0) || '?';
+    const av = j.photo ? `<img class="jt-av" src="${esc(j.photo)}" alt="">` : `<div class="jt-av">${esc(initial)}</div>`;
+    el.innerHTML = `
+      ${av}
+      <div class="jt-info">
+        <div class="jt-nm"><b>${esc(j.name)}</b> เข้าร่วมชมการถ่ายทอดสด</div>
+        <span class="viewer-badge badge-${esc(r.key)}" style="--bdg-col:${r.color};--bdg-bg:${r.bg}">
+          <span class="vbi">${r.icon}</span>${esc(r.label)}
+        </span>
+      </div>
+    `;
+    layer.appendChild(el);
+    setTimeout(() => {
+      el.classList.add('out');
+      setTimeout(() => el.remove(), 400);
+    }, 3200);
+  }
+
+  // ---- 5. รายชื่อผู้รับชมสด (Live Viewers Modal Sheet) ----
+  let currentViewersList = [];
+  let viewersTab = 'all';
+
+  function openViewersModal(){
+    const bd = document.getElementById('viewers-backdrop');
+    if(bd) {
+      bd.classList.add('open');
+      renderViewersModalContent();
+    }
+  }
+
+  function closeViewersModal(){
+    const bd = document.getElementById('viewers-backdrop');
+    if(bd) bd.classList.remove('open');
+  }
+
+  function setViewersTab(t){
+    viewersTab = t;
+    document.querySelectorAll('.vs-tab').forEach(b => {
+      b.classList.toggle('on', b.id === `vs-tab-${t}`);
+    });
+    renderViewersModalContent();
+  }
+
+  function renderViewersModalContent(){
+    const bd = document.getElementById('viewers-backdrop');
+    if(!bd || !bd.classList.contains('open')) return;
+    const badge = document.getElementById('vs-total-badge');
+    if(badge) badge.textContent = (currentViewersList.length || 0) + ' คน';
+
+    const listEl = document.getElementById('vs-list');
+    if(!listEl) return;
+
+    let filtered = currentViewersList;
+    if(viewersTab === 'vip'){
+      filtered = currentViewersList.filter(v => v.role === 'top_fan' || v.role === 'member');
+    } else if(viewersTab === 'new'){
+      filtered = currentViewersList.filter(v => v.role === 'new');
+    }
+
+    if(filtered.length === 0){
+      listEl.innerHTML = '<div class="sched-empty" style="padding:24px 0">ไม่มีผู้ชมในหมวดหมู่นี้ค่ะ</div>';
+      return;
+    }
+
+    listEl.innerHTML = filtered.map(v => {
+      const r = VIEWER_ROLES[v.role] || VIEWER_ROLES.new;
+      const initial = (v.name || '?').trim().charAt(0) || '?';
+      let avHtml = `<div class="av">${esc(initial)}</div>`;
+      if(v.photo && (v.photo.startsWith('http') || v.photo.startsWith('data:'))){
+        avHtml = `<img class="av" src="${esc(v.photo)}" alt="">`;
+      } else if(v.avatarIcon){
+        avHtml = `<div class="av">${esc(v.avatarIcon)}</div>`;
+      }
+      return `
+        <div class="vs-item">
+          ${avHtml}
+          <div class="vs-cnt">
+            <div class="vs-name">${esc(v.name || 'ผู้ชม')}</div>
+            <div class="vs-sub">
+              <span class="viewer-badge badge-${esc(r.key)}" style="--bdg-col:${r.color};--bdg-bg:${r.bg}">
+                <span class="vbi">${r.icon}</span>${esc(r.label)}
+              </span>
+            </div>
+          </div>
+          <span class="vs-dot-live" title="กำลังรับชมอยู่"></span>
+        </div>
+      `;
+    }).join('');
   }
 
   function bindPresence(){
@@ -2321,13 +2837,44 @@
       if(snap.val()===true){
         const my=listRef.push();
         my.onDisconnect().remove();
-        my.set(true);
+        const ident = currentIdentity();
+        const role = getViewerRole();
+        my.set({
+          uid: myUid || '',
+          name: (ident.name || 'ผู้ชม').slice(0, 40),
+          photo: (ident.photo || '').slice(0, 500),
+          avatarIcon: ident.avatarIcon || '',
+          role: role,
+          joinedAt: firebase.database.ServerValue.TIMESTAMP
+        });
       }
     });
     listRef.on('value',snap=>{
       const count = snap.numChildren() || 0;
-      document.getElementById('viewer-count').textContent = count;
+      const elCount = document.getElementById('viewer-count');
+      if(elCount) elCount.textContent = count;
       trackPeakPresence(count);
+
+      const raw = snap.val() || {};
+      const list = [];
+      for(const k in raw){
+        const v = raw[k];
+        if(v && typeof v === 'object'){
+          list.push({
+            key: k,
+            uid: v.uid || '',
+            name: v.name || 'ผู้ชม',
+            photo: v.photo || '',
+            avatarIcon: v.avatarIcon || '',
+            role: v.role || 'new',
+            joinedAt: v.joinedAt || 0
+          });
+        } else if(v === true){
+          list.push({ key: k, uid: '', name: 'ผู้ชม', role: 'returning', joinedAt: 0 });
+        }
+      }
+      currentViewersList = list;
+      renderViewersModalContent();
     });
   }
 
@@ -2365,16 +2912,48 @@
       }
       const el=document.createElement('div'); el.className='msg'; el.dataset.key=snap.key;
       const initial=(m.name||'?').trim().charAt(0)||'?';
-      const av=m.photo? `<img class="av" src="${esc(m.photo)}" alt="">` : `<div class="av">${esc(initial)}</div>`;
+      let av = `<div class="av">${esc(initial)}</div>`;
+      if(m.photo && (m.photo.startsWith('http') || m.photo.startsWith('data:'))){
+        av = `<img class="av" src="${esc(m.photo)}" alt="">`;
+      } else if(m.avatarIcon){
+        av = `<div class="av">${esc(m.avatarIcon)}</div>`;
+      }
+      const badgeHtml = renderBadgeHtml(m.badge);
+      const quoteHtml = m.replyTo ? `
+        <div class="msg-quote" onclick="scrollToMsg('${esc(m.replyTo.id)}')" title="แตะเพื่อดูข้อความต้นทาง">
+          <div class="mq-name">↩️ ${esc(m.replyTo.name||'ผู้ใช้')}</div>
+          <div class="mq-text">${esc(m.replyTo.text||'')}</div>
+        </div>
+      ` : '';
       const txHtml = (typeof REACT_IMG_MAP!=='undefined' && REACT_IMG_MAP[txt]) ? `<img src="${REACT_IMG_MAP[txt]}" alt="${esc(txt)}" style="width:26px;height:26px;vertical-align:middle;display:inline-block">` : esc(m.text||'');
-      el.innerHTML=`${av}<div class="body"><div class="nm">${esc(m.name||'ไม่ระบุชื่อ')}<button class="del" onclick="delMsg('${snap.key}')">ลบ</button></div><div class="tx">${txHtml}</div></div>`;
+      const safeName = esc(m.name||'ไม่ระบุชื่อ');
+      const safeSnippet = esc((m.text||'').slice(0, 80));
+
+      el.innerHTML = `${av}<div class="body">
+        <div class="nm">
+          <span>${safeName}</span>${badgeHtml}
+          <div class="msg-actions">
+            <button type="button" class="msg-act-btn" onclick="startReply('${snap.key}', '${safeName}', '${safeSnippet}')" title="ตอบกลับ">↩️</button>
+            <button type="button" class="msg-act-btn" onclick="openMsgReactPopover('${snap.key}', this, event)" title="ส่งความรู้สึก">😊</button>
+            <button class="del" onclick="delMsg('${snap.key}')">ลบ</button>
+          </div>
+        </div>
+        ${quoteHtml}
+        <div class="tx">${txHtml}</div>
+        <div class="msg-reacts" id="msg-reacts-${snap.key}"></div>
+      </div>`;
+
       list.appendChild(el);
+      if(msgReactionsCache[snap.key]){
+        renderMsgReactions(snap.key, msgReactionsCache[snap.key]);
+      }
       while(list.children.length>80) list.removeChild(list.firstChild);   // ดันแชทเก่าออก กันหน่วง
       while(list.firstChild && list.firstChild.classList && list.firstChild.classList.contains('chat-daysep')) list.removeChild(list.firstChild);
       list.scrollTop=list.scrollHeight;
     });
     chatRef.on('child_removed',snap=>{
       const el=list.querySelector(`[data-key="${snap.key}"]`); if(el) el.remove();
+      delete msgReactionsCache[snap.key];
     });
   }
 
@@ -2410,13 +2989,29 @@
     if(now-lastSend < CONFIG.chat.minSendIntervalMs){ toast('พิมพ์เร็วไปค่ะ รอสักครู่'); return; }
     const name=ensureName(); if(!name){ toast('กรุณาตั้งชื่อเล่นก่อนค่ะ'); return; }
     lastSend=now; input.value='';
+
+    const ident = currentIdentity();
+    const photoVal = (ident.photo && !ident.photo.startsWith('data:')) ? ident.photo.slice(0,500) : '';
+    const payload = {
+      uid: myUid,
+      name: name.slice(0,40),
+      photo: photoVal,
+      text: clean(text).slice(0,CONFIG.chat.maxLen),
+      badge: getViewerRole(),
+      ts: firebase.database.ServerValue.TIMESTAMP
+    };
+
+    if(currentReplyTarget){
+      payload.replyTo = {
+        id: currentReplyTarget.id,
+        name: currentReplyTarget.name,
+        text: currentReplyTarget.text
+      };
+      cancelReply();
+    }
+
     try{
-      await db.ref(`rooms/${CONFIG.chat.roomId}/messages`).push({
-        uid: myUid, name: name.slice(0,40),
-        photo: (currentIdentity().photo||'').slice(0,60000),
-        text: clean(text).slice(0,CONFIG.chat.maxLen),
-        ts: firebase.database.ServerValue.TIMESTAMP
-      });
+      await db.ref(`rooms/${CONFIG.chat.roomId}/messages`).push(payload);
     }catch(e){ toast('ส่งไม่สำเร็จค่ะ'); lastSend=0; console.error(e); }
   }
 
@@ -3084,6 +3679,7 @@
   function delMsg(key){
     if(!document.body.classList.contains('is-mod')) return;
     db.ref(`rooms/${CONFIG.chat.roomId}/messages/${key}`).remove().catch(()=>toast('ลบไม่สำเร็จ'));
+    db.ref(`rooms/${CONFIG.chat.roomId}/messageReactions/${key}`).remove().catch(()=>{});
   }
 
   // ---- ล้างแชทเก่า (แอดมินเท่านั้น) — เก็บ N ข้อความล่าสุด ที่เหลือลบทิ้ง กันฐานข้อมูลพอก ----
