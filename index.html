@@ -1411,7 +1411,7 @@
         <div class="live-join-toast-layer" id="live-join-toast-layer"></div>
         <!-- แถบระบุและแก้ไขชื่อผู้ส่ง (แชทได้ทันที ไม่ต้องพึ่ง prompt) -->
         <div class="chat-identity-bar" id="chat-identity-bar">
-          <span>💬 ส่งในชื่อ: <b id="ci-name">แอดไม่ประสงค์ออกนาม</b></span>
+          <span>💬 ส่งในชื่อ: <b id="ci-name">ไม่ประสงค์ออกนาม</b></span>
           <button type="button" class="cib-edit-btn" onclick="openEditNickModal()" title="แตะเพื่อเปลี่ยนชื่อ">✏️ เปลี่ยนชื่อ</button>
         </div>
         <!-- แถบพรีวิวการตอบกลับข้อความ -->
@@ -2577,11 +2577,11 @@
     syncMyPresence();
   }
 
-  // ---- identity: ชื่อ/รูป สำหรับแชท (สมาชิก Yateem → social user → LINE → ชื่อเล่น / แอดไม่ประสงค์ออกนาม) ----
+  // ---- identity: ชื่อ/รูป สำหรับแชท (สมาชิก Yateem → social user → LINE → ชื่อเล่น / ไม่ประสงค์ออกนาม) ----
   function getOrInitGuestName(){
     let n = (localStorage.getItem('yt_nick') || '').trim();
-    if(!n || n === 'ผู้ชม' || n.startsWith('ผู้ชม #') || n.startsWith('ผู้ชม#')){
-      n = 'แอดไม่ประสงค์ออกนาม';
+    if(!n || n === 'ผู้ชม' || n.startsWith('ผู้ชม #') || n.startsWith('ผู้ชม#') || n === 'แอดไม่ประสงค์ออกนาม'){
+      n = 'ไม่ประสงค์ออกนาม';
       localStorage.setItem('yt_nick', n);
     }
     return n;
@@ -2618,7 +2618,7 @@
     }
     if(isAdmin || (u && isAdminUser(u))) {
       const saved = (localStorage.getItem('yt_nick') || '').trim();
-      const admName = (saved && !saved.startsWith('ผู้ชม')) ? saved : 'แอดมิน (ผู้ดูแล)';
+      const admName = (saved && !saved.startsWith('ผู้ชม') && saved !== 'ไม่ประสงค์ออกนาม' && saved !== 'แอดไม่ประสงค์ออกนาม') ? saved : 'แอดมิน (ผู้ดูแล)';
       return { name: admName, photo: (u && u.photoURL) || '', role: 'admin' };
     }
     return { name: getOrInitGuestName(), photo:'', role: getViewerRole() };
@@ -2632,7 +2632,7 @@
     if(!myPresenceRef || typeof firebase === 'undefined' || !firebase.database) return;
     const ident = currentIdentity();
     const role = getViewerRole();
-    const myName = (ident.name || 'แอดไม่ประสงค์ออกนาม').slice(0, 40);
+    const myName = (ident.name || 'ไม่ประสงค์ออกนาม').slice(0, 40);
     myPresenceRef.set({
       uid: (typeof myUid !== 'undefined' && myUid) ? myUid : '',
       name: myName,
@@ -2647,7 +2647,7 @@
 
   function updateIdentityBar(){
     const el = document.getElementById('ci-name');
-    if(el) el.textContent = displayName() || 'แอดไม่ประสงค์ออกนาม';
+    if(el) el.textContent = displayName() || 'ไม่ประสงค์ออกนาม';
   }
 
   function openEditNickModal(){
@@ -2885,6 +2885,26 @@
   let activeReactMsgKey = null;
   const notifiedReactionKeys = new Set();
 
+  // จัดเก็บประวัติรีแอคชันของตนเองลง localStorage เพื่อจำไอคอนเดิมเมื่อกลับเข้ามาใหม่
+  const MY_MSG_REACTS_KEY = 'yt_my_msg_reactions';
+  function getMyLocalReaction(msgKey){
+    try {
+      const store = JSON.parse(localStorage.getItem(MY_MSG_REACTS_KEY) || '{}');
+      return store[msgKey] || null;
+    } catch(e){ return null; }
+  }
+  function saveMyLocalReaction(msgKey, emoji){
+    try {
+      const store = JSON.parse(localStorage.getItem(MY_MSG_REACTS_KEY) || '{}');
+      if(emoji){
+        store[msgKey] = emoji;
+      } else {
+        delete store[msgKey];
+      }
+      localStorage.setItem(MY_MSG_REACTS_KEY, JSON.stringify(store));
+    } catch(e){}
+  }
+
   function checkReactionNotification(msgKey, u, r){
     if(!r || !r.e || !r.ts) return;
     if(u === myUid) return; // ไม่เตือนถ้าตัวเองเป็นคนกด
@@ -3021,6 +3041,7 @@
 
     if(current === emoji){
       // ยกเลิกความรู้สึก (Unreact)
+      saveMyLocalReaction(msgKey, null);
       ref.remove().catch(()=>{});
       if(msgReactionsCache[msgKey] && msgReactionsCache[msgKey][myUid]){
         delete msgReactionsCache[msgKey][myUid];
@@ -3028,6 +3049,7 @@
       }
     } else {
       // Optimistic update ทันที ให้ปุ่มเปลี่ยนเป็นไอคอนนั้นเหมือน Facebook
+      saveMyLocalReaction(msgKey, emoji);
       if(!msgReactionsCache[msgKey]) msgReactionsCache[msgKey] = {};
       msgReactionsCache[msgKey][myUid] = { e: emoji, name: name };
       renderMsgReactions(msgKey, msgReactionsCache[msgKey]);
@@ -3047,7 +3069,17 @@
 
   function renderMsgReactions(msgKey, userReactions){
     const container = document.getElementById(`msg-reacts-${msgKey}`);
-    const myReact = (myUid && userReactions && userReactions[myUid]) ? userReactions[myUid].e : null;
+    const localReact = getMyLocalReaction(msgKey);
+    let myReact = (myUid && userReactions && userReactions[myUid]) ? userReactions[myUid].e : localReact;
+
+    // หากเซิร์ฟเวอร์มีบันทึกความรู้สึกไว้ ให้ซิงก์ลง localStorage เพื่อให้จำไอคอนไว้เสมอ
+    if(myUid && userReactions && userReactions[myUid] && userReactions[myUid].e){
+      if(localReact !== userReactions[myUid].e){
+        saveMyLocalReaction(msgKey, userReactions[myUid].e);
+      }
+      myReact = userReactions[myUid].e;
+    }
+
     const reactBtn = document.getElementById(`btn-react-${msgKey}`);
 
     // อัปเดตปุ่มรีแอคชันบนข้อความให้กลายเป็นไอคอนที่เลือกเหมือน Facebook
@@ -3104,7 +3136,7 @@
     try {
       if(!force && sessionStorage.getItem('yt_join_broadcasted')) return;
       sessionStorage.setItem('yt_join_broadcasted', '1');
-      const name = currentIdentity().name || 'แอดไม่ประสงค์ออกนาม';
+      const name = currentIdentity().name || 'ไม่ประสงค์ออกนาม';
       const role = getViewerRole();
       const ref = db.ref(`rooms/${CONFIG.chat.roomId}/joins`).push();
       ref.set({
@@ -3154,7 +3186,7 @@
     if(!layer) return;
     const r = VIEWER_ROLES[j.role] || VIEWER_ROLES.new;
     const rawName = String(j.name || '').trim();
-    const cleanName = (!rawName || rawName === 'ผู้ชม' || rawName.startsWith('ผู้ชม #') || rawName.startsWith('ผู้ชม#')) ? 'แอดไม่ประสงค์ออกนาม' : rawName;
+    const cleanName = (!rawName || rawName === 'ผู้ชม' || rawName.startsWith('ผู้ชม #') || rawName.startsWith('ผู้ชม#') || rawName === 'แอดไม่ประสงค์ออกนาม') ? 'ไม่ประสงค์ออกนาม' : rawName;
     const el = document.createElement('div');
     el.className = 'join-toast';
     const initial = cleanName.charAt(0) || '?';
@@ -3259,7 +3291,7 @@
     listEl.innerHTML = filtered.map(v => {
       const r = VIEWER_ROLES[v.role] || VIEWER_ROLES.new;
       const rawName = String(v.name || '').trim();
-      const cleanName = (!rawName || rawName === 'ผู้ชม' || rawName.startsWith('ผู้ชม #') || rawName.startsWith('ผู้ชม#')) ? 'แอดไม่ประสงค์ออกนาม' : rawName;
+      const cleanName = (!rawName || rawName === 'ผู้ชม' || rawName.startsWith('ผู้ชม #') || rawName.startsWith('ผู้ชม#') || rawName === 'แอดไม่ประสงค์ออกนาม') ? 'ไม่ประสงค์ออกนาม' : rawName;
       const initial = cleanName.charAt(0) || '?';
       let avHtml = `<div class="av">${esc(initial)}</div>`;
       if(v.photo && (v.photo.startsWith('http') || v.photo.startsWith('data:'))){
@@ -3322,9 +3354,9 @@
           vJoinedAt = v.joinedAt || 0;
         }
 
-        // หากไม่มีชื่อ หรือชื่อขึ้นต้นด้วย "ผู้ชม #" หรือ "ผู้ชม#" หรือเป็น "ผู้ชม" ให้เปลี่ยนเป็น "แอดไม่ประสงค์ออกนาม"
-        if(!vName || vName === 'ผู้ชม' || vName.startsWith('ผู้ชม #') || vName.startsWith('ผู้ชม#')){
-          vName = 'แอดไม่ประสงค์ออกนาม';
+        // หากไม่มีชื่อ หรือชื่อขึ้นต้นด้วย "ผู้ชม #" หรือ "ผู้ชม#" หรือเป็น "ผู้ชม" ให้เปลี่ยนเป็น "ไม่ประสงค์ออกนาม"
+        if(!vName || vName === 'ผู้ชม' || vName.startsWith('ผู้ชม #') || vName.startsWith('ผู้ชม#') || vName === 'แอดไม่ประสงค์ออกนาม'){
+          vName = 'ไม่ประสงค์ออกนาม';
         }
 
         list.push({
@@ -3431,12 +3463,23 @@
       const safeName = esc(m.name||'ไม่ระบุชื่อ');
       const safeSnippet = esc(txt.slice(0, 80));
 
+      const myInitReact = getMyLocalReaction(snap.key);
+      const btnReactCls = myInitReact ? ' is-reacted' : '';
+      let btnReactIcon = '😊';
+      let btnReactTitle = 'ส่งความรู้สึก';
+      if(myInitReact){
+        btnReactIcon = (typeof REACT_IMG_MAP !== 'undefined' && REACT_IMG_MAP[myInitReact])
+          ? `<img src="${REACT_IMG_MAP[myInitReact]}" alt="${esc(myInitReact)}">`
+          : esc(myInitReact);
+        btnReactTitle = `คุณส่ง ${myInitReact} (แตะเพื่อเปลี่ยนหรือยกเลิก)`;
+      }
+
       el.innerHTML = `${av}<div class="body">
         <div class="nm">
           <span>${safeName}</span>${badgeHtml}
           <div class="msg-actions">
             <button type="button" class="msg-act-btn" onclick="startReply('${snap.key}', '${safeName}', '${safeSnippet}')" title="ตอบกลับ">↩️</button>
-            <button type="button" class="msg-act-btn btn-react" id="btn-react-${snap.key}" onclick="onMsgReactClick('${snap.key}', this, event)" title="ส่งความรู้สึก">😊</button>
+            <button type="button" class="msg-act-btn btn-react${btnReactCls}" id="btn-react-${snap.key}" onclick="onMsgReactClick('${snap.key}', this, event)" title="${btnReactTitle}">${btnReactIcon}</button>
             <button class="del" onclick="delMsg('${snap.key}')">ลบ</button>
           </div>
         </div>
