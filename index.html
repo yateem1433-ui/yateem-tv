@@ -141,6 +141,7 @@
     header .live-cluster{ margin-left:auto; display:flex; align-items:center; gap:8px; }
     header .live-cluster .chip{ padding:5px 10px; font-size:12px; background:var(--glass); }
     header .live-cluster .chip.live{ background:rgba(255,59,70,0.18); border-color:rgba(255,59,70,0.42); color:#fff; }
+    header #viewers{ display:none !important; }
     body.is-offline #live-indicator, .hero.is-offline ~ * #live-indicator{ display:none; }
     .hero .live-tag{ display:none; }
     .hero .offline{ position:absolute; inset:0; display:none; flex-direction:column; gap:8px;
@@ -1482,7 +1483,7 @@
     <div class="brand" data-lbl="brandName">Yateem TV</div>
     <div class="live-cluster">
       <span class="chip live" id="live-indicator"><span class="dot"></span><span data-lbl="liveBadge">LIVE</span></span>
-      <span class="chip viewers" id="viewers" onclick="openViewersModal()" role="button" tabindex="0" title="แตะเพื่อดูรายชื่อผู้ชมสดขณะนี้" style="cursor:pointer">👁 <span id="viewer-count">–</span> <span data-lbl="viewersSuffix">กำลังชม</span></span>
+      <span class="chip viewers" id="viewers" onclick="openViewersModal()" role="button" tabindex="0" title="แตะเพื่อดูรายชื่อผู้ชมสดขณะนี้" style="cursor:pointer;display:none">👁 <span id="viewer-count">–</span> <span data-lbl="viewersSuffix">กำลังชม</span></span>
       <button class="hdr-install" id="hdr-install-btn" onclick="doInstall()" style="display:none" data-lbl="hdrInstallBtn">📲 ติดตั้ง</button>
       <button class="profile-btn" id="profile-btn" onclick="openLogin()" aria-label="เข้าสู่ระบบ" title="เข้าสู่ระบบ">👤</button>
     </div>
