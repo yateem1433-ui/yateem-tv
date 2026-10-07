@@ -869,6 +869,32 @@
     .logout-btn{ border:1px solid var(--stroke); background:var(--glass-2); color:#ff8a90; border-radius:10px;
       padding:6px 12px; font-family:inherit; font-size:13px; cursor:pointer; }
 
+    /* ---- admin security login modal & managers management ---- */
+    .admin-login-sheet{ max-width:420px; width:92vw; text-align:left; border-radius:18px; border:1px solid rgba(255,215,0,0.25); box-shadow:0 12px 40px rgba(0,0,0,0.6); }
+    .al-header{ text-align:center; margin-bottom:12px; }
+    .al-icon{ font-size:38px; display:inline-block; margin-bottom:4px; filter:drop-shadow(0 0 10px rgba(255,184,0,0.4)); }
+    .al-eye-btn{ position:absolute; right:8px; background:none; border:none; color:var(--muted); font-size:16px; cursor:pointer; padding:6px; }
+    .al-eye-btn:hover{ color:var(--text); }
+    .al-remember-lbl{ display:flex; align-items:flex-start; gap:8px; font-size:12.5px; color:var(--text); opacity:.92; margin-top:12px; cursor:pointer; user-select:none; line-height:1.4; }
+    .al-remember-lbl input{ width:18px; height:18px; min-width:18px; margin:0; margin-top:2px; accent-color:var(--accent); }
+    .al-error{ margin-top:10px; padding:8px 12px; background:rgba(255,107,115,0.15); border:1px solid rgba(255,107,115,0.35); border-radius:8px; color:#ff6b73; font-size:12.5px; line-height:1.4; }
+    
+    .mgr-card{ background:var(--glass-2); border:1px solid var(--stroke); border-radius:14px; padding:14px; margin-top:10px; }
+    .mgr-item{ display:flex; gap:12px; align-items:center; background:var(--glass); border:1px solid var(--stroke); border-radius:12px; padding:12px; transition:border-color .15s ease; }
+    .mgr-item:hover{ border-color:rgba(255,255,255,0.2); }
+    .mgr-item.is-owner{ border-color:rgba(255,184,0,0.35); background:linear-gradient(135deg,rgba(255,184,0,0.08),rgba(255,255,255,0.02)); }
+    .mgr-avatar{ width:42px; height:42px; min-width:42px; border-radius:50%; background:var(--glass-2); display:flex; align-items:center; justify-content:center; font-size:20px; border:1px solid var(--stroke); }
+    .mgr-info{ flex:1; min-width:0; }
+    .mgr-name-row{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:3px; }
+    .mgr-name{ font-weight:700; font-size:14px; color:var(--text); }
+    .mgr-badge{ font-size:11px; padding:2px 7px; border-radius:6px; font-weight:600; }
+    .mgr-badge.badge-owner{ background:rgba(255,184,0,0.2); color:#ffd700; border:1px solid rgba(255,184,0,0.4); }
+    .mgr-badge.badge-admin{ background:rgba(255,77,77,0.18); color:#ff6b6b; border:1px solid rgba(255,77,77,0.35); }
+    .mgr-badge.badge-manager{ background:rgba(6,199,85,0.18); color:#06C755; border:1px solid rgba(6,199,85,0.35); }
+    .mgr-uid{ font-size:11.5px; font-family:monospace; color:var(--muted); word-break:break-all; }
+    .mgr-meta{ font-size:11px; color:var(--muted); margin-top:2px; }
+    .mgr-act{ display:flex; gap:6px; align-items:center; flex-shrink:0; }
+
     /* ---- ปุ่มรีแอคชัน & อิโมจิลอย (ตรงช่องพิมพ์แชท) ---- */
     /* static: ให้ถาด #react-pop ไปยึด .chat-input (เต็มความกว้าง) — ไม่งั้นถาดล้นออกซ้ายจอบนมือถือ */
     .react-bar{ position:static; display:flex; align-items:center; flex:0 0 auto; }
@@ -1685,6 +1711,9 @@
         <button class="login-btn line"   onclick="loginLine()"><span class="lb-ic">💬</span> <span data-lbl="loginLineBtn">เข้าสู่ระบบด้วย LINE</span></button>
         <button class="login-btn google" onclick="loginGoogle()"><span class="lb-ic">G</span> <span data-lbl="loginGoogleBtn">เข้าสู่ระบบด้วย Google</span></button>
         <button class="login-btn guest"  onclick="closeLogin()" data-lbl="loginGuestBtn">แชทแบบไม่ล็อกอิน</button>
+        <div style="text-align:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--stroke)">
+          <a href="#admin" onclick="closeLogin(); openAdminLoginModal(); return false;" style="font-size:12px;color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;gap:4px">🔐 เข้าสู่ระบบสำหรับผู้ดูแลระบบ / ผู้จัดการ</a>
+        </div>
       </div>
 
       <!-- Registration / Edit Form View -->
@@ -1755,6 +1784,7 @@
         </div>
 
         <div style="display:flex; flex-direction:column; gap:8px; margin-top:12px;">
+          <button type="button" class="login-btn admin-open-btn" id="profile-admin-btn" onclick="closeLogin(); openAdmin();" style="display:none;background:linear-gradient(135deg,rgba(255,184,0,0.22),rgba(255,107,115,0.22));border:1px solid var(--accent);color:var(--accent);font-weight:700"><span class="lb-ic">⚙️</span> <span>เปิดแผงควบคุมแอดมิน / ผู้จัดการ</span></button>
           <button class="login-btn kitchen-btn" onclick="openKitchenFromMember()"><span class="lb-ic">🛒</span> <span>สั่งอาหาร Yateem Kitchen</span></button>
           <button class="login-btn track-btn" onclick="openTrackFromMember()"><span class="lb-ic">📦</span> <span>ติดตามสถานะออเดอร์</span></button>
           <button class="login-btn guest" onclick="showMemberEditForm()"><span class="lb-ic">✏️</span> <span>แก้ไขข้อมูลสมาชิก</span></button>
@@ -2061,13 +2091,49 @@
     </div>
   </div>
 
+  <!-- ADMIN SECURITY LOGIN MODAL -->
+  <div class="backdrop" id="admin-login-backdrop" onclick="if(event.target===this)closeAdminLoginModal()">
+    <div class="sheet glass admin-login-sheet" style="position:relative;max-width:420px;width:92vw;padding:24px">
+      <button type="button" class="close" onclick="closeAdminLoginModal()">×</button>
+      <div class="al-header">
+        <div class="al-icon">🔐</div>
+        <h2 style="font-size:20px;margin:6px 0 2px;color:var(--accent)">เข้าสู่ระบบผู้ดูแลระบบ</h2>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 16px">ยืนยันรหัสความปลอดภัยเพื่อจัดการระบบ Yateem TV</p>
+      </div>
+      <form id="admin-login-form" onsubmit="event.preventDefault(); submitAdminLoginForm();">
+        <div class="mem-field">
+          <label for="admin-email-input">📧 อีเมลแอดมิน / ผู้จัดการ</label>
+          <input type="email" id="admin-email-input" class="mem-input" placeholder="admin@yateem.tv" required autocomplete="username">
+        </div>
+        <div class="mem-field" style="position:relative">
+          <label for="admin-pass-input">🔑 รหัสผ่านความปลอดภัย</label>
+          <div style="position:relative;display:flex;align-items:center">
+            <input type="password" id="admin-pass-input" class="mem-input" placeholder="กรอกรหัสผ่าน..." required autocomplete="current-password" style="padding-right:42px">
+            <button type="button" class="al-eye-btn" onclick="toggleAdminPassVisibility()" title="แสดง/ซ่อนรหัสผ่าน">👁️</button>
+          </div>
+        </div>
+        <label class="al-remember-lbl">
+          <input type="checkbox" id="admin-remember-input" checked>
+          <span>จำรหัสผ่านในเครื่องนี้ (บันทึกครั้งเดียว เข้าใช้งานได้ทันที)</span>
+        </label>
+        <div id="admin-login-error" class="al-error" style="display:none"></div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+          <button type="button" class="login-btn guest" onclick="closeAdminLoginModal()" style="flex:1">ยกเลิก</button>
+          <button type="submit" class="login-btn member-signup-btn" id="admin-login-submit-btn" style="flex:2">
+            <span class="lb-ic">🔓</span> <span>เข้าสู่ระบบแอดมิน</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- ADMIN PANEL -->
   <div class="backdrop" id="admin-backdrop" style="align-items:stretch">
     <div class="admin-panel glass">
       <div class="admin-head">
         <b>⚙️ แผงแอดมิน Yateem TV</b>
         <div style="display:flex;gap:10px;align-items:center">
-          <button class="logout-btn" onclick="adminLogout()">ออกจากระบบ</button>
+          <button class="logout-btn" onclick="adminLogout()" title="ออกจากระบบและล้างการจำรหัสในเครื่องนี้">ออกจากระบบ</button>
           <button class="close" style="position:static" onclick="closeAdmin()">×</button>
         </div>
       </div>
@@ -2078,6 +2144,7 @@
         <button class="atab" data-tab="schedule" onclick="adminTab('schedule')">ผังรายการ</button>
         <button class="atab" data-tab="stats" onclick="adminTab('stats')">📊 สถิติ</button>
         <button class="atab" data-tab="gifts" onclick="adminTab('gifts')">🎁 ของขวัญ</button>
+        <button class="atab" data-tab="managers" onclick="adminTab('managers')">👥 ผู้จัดการ</button>
       </div>
 
       <div class="admin-body">
@@ -2469,6 +2536,56 @@
             <button type="button" class="mini" onclick="loadAdminStats(true)">🔄 รีเฟรชสถิติ</button>
           </div>
         </div>
+
+        <!-- TAB: managers (จัดการผู้จัดการ / ซับแอดมิน) -->
+        <div class="apane" id="apane-managers" style="display:none">
+          <div class="grp" style="border-top:none;padding-top:0;display:flex;align-items:center;justify-content:space-between">
+            <span>👥 สิทธิ์ผู้ดูแลและผู้จัดการ (Managers)</span>
+            <span class="vs-count-badge" id="mgr-total-badge">0 คน</span>
+          </div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">
+            แต่งตั้งหรือเพิกถอนสิทธิ์ผู้จัดการระบบ สำหรับช่วยดูแลห้องแชท ลบข้อความที่ไม่เหมาะสม และจัดการเนื้อหาบน Yateem TV
+          </div>
+
+          <!-- Add Manager Form Card -->
+          <div class="glass mgr-card">
+            <div style="font-weight:700;color:var(--accent);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+              <span>➕ แต่งตั้งผู้จัดการใหม่</span>
+            </div>
+            
+            <div style="margin-bottom:10px">
+              <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block">เลือกด่วนจากผู้ชมหรือสมาชิกที่ออนไลน์ล่าสุด:</label>
+              <select id="mgr-quick-pick" onchange="onMgrQuickPick(this.value)">
+                <option value="">-- แตะเลือกเพื่อกรอก UID อัตโนมัติ --</option>
+              </select>
+            </div>
+
+            <label style="font-size:12px;color:var(--muted)">Firebase UID ของผู้ใช้*</label>
+            <input type="text" id="mgr-input-uid" placeholder="เช่น aBcD1234EfGh5678..." style="font-family:monospace;font-size:13px">
+
+            <label style="font-size:12px;color:var(--muted);margin-top:8px">ชื่อหรือตำแหน่งผู้จัดการ</label>
+            <input type="text" id="mgr-input-name" placeholder="เช่น บังเลาะห์ (ผู้จัดการฝ่ายดูแลแชท)">
+
+            <label style="font-size:12px;color:var(--muted);margin-top:8px">ระดับสิทธิ์ (Role)</label>
+            <select id="mgr-input-role">
+              <option value="manager">🛡️ ผู้จัดการ (Manager - ลบแชท & ช่วยดูแลทั่วไป)</option>
+              <option value="admin">⭐ ผู้ดูแลระบบ (Admin - สิทธิ์ดูแลเต็มรูปแบบ)</option>
+            </select>
+
+            <button type="button" class="save-btn" onclick="adminAddManager()" style="margin-top:12px;padding:12px;font-size:14px">
+              + แต่งตั้งและบันทึกสิทธิ์
+            </button>
+          </div>
+
+          <!-- Managers List Section -->
+          <div class="grp" style="display:flex;align-items:center;justify-content:space-between">
+            <span>รายชื่อผู้จัดการและผู้ดูแลปัจจุบัน</span>
+            <button type="button" class="mini" onclick="loadAdminManagers()">🔄 โหลดใหม่</button>
+          </div>
+          <div id="mgr-list" class="mgr-list" style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
+            <div class="sched-empty" style="padding:20px 0">กำลังโหลดรายชื่อผู้จัดการ...</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -2654,16 +2771,37 @@
      ============================================================ */
   let db=null, chatRef=null, myUid=null, lastSend=0, chatOn=false;
   const OWNER_UID='qDOL6lE687ejMumQcpOWtEjAMJ92';   // ต้องตรงกับ database.rules.json
-  // เป็นแอดมินจริงเฉพาะ owner หรือผู้ล็อกอินด้วย email/password เท่านั้น
-  // (ผู้ล็อกอิน social = Google/Facebook เป็น non-anonymous แต่ไม่ใช่แอดมิน)
-  function isAdminUser(u){ return !!u && (u.uid===OWNER_UID ||
-    (u.providerData||[]).some(p=>p && p.providerId==='password')); }
+  let adminUidsMap = { [OWNER_UID]: true };
+  // เป็นแอดมินจริงเฉพาะ owner, ผู้ล็อกอินด้วย email/password, หรือมี UID ใน /admins
+  function isAdminUser(u){
+    if(!u) return false;
+    if(u.uid === OWNER_UID) return true;
+    if((u.providerData||[]).some(p=>p && p.providerId==='password')) return true;
+    if(adminUidsMap && adminUidsMap[u.uid]) return true;
+    return false;
+  }
   function fbConfigured(){ return CONFIG.firebase && CONFIG.firebase.apiKey && CONFIG.firebase.databaseURL; }
   function initFirebaseApp(){                      // เรียกได้ครั้งเดียว ใช้ร่วมกันทั้ง settings/schedule/chat
     if(!fbConfigured()) return false;
     if(!firebase.apps.length){ firebase.initializeApp(CONFIG.firebase); }
     if(!db) db=firebase.database();
     return true;
+  }
+
+  function bindAdminsSync(){
+    if(!db) return;
+    db.ref('admins').on('value', snap => {
+      const val = snap.val() || {};
+      adminUidsMap = { [OWNER_UID]: true };
+      Object.keys(val).forEach(k => {
+        if(val[k]) adminUidsMap[k] = true;
+      });
+      const u = (firebase.auth && firebase.auth().currentUser);
+      if(u) applyUserState(u);
+      if(document.getElementById('apane-managers') && document.getElementById('apane-managers').style.display === 'block'){
+        if(typeof renderManagersList === 'function') renderManagersList(val);
+      }
+    });
   }
 
   async function initChat(){
@@ -2693,6 +2831,7 @@
       recordVisitStats();
       chatOn=true; note.textContent='ใส่ชื่อเล่นแล้วพิมพ์ได้เลยค่ะ';
       bindPresence();
+      bindAdminsSync();
       bindMessages();
       bindReactions();
       bindMessageReactions();
@@ -2712,6 +2851,8 @@
     const admin=isAdminUser(user);
     isAdmin=admin;
     document.body.classList.toggle('is-mod', admin);
+    const pAdmBtn = document.getElementById('profile-admin-btn');
+    if(pAdmBtn) pAdmBtn.style.display = admin ? 'block' : 'none';
     bindGiftAdmin(admin);
     bindWallet();
     updateProfileBtn(user);
@@ -4179,6 +4320,8 @@
 
   /* แอดมิน — เปิดด้วย #mod (ลบแชทอย่างเดียว) หรือ #admin (เปิดแผงแก้ไข) */
   let isAdmin=false;
+  let adminPendingOpenPanel=false;
+
   function handleAdminHash(){
     const h=location.hash;
     if(h!=='#mod' && h!=='#admin') return;
@@ -4186,30 +4329,107 @@
       if(h==='#admin') openAdmin();
       return;
     }
-    adminLogin(h==='#admin');
+    openAdminLoginModal(h==='#admin');
   }
-  function adminLogin(openPanel){
-    const email=prompt('อีเมลแอดมิน:','');
-    if(!email) return;
-    const pass=prompt('รหัสผ่าน:','')||'';
-    firebase.auth().signInWithEmailAndPassword(email,pass)
-      .then(cred=>{
-        myUid=cred.user.uid; isAdmin=true; document.body.classList.add('is-mod');
-        const admName = 'แอดมิน (' + (cred.user.email ? cred.user.email.split('@')[0] : 'ผู้ดูแล') + ')';
-        const curNick = (localStorage.getItem('yt_nick') || '').trim();
-        if(!curNick || curNick === 'ไม่ประสงค์ออกนาม' || curNick === 'แอดไม่ประสงค์ออกนาม' || curNick.startsWith('ผู้ชม')){
-          localStorage.setItem('yt_nick', admName);
-        }
-        applyUserState(cred.user);
-        toast('เข้าสู่ระบบแอดมินแล้ว (จำไว้ในเครื่องนี้)');
-        broadcastJoinEvent(true);
-        if(openPanel) openAdmin();
-      })
-      .catch(()=>toast('ล็อกอินแอดมินไม่สำเร็จ'));
+
+  function openAdminLoginModal(openPanel){
+    adminPendingOpenPanel = !!openPanel;
+    const bd = document.getElementById('admin-login-backdrop');
+    if(!bd) return;
+    const savedEmail = localStorage.getItem('yt_admin_email') || '';
+    const emailInp = document.getElementById('admin-email-input');
+    const passInp = document.getElementById('admin-pass-input');
+    const remInp = document.getElementById('admin-remember-input');
+    const errEl = document.getElementById('admin-login-error');
+    if(emailInp) emailInp.value = savedEmail;
+    if(passInp) passInp.value = '';
+    if(remInp) remInp.checked = (localStorage.getItem('yt_admin_remember') !== '0');
+    if(errEl){ errEl.style.display = 'none'; errEl.textContent = ''; }
+    bd.classList.add('open');
+    setTimeout(()=>{ if(savedEmail && passInp) passInp.focus(); else if(emailInp) emailInp.focus(); }, 120);
   }
+
+  function closeAdminLoginModal(){
+    const bd = document.getElementById('admin-login-backdrop');
+    if(bd) bd.classList.remove('open');
+    if(location.hash === '#admin' || location.hash === '#mod'){
+      if(!isAdmin) history.replaceState(null, document.title, location.pathname + location.search);
+    }
+  }
+
+  function toggleAdminPassVisibility(){
+    const passInp = document.getElementById('admin-pass-input');
+    if(!passInp) return;
+    passInp.type = (passInp.type === 'password') ? 'text' : 'password';
+  }
+
+  async function submitAdminLoginForm(){
+    const email = (document.getElementById('admin-email-input').value||'').trim();
+    const pass = (document.getElementById('admin-pass-input').value||'').trim();
+    const remember = document.getElementById('admin-remember-input').checked;
+    const errEl = document.getElementById('admin-login-error');
+    const btn = document.getElementById('admin-login-submit-btn');
+
+    if(!email || !pass){
+      if(errEl){ errEl.textContent = 'กรุณากรอกอีเมลและรหัสผ่านให้ครบถ้วน'; errEl.style.display = 'block'; }
+      return;
+    }
+    if(errEl) errEl.style.display = 'none';
+    if(btn){ btn.disabled = true; btn.textContent = 'กำลังตรวจสอบ...'; }
+
+    try{
+      if(remember){
+        await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        localStorage.setItem('yt_admin_remember', '1');
+        localStorage.setItem('yt_admin_email', email);
+      } else {
+        await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
+        localStorage.removeItem('yt_admin_remember');
+      }
+
+      const cred = await firebase.auth().signInWithEmailAndPassword(email, pass);
+      myUid = cred.user.uid;
+      isAdmin = true;
+      document.body.classList.add('is-mod');
+
+      const admName = 'แอดมิน (' + (cred.user.email ? cred.user.email.split('@')[0] : 'ผู้ดูแล') + ')';
+      const curNick = (localStorage.getItem('yt_nick') || '').trim();
+      if(!curNick || curNick === 'ไม่ประสงค์ออกนาม' || curNick === 'แอดไม่ประสงค์ออกนาม' || curNick.startsWith('ผู้ชม')){
+        localStorage.setItem('yt_nick', admName);
+      }
+      applyUserState(cred.user);
+      closeAdminLoginModal();
+      toast('เข้าสู่ระบบผู้ดูแลแล้ว ✅' + (remember ? ' (จำรหัสในเครื่องนี้)' : ''));
+      broadcastJoinEvent(true);
+      if(adminPendingOpenPanel || location.hash === '#admin'){
+        openAdmin();
+      }
+    }catch(e){
+      console.error(e);
+      let msg = 'รหัสผ่านหรืออีเมลไม่ถูกต้อง';
+      if(e.code === 'auth/user-not-found') msg = 'ไม่พบบัญชีผู้ใช้นี้ในระบบ';
+      else if(e.code === 'auth/wrong-password') msg = 'รหัสผ่านไม่ถูกต้อง';
+      else if(e.code === 'auth/too-many-requests') msg = 'ลองผิดหลายครั้งเกินไป โปรดรอสักครู่';
+      else if(e.message) msg = e.message;
+      if(errEl){ errEl.textContent = msg; errEl.style.display = 'block'; }
+    }finally{
+      if(btn){ btn.disabled = false; btn.innerHTML = '<span class="lb-ic">🔓</span> <span>เข้าสู่ระบบแอดมิน</span>'; }
+    }
+  }
+
   function adminLogout(){
-    firebase.auth().signOut().then(()=>{ toast('ออกจากระบบแล้ว'); location.hash=''; location.reload(); })
-      .catch(()=>toast('ออกจากระบบไม่สำเร็จ'));
+    localStorage.removeItem('yt_admin_remember');
+    firebase.auth().signOut().then(()=>{
+      toast('ออกจากระบบแล้ว (ล้างการจำรหัสในเครื่องนี้)');
+      isAdmin = false;
+      document.body.classList.remove('is-mod');
+      closeAdmin();
+      location.hash = '';
+      setTimeout(()=>location.reload(), 300);
+    }).catch(e=>{
+      console.error(e);
+      toast('ออกจากระบบไม่สำเร็จ');
+    });
   }
 
   /* ============================================================
@@ -5336,17 +5556,22 @@
   // ---- แผงแอดมิน ----
   let adminEditing=false;
   async function openAdmin(){
+    if(!isAdmin){
+      openAdminLoginModal(true);
+      return;
+    }
     document.getElementById('admin-backdrop').classList.add('open');
     if(!settingsReady){ toast('กำลังโหลดข้อมูล...'); await waitSettings(); }
     adminEditing=false;
     fillSettingsForm(); fillAdminVideos(); fillAdminSponsors(); renderThemeTab(); renderLabelsForm();
     adminTab('settings'); adminLoadTemplateDay();
     const ovD=document.getElementById('ov-date'); if(ovD && !ovD.value){ ovD.value=ymd(new Date()); adminLoadOverride(); }
+    updateMgrQuickPickOptions();
   }
   function closeAdmin(){ document.getElementById('admin-backdrop').classList.remove('open'); }
   function adminTab(t){
     document.querySelectorAll('.atab').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
-    ['settings','theme','labels','schedule','stats','gifts'].forEach(p=>{
+    ['settings','theme','labels','schedule','stats','gifts','managers'].forEach(p=>{
       const el=document.getElementById('apane-'+p); if(el) el.style.display=(p===t)?'block':'none';
     });
     if(t==='schedule'){
@@ -5359,6 +5584,199 @@
     }
     if(t==='gifts'){
       initGiftReportPickers(); loadGiftReport(); renderGiftPreviewBtns(); loadAdminGifts();
+    }
+    if(t==='managers'){
+      loadAdminManagers();
+    }
+  }
+
+  /* ============================================================
+     ADMIN MANAGERS MANAGEMENT (ระบบจัดการผู้จัดการ / ซับแอดมิน)
+     ============================================================ */
+  let adminManagersCache = {};
+
+  function onMgrQuickPick(uid){
+    if(!uid) return;
+    const uidInp = document.getElementById('mgr-input-uid');
+    const nameInp = document.getElementById('mgr-input-name');
+    if(uidInp) uidInp.value = uid;
+    const prof = (typeof knownViewerProfiles !== 'undefined' && knownViewerProfiles[uid]) ? knownViewerProfiles[uid] : null;
+    if(prof && prof.name && nameInp && !nameInp.value){
+      nameInp.value = prof.name + ' (ผู้จัดการ)';
+    }
+  }
+
+  function updateMgrQuickPickOptions(){
+    const sel = document.getElementById('mgr-quick-pick');
+    if(!sel) return;
+    const curVal = sel.value;
+    let html = '<option value="">-- แตะเลือกเพื่อกรอก UID อัตโนมัติ --</option>';
+    if(typeof knownViewerProfiles !== 'undefined'){
+      Object.keys(knownViewerProfiles).forEach(k => {
+        if(k.startsWith('name:')) return; // ignore anon guest prefix
+        const p = knownViewerProfiles[k];
+        if(!p || !p.name) return;
+        const isSelf = (k === myUid);
+        const isOwn = (k === OWNER_UID);
+        const tag = isOwn ? ' (👑 Owner)' : (isSelf ? ' (ตัวคุณ)' : '');
+        html += `<option value="${esc(k)}">${esc(p.name)}${tag} [UID: ${esc(k.slice(0, 8))}...]</option>`;
+      });
+    }
+    sel.innerHTML = html;
+    if(curVal) sel.value = curVal;
+  }
+
+  async function loadAdminManagers(){
+    const listEl = document.getElementById('mgr-list');
+    if(!listEl) return;
+    updateMgrQuickPickOptions();
+
+    if(!db){
+      listEl.innerHTML = '<div class="sched-empty">ฐานข้อมูลยังไม่พร้อมเชื่อมต่อ</div>';
+      return;
+    }
+
+    try{
+      const snap = await db.ref('admins').once('value');
+      const val = snap.val() || {};
+      adminManagersCache = val;
+      renderManagersList(val);
+    }catch(e){
+      console.error(e);
+      listEl.innerHTML = '<div class="sched-empty" style="color:#ff6b73">โหลดรายชื่อไม่สำเร็จ (โปรดตรวจสิทธิ์แอดมิน): ' + esc(e.message||e) + '</div>';
+    }
+  }
+
+  function renderManagersList(val){
+    const listEl = document.getElementById('mgr-list');
+    const badgeEl = document.getElementById('mgr-total-badge');
+    if(!listEl) return;
+
+    val = val || {};
+    adminManagersCache = val;
+
+    const mgrUids = Object.keys(val);
+    const totalCount = 1 + mgrUids.filter(k => k !== OWNER_UID).length;
+    if(badgeEl) badgeEl.textContent = totalCount + ' คน';
+
+    let html = '';
+
+    // 1. Owner Card (Always pinned on top, cannot be deleted)
+    const isMeOwner = (myUid === OWNER_UID);
+    html += `
+      <div class="mgr-item is-owner">
+        <div class="mgr-avatar">👑</div>
+        <div class="mgr-info">
+          <div class="mgr-name-row">
+            <span class="mgr-name">เจ้าของระบบหลัก (Super Admin)</span>
+            <span class="mgr-badge badge-owner">👑 เจ้าของระบบ (Owner)</span>
+            ${isMeOwner ? '<span style="font-size:11px;color:var(--accent)">(บัญชีของคุณ)</span>' : ''}
+          </div>
+          <div class="mgr-uid">UID: ${esc(OWNER_UID)}</div>
+          <div class="mgr-meta">สิทธิ์สูงสุดถาวรตามกฎฐานข้อมูล Firebase</div>
+        </div>
+        <div class="mgr-act">
+          <span style="font-size:11px;color:var(--muted);background:var(--glass-2);padding:4px 8px;border-radius:6px">สิทธิ์หลัก</span>
+        </div>
+      </div>
+    `;
+
+    // 2. Added Managers
+    const nonOwnerKeys = mgrUids.filter(k => k !== OWNER_UID);
+    if(nonOwnerKeys.length === 0){
+      html += `
+        <div class="sched-empty" style="padding:16px 0;background:var(--glass-2);border-radius:12px;margin-top:6px">
+          ยังไม่มีผู้จัดการเพิ่มเติม สามารถกรอก UID ด้านบนเพื่อแต่งตั้งผู้จัดการได้ทันทีค่ะ
+        </div>
+      `;
+    } else {
+      nonOwnerKeys.forEach(uid => {
+        const item = val[uid] || {};
+        const isObj = (typeof item === 'object');
+        const role = (isObj && item.role) ? item.role : 'manager';
+        const name = (isObj && item.name) ? item.name : 'ผู้จัดการ';
+        const addedAt = (isObj && item.addedAt) ? new Date(item.addedAt).toLocaleString('th-TH', { dateStyle:'short', timeStyle:'short' }) : 'ไม่ระบุเวลา';
+        const roleBadge = (role === 'admin') 
+          ? '<span class="mgr-badge badge-admin">⭐ ผู้ดูแลระบบ (Admin)</span>'
+          : '<span class="mgr-badge badge-manager">🛡️ ผู้จัดการ (Manager)</span>';
+        const isMe = (uid === myUid);
+
+        html += `
+          <div class="mgr-item">
+            <div class="mgr-avatar">${(role === 'admin') ? '⭐' : '🛡️'}</div>
+            <div class="mgr-info">
+              <div class="mgr-name-row">
+                <span class="mgr-name">${esc(name)}</span>
+                ${roleBadge}
+                ${isMe ? '<span style="font-size:11px;color:var(--accent)">(คุณ)</span>' : ''}
+              </div>
+              <div class="mgr-uid">UID: ${esc(uid)}</div>
+              <div class="mgr-meta">แต่งตั้งเมื่อ: ${esc(addedAt)}</div>
+            </div>
+            <div class="mgr-act">
+              <button type="button" class="mini danger-mini" onclick="adminRemoveManager('${esc(uid)}', '${esc(name)}')" title="เพิกถอนสิทธิ์ผู้จัดการนี้">
+                🗑️ ลบสิทธิ์
+              </button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    listEl.innerHTML = html;
+  }
+
+  async function adminAddManager(){
+    const uidInp = document.getElementById('mgr-input-uid');
+    const nameInp = document.getElementById('mgr-input-name');
+    const roleInp = document.getElementById('mgr-input-role');
+    const uid = (uidInp ? uidInp.value : '').trim();
+    const name = (nameInp ? nameInp.value : '').trim();
+    const role = (roleInp ? roleInp.value : 'manager') || 'manager';
+
+    if(!uid){ toast('กรุณาระบุ Firebase UID ของผู้ใช้ที่ต้องการแต่งตั้ง'); if(uidInp) uidInp.focus(); return; }
+    if(uid === OWNER_UID){ toast('UID นี้เป็นเจ้าของระบบหลักอยู่แล้วค่ะ'); return; }
+
+    if(!db || !isAdmin){ toast('ต้องเข้าสู่ระบบแอดมินก่อนดำเนินการค่ะ'); return; }
+
+    const managerData = {
+      role: role,
+      name: name || (role === 'admin' ? 'ผู้ดูแลระบบ' : 'ผู้จัดการ'),
+      addedAt: firebase.database.ServerValue.TIMESTAMP,
+      addedBy: myUid || OWNER_UID
+    };
+
+    try{
+      await db.ref('admins/' + uid).set(managerData);
+      toast('แต่งตั้ง ' + (name || 'ผู้จัดการ') + ' เรียบร้อยแล้วค่ะ ✅');
+      if(uidInp) uidInp.value = '';
+      if(nameInp) nameInp.value = '';
+      const quickSel = document.getElementById('mgr-quick-pick');
+      if(quickSel) quickSel.value = '';
+      loadAdminManagers();
+    }catch(e){
+      console.error(e);
+      saveErr(e);
+    }
+  }
+
+  async function adminRemoveManager(uid, name){
+    if(!uid) return;
+    if(uid === OWNER_UID){ toast('ไม่สามารถลบสิทธิ์เจ้าของระบบหลักได้ค่ะ'); return; }
+    if(!db || !isAdmin){ toast('ต้องเข้าสู่ระบบแอดมินก่อนค่ะ'); return; }
+
+    const label = name ? `คุณ "${name}"` : `UID: ${uid}`;
+    if(!confirm(`ต้องการเพิกถอนสิทธิ์ผู้จัดการของ ${label} ใช่หรือไม่?\n\nเมื่อลบแล้วผู้ใช้นี้จะไม่สามารถลบแชทหรือเข้าถึงฟังก์ชันแอดมินได้อีกต่อไป`)){
+      return;
+    }
+
+    try{
+      await db.ref('admins/' + uid).remove();
+      toast('เพิกถอนสิทธิ์เรียบร้อยแล้วค่ะ ✅');
+      loadAdminManagers();
+    }catch(e){
+      console.error(e);
+      saveErr(e);
     }
   }
   function val(id){ return (document.getElementById(id).value||'').trim(); }
