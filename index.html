@@ -256,36 +256,78 @@
     }
     .viewer-badge .vbi{ font-size:10px; }
 
-    /* ---- message reactions container ---- */
-    .msg-reacts{ display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; }
-    .mrp{
-      display:inline-flex; align-items:center; gap:3px;
-      background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.14);
-      border-radius:12px; padding:2px 7px; font-size:12px; color:var(--text);
-      cursor:pointer; transition:transform .12s ease, border-color .12s ease; font-family:inherit;
+    /* ---- Facebook Style Message Reactions ---- */
+    .msg-reacts{ display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; align-items:center; }
+    
+    /* Cluster Badge: ไอคอนกลุ่มซ้อนทับกัน + ยอดนับรวม เหมือน Facebook */
+    .msg-react-cluster{
+      display:inline-flex; align-items:center; gap:5px;
+      background:rgba(11,18,34,0.88); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+      border:1px solid rgba(255,255,255,0.14); border-radius:14px;
+      padding:2px 8px 2px 5px; cursor:pointer;
+      box-shadow:0 3px 10px rgba(0,0,0,0.38);
+      transition:transform .14s cubic-bezier(0.18, 0.89, 0.32, 1.28), border-color .14s ease, background .14s ease, box-shadow .14s ease;
+      user-select:none; -webkit-user-select:none;
     }
-    .mrp:hover{ transform:scale(1.06); }
-    .mrp.on{
-      border-color:var(--accent); background:rgba(234,185,52,0.18); color:var(--accent);
-      box-shadow:0 0 6px rgba(234,185,52,0.3);
+    .msg-react-cluster:hover{
+      transform:scale(1.08);
+      border-color:var(--accent);
+      background:rgba(234,185,52,0.14);
+      box-shadow:0 4px 14px rgba(234,185,52,0.25);
     }
-    .mrp img{ width:16px; height:16px; object-fit:contain; }
-    .mrp-cnt{ font-size:11px; font-weight:600; }
+    .msg-react-cluster:active{ transform:scale(0.96); }
+    .msg-react-cluster.has-mine{
+      border-color:rgba(234,185,52,0.55);
+      background:rgba(234,185,52,0.16);
+      box-shadow:0 0 10px rgba(234,185,52,0.25);
+    }
+    .mrc-icons{
+      display:inline-flex; align-items:center;
+    }
+    .mrc-ic{
+      display:inline-flex; align-items:center; justify-content:center;
+      width:18px; height:18px; border-radius:50%;
+      background:#070B14; border:1.2px solid rgba(255,255,255,0.25);
+      margin-left:-4px; position:relative; box-shadow:0 1px 4px rgba(0,0,0,0.5);
+    }
+    .mrc-ic:first-child{ margin-left:0; }
+    .mrc-ic img{ width:15px; height:15px; object-fit:contain; display:block; }
+    .mrc-ic .emoji-char{ font-size:12px; line-height:1; }
+    .mrc-cnt{
+      font-size:11px; font-weight:700; color:var(--text); margin-left:2px; line-height:1;
+    }
+    .msg-react-cluster.has-mine .mrc-cnt{ color:var(--accent); }
+
+    /* เด้งเบาๆ เมื่อมียอดอัปเดตใหม่ */
+    .mrc-bounce{ animation:mrcBounce .32s cubic-bezier(0.18, 0.89, 0.32, 1.3); }
+    @keyframes mrcBounce{
+      0%{ transform:scale(0.85); }
+      50%{ transform:scale(1.18); }
+      100%{ transform:scale(1); }
+    }
 
     /* ---- Facebook style dynamic reaction button on messages ---- */
     .msg-act-btn.btn-react{
-      display:inline-flex; align-items:center; justify-content:center;
-      transition:transform .15s cubic-bezier(0.18, 0.89, 0.32, 1.28), background .15s ease, border-color .15s ease;
-      min-width:24px; min-height:24px;
+      display:inline-flex; align-items:center; justify-content:center; gap:3px;
+      transition:transform .15s cubic-bezier(0.18, 0.89, 0.32, 1.28), background .15s ease, border-color .15s ease, color .15s ease;
+      min-width:24px; min-height:24px; padding:1px 5px; border-radius:12px;
+      color:var(--muted);
+    }
+    .msg-act-btn.btn-react:hover{
+      transform:scale(1.15); color:var(--accent);
     }
     .msg-act-btn.btn-react.is-reacted{
-      background:rgba(234,185,52,0.22) !important;
-      border:1px solid var(--accent) !important;
-      box-shadow:0 0 8px rgba(234,185,52,0.4);
-      transform:scale(1.1);
+      background:rgba(234,185,52,0.18) !important;
+      border:1px solid rgba(234,185,52,0.5) !important;
+      color:var(--accent) !important;
+      box-shadow:0 0 10px rgba(234,185,52,0.3);
+      transform:scale(1.08);
     }
-    .msg-act-btn.btn-react.is-reacted img{
-      width:18px; height:18px; object-fit:contain; pointer-events:none; display:block;
+    .msg-act-btn.btn-react img{
+      width:17px; height:17px; object-fit:contain; pointer-events:none; display:inline-block; vertical-align:middle;
+    }
+    .msg-act-btn.btn-react .br-text{
+      display:none; font-size:11px; font-weight:600; line-height:1;
     }
 
     /* ---- chat identity bar (non-blocking guest name display) ---- */
@@ -307,27 +349,71 @@
     .msg-react-popover{
       position:fixed; z-index:9999;
       display:flex; align-items:center; justify-content:center;
-      gap:4px; max-width:calc(100vw - 16px) !important; width:max-content;
-      background:rgba(11,18,34,0.96); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
-      border:1px solid rgba(234,185,52,0.45); border-radius:32px;
-      padding:5px 8px; box-shadow:0 12px 32px rgba(0,0,0,0.7), 0 0 18px rgba(234,185,52,0.3);
+      gap:5px; max-width:calc(100vw - 16px) !important; width:max-content;
+      background:rgba(11,18,34,0.97); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+      border:1.5px solid rgba(234,185,52,0.48); border-radius:34px;
+      padding:5px 9px; box-shadow:0 14px 34px rgba(0,0,0,0.75), 0 0 20px rgba(234,185,52,0.32);
       animation:popRise .16s cubic-bezier(0.18, 0.89, 0.32, 1.28);
       touch-action:manipulation; box-sizing:border-box; overflow:hidden;
     }
-    @keyframes popRise{ from{opacity:0; transform:scale(0.8) translateY(6px)} to{opacity:1; transform:scale(1) translateY(0)} }
+    @keyframes popRise{ from{opacity:0; transform:scale(0.8) translateY(8px)} to{opacity:1; transform:scale(1) translateY(0)} }
     .msg-react-popover button{
-      background:none; border:none; cursor:pointer; font-size:20px; line-height:1;
-      padding:3px; border-radius:50%; transition:transform .12s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      background:none; border:none; cursor:pointer; font-size:22px; line-height:1;
+      padding:3px; border-radius:50%; transition:transform .14s cubic-bezier(0.18, 0.89, 0.32, 1.35);
       display:flex; align-items:center; justify-content:center; flex:0 0 auto;
       -webkit-tap-highlight-color:transparent;
     }
     .msg-react-popover button:hover,
     .msg-react-popover button:active{
-      transform:scale(1.35); background:rgba(255,255,255,0.12);
+      transform:scale(1.42) translateY(-4px); background:rgba(255,255,255,0.14);
     }
     .msg-react-popover button img{
-      width:24px; height:24px; display:block; object-fit:contain; pointer-events:none;
+      width:26px; height:26px; display:block; object-fit:contain; pointer-events:none;
     }
+    .msg-react-popover button.is-current{
+      background:rgba(234,185,52,0.28) !important;
+      box-shadow:0 0 0 2px var(--accent);
+      transform:scale(1.18);
+    }
+
+    /* ---- reaction details sheet (ดูว่าใครกดอะไรบ้าง สไตล์ Facebook) ---- */
+    .react-details-sheet{ width:100%; max-width:380px; }
+    .rds-tabs{
+      display:flex; align-items:center; gap:6px; overflow-x:auto; padding-bottom:6px;
+      border-bottom:1px solid rgba(255,255,255,0.08); scrollbar-width:none;
+    }
+    .rds-tabs::-webkit-scrollbar{ display:none; }
+    .rds-tab{
+      background:none; border:1px solid transparent; color:var(--muted); font-size:12px; font-weight:600;
+      padding:4px 9px; border-radius:14px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;
+      white-space:nowrap; transition:all .12s ease; font-family:inherit;
+    }
+    .rds-tab.on{
+      background:rgba(234,185,52,0.18); border-color:rgba(234,185,52,0.45); color:var(--accent);
+    }
+    .rds-tab img{ width:15px; height:15px; object-fit:contain; display:block; }
+    .rds-item{
+      display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:12px;
+      background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05);
+      transition:background .12s;
+    }
+    .rds-item:hover{ background:rgba(255,255,255,0.06); }
+    .rds-av-wrap{ position:relative; flex:0 0 auto; }
+    .rds-av{
+      width:34px; height:34px; border-radius:50%; object-fit:cover;
+      background:var(--glass-2); border:1px solid var(--stroke); display:flex; align-items:center;
+      justify-content:center; font-size:13px; color:var(--accent); font-weight:700;
+    }
+    .rds-badge-ic{
+      position:absolute; bottom:-3px; right:-4px; width:17px; height:17px; border-radius:50%;
+      background:#070B14; border:1px solid rgba(255,255,255,0.25);
+      display:flex; align-items:center; justify-content:center;
+    }
+    .rds-badge-ic img{ width:13px; height:13px; object-fit:contain; }
+    .rds-badge-ic .emoji-char{ font-size:11px; line-height:1; }
+    .rds-info{ min-width:0; flex:1; }
+    .rds-name{ font-size:13px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .rds-sub{ font-size:11px; color:var(--muted); }
 
     /* ---- live viewers avatar strip (Facebook Live style) ---- */
     .viewers-bar{
@@ -361,21 +447,48 @@
       pointer-events:none; padding:0 12px;
     }
     .reaction-notify-toast{
-      display:flex; align-items:center; gap:10px; max-width:min(92vw, 420px); width:max-content;
-      background:rgba(11,18,34,0.95); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
-      border:1px solid var(--accent); border-radius:26px; padding:7px 14px 7px 10px;
-      box-shadow:0 10px 28px rgba(0,0,0,0.65), 0 0 18px rgba(234,185,52,0.35);
-      animation:rxIn .28s cubic-bezier(0.18, 0.89, 0.32, 1.2); pointer-events:auto; cursor:pointer;
+      display:flex; align-items:center; gap:11px; max-width:min(94vw, 440px); width:max-content;
+      background:rgba(11,18,34,0.96); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+      border:1.5px solid var(--accent); border-radius:28px; padding:7px 14px 7px 9px;
+      box-shadow:0 12px 32px rgba(0,0,0,0.7), 0 0 20px rgba(234,185,52,0.35);
+      animation:rxIn .28s cubic-bezier(0.18, 0.89, 0.32, 1.25); pointer-events:auto; cursor:pointer;
+      transition:transform .12s, box-shadow .12s;
     }
-    @keyframes rxIn{ from{opacity:0; transform:translateY(-14px) scale(0.92)} to{opacity:1; transform:none} }
-    .reaction-notify-toast.out{ animation:rxOut .3s ease forwards; }
-    @keyframes rxOut{ to{opacity:0; transform:translateY(-12px) scale(0.9)} }
-    .reaction-notify-toast .rnt-ic{ width:28px; height:28px; object-fit:contain; flex:0 0 auto; }
-    .reaction-notify-toast .rnt-emoji{ font-size:24px; line-height:1; flex:0 0 auto; }
+    .reaction-notify-toast:hover{
+      transform:translateY(-2px);
+      box-shadow:0 16px 36px rgba(0,0,0,0.8), 0 0 24px rgba(234,185,52,0.45);
+    }
+    @keyframes rxIn{ from{opacity:0; transform:translateY(-16px) scale(0.9)} to{opacity:1; transform:none} }
+    .reaction-notify-toast.out{ animation:rxOut .28s ease forwards; }
+    @keyframes rxOut{ to{opacity:0; transform:translateY(-14px) scale(0.9)} }
+    .reaction-notify-toast .rnt-av-box{ position:relative; flex:0 0 auto; }
+    .reaction-notify-toast .rnt-av{
+      width:34px; height:34px; border-radius:50%; object-fit:cover;
+      background:var(--glass-2); border:1.5px solid var(--accent); display:flex; align-items:center;
+      justify-content:center; font-size:13px; color:var(--accent); font-weight:700;
+    }
+    .reaction-notify-toast .rnt-mini-rx{
+      position:absolute; bottom:-3px; right:-4px; width:18px; height:18px; border-radius:50%;
+      background:#070B14; border:1px solid rgba(255,255,255,0.25);
+      display:flex; align-items:center; justify-content:center;
+      box-shadow:0 2px 6px rgba(0,0,0,0.4);
+    }
+    .reaction-notify-toast .rnt-mini-rx img{ width:14px; height:14px; object-fit:contain; }
+    .reaction-notify-toast .rnt-mini-rx .emoji-char{ font-size:11px; line-height:1; }
+    .reaction-notify-toast .rnt-ic-big{
+      width:32px; height:32px; object-fit:contain; flex:0 0 auto;
+      animation:rntIconPop .38s cubic-bezier(0.18, 0.89, 0.32, 1.4);
+    }
+    @keyframes rntIconPop{
+      0%{ transform:scale(0.5) rotate(-15deg); }
+      60%{ transform:scale(1.25) rotate(10deg); }
+      100%{ transform:scale(1) rotate(0); }
+    }
     .reaction-notify-toast .rnt-body{ min-width:0; display:flex; flex-direction:column; line-height:1.25; }
     .reaction-notify-toast .rnt-t{ font-size:13px; color:var(--text); }
     .reaction-notify-toast .rnt-t b{ color:var(--accent); }
-    .reaction-notify-toast .rnt-sub{ font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:240px; }
+    .reaction-notify-toast .rnt-rx-label{ color:var(--accent); font-weight:600; }
+    .reaction-notify-toast .rnt-sub{ font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:240px; margin-top:2px; }
     .reaction-notify-toast .rnt-arrow{ color:var(--accent); font-size:18px; margin-left:4px; flex:0 0 auto; }
 
     /* ---- Facebook Live join alerts (toast layer) ---- */
@@ -451,12 +564,17 @@
     .spotlight .go{ margin-left:auto; color:var(--accent); font-weight:600; font-size:22px; }
 
     /* ---- modal / sheet ---- */
-    .backdrop{ position:fixed; inset:0; z-index:50; background:rgba(3,5,10,.6);
+    .backdrop{ position:fixed; inset:0; z-index:900; background:rgba(3,5,10,.6);
       -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); display:none;
       align-items:flex-end; justify-content:center; }
     .backdrop.open{ display:flex; }
     .sheet{ width:100%; max-width:560px; border-radius:26px 26px 0 0; padding:22px;
       padding-bottom:calc(22px + env(safe-area-inset-bottom)); animation:slideup .28s ease; }
+    @media (min-width:640px){
+      .backdrop{ align-items:center; }
+      .sheet{ border-radius:24px; margin-bottom:0; max-height:88vh; }
+    }
+    body.has-install-banner .wrap{ padding-bottom:calc(74px + env(safe-area-inset-bottom)); }
     @keyframes slideup{ from{transform:translateY(30px); opacity:.4} to{transform:none; opacity:1} }
     .sheet h2{ margin:0 0 4px; font-size:20px; font-weight:700; }
     .sheet .close{ position:absolute; top:16px; right:20px; background:none; border:none; color:var(--muted); font-size:26px; cursor:pointer; }
@@ -1399,6 +1517,16 @@
         <button class="share-btn" onclick="shareSite()" data-lbl="shareBtn">🔗 แชร์</button>
       </div>
 
+      <!-- แถบโปรไฟล์ผู้ชมสดกำลังรับชม (Facebook Live Style Viewers Bar) -->
+      <div class="glass viewers-bar" id="viewers-bar" onclick="openViewersModal()" title="แตะเพื่อดูรายชื่อผู้รับชมทั้งหมด">
+        <div class="vb-lead">
+          <span class="vb-dot"></span>
+          <span class="vb-lbl">กำลังชม:</span>
+        </div>
+        <div class="vb-avatars" id="vb-avatars"></div>
+        <span class="vb-more" id="vb-more">ดูทั้งหมด ›</span>
+      </div>
+
       <!-- แจ้งเตือนเมื่อมีคนส่งความรู้สึกถึงเจ้าของข้อความ -->
       <div class="rx-notify-layer" id="rx-notify-layer"></div>
 
@@ -1896,11 +2024,24 @@
       <div class="vs-tabs">
         <button type="button" class="vs-tab on" id="vs-tab-all" onclick="setViewersTab('all')">ทั้งหมด</button>
         <button type="button" class="vs-tab" id="vs-tab-vip" onclick="setViewersTab('vip')">👑 แฟนตัวยง & สมาชิก</button>
-        <button type="button" class="vs-tab" id="vs-tab-new" onclick="setViewersTab('new')">🌱 ผู้ชมใหม่</button>
+        <button type="button" class="vs-tab" id="vs-tab-new" onclick="setViewersTab('new')">🌱 ผู้ชมทั่วไป</button>
       </div>
       <div class="vs-list" id="vs-list">
         <div class="sched-empty" style="padding:24px 0">กำลังโหลดรายชื่อผู้ชม...</div>
       </div>
+    </div>
+  </div>
+
+  <!-- REACTION DETAILS SHEET (ดูว่าใครกดความรู้สึกอะไรบ้าง — สไตล์ Facebook) -->
+  <div class="backdrop" id="react-details-backdrop" onclick="if(event.target===this)closeReactionDetailsModal()">
+    <div class="sheet glass react-details-sheet" style="position:relative;max-width:400px">
+      <button class="close" onclick="closeReactionDetailsModal()">×</button>
+      <div class="rds-header" style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <h2 style="font-size:17px;margin:0;color:var(--accent)">💖 การแสดงความรู้สึก</h2>
+        <span class="vs-count-badge" id="rds-total-badge">0 คน</span>
+      </div>
+      <div class="rds-tabs" id="rds-tabs"></div>
+      <div class="rds-list" id="rds-list" style="max-height:50vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-top:10px"></div>
     </div>
   </div>
 
@@ -2577,11 +2718,12 @@
     syncMyPresence();
   }
 
-  // ---- identity: ชื่อ/รูป สำหรับแชท (สมาชิก Yateem → social user → LINE → ชื่อเล่น / ไม่ประสงค์ออกนาม) ----
+  // ---- identity: ชื่อ/รูป สำหรับแชท (สมาชิก Yateem → social user → LINE → ชื่อเล่น / ผู้ชม #xxxx) ----
   function getOrInitGuestName(){
     let n = (localStorage.getItem('yt_nick') || '').trim();
-    if(!n || n === 'ผู้ชม' || n.startsWith('ผู้ชม #') || n.startsWith('ผู้ชม#') || n === 'แอดไม่ประสงค์ออกนาม'){
-      n = 'ไม่ประสงค์ออกนาม';
+    if(!n || n === 'ผู้ชม' || n === 'ไม่ประสงค์ออกนาม' || n === 'แอดไม่ประสงค์ออกนาม'){
+      const randNum = Math.floor(1000 + Math.random() * 9000);
+      n = 'ผู้ชม #' + randNum;
       localStorage.setItem('yt_nick', n);
     }
     return n;
@@ -2596,9 +2738,7 @@
     const hasCustomNick = !!(customNick && 
       customNick !== 'ไม่ประสงค์ออกนาม' && 
       customNick !== 'แอดไม่ประสงค์ออกนาม' && 
-      customNick !== 'ผู้ชม' && 
-      !customNick.startsWith('ผู้ชม #') && 
-      !customNick.startsWith('ผู้ชม#'));
+      !customNick.startsWith('ผู้ชม'));
 
     let name = '';
     let photo = '';
@@ -2627,7 +2767,7 @@
       name = hasCustomNick ? customNick : getOrInitGuestName();
     }
 
-    if(!name) name = 'ไม่ประสงค์ออกนาม';
+    if(!name) name = getOrInitGuestName();
 
     return {
       name: name,
@@ -2642,27 +2782,41 @@
   function ensureName(){ return displayName() || getOrInitGuestName(); }
 
   let myPresenceRef = null;
+  let presenceHeartbeatTimer = null;
 
   function syncMyPresence(){
     if(!myPresenceRef || typeof firebase === 'undefined' || !firebase.database) return;
     const ident = currentIdentity();
     const role = getViewerRole();
-    const myName = (ident.name || 'ไม่ประสงค์ออกนาม').slice(0, 40);
+    const currentUid = (typeof myUid !== 'undefined' && myUid) || (firebase.auth && firebase.auth().currentUser && firebase.auth().currentUser.uid) || '';
+    const myName = (ident.name || getOrInitGuestName()).slice(0, 40);
+    const safePhoto = (ident.photo && !ident.photo.startsWith('data:') && (ident.photo.startsWith('http://') || ident.photo.startsWith('https://'))) ? ident.photo.slice(0, 500) : '';
     myPresenceRef.set({
-      uid: (typeof myUid !== 'undefined' && myUid) ? myUid : '',
+      uid: currentUid,
       name: myName,
-      photo: (ident.photo || '').slice(0, 500),
+      photo: safePhoto,
       avatarIcon: ident.avatarIcon || '',
       role: role,
-      joinedAt: firebase.database.ServerValue.TIMESTAMP
+      joinedAt: firebase.database.ServerValue.TIMESTAMP,
+      lastSeen: firebase.database.ServerValue.TIMESTAMP
     }).catch(() => {
-      myPresenceRef.set(true).catch(()=>{});
+      myPresenceRef.set({ name: myName, uid: currentUid }).catch(()=>{
+        myPresenceRef.set(true).catch(()=>{});
+      });
     });
+
+    if(!presenceHeartbeatTimer){
+      presenceHeartbeatTimer = setInterval(() => {
+        if(myPresenceRef && db && chatOn){
+          myPresenceRef.child('lastSeen').set(firebase.database.ServerValue.TIMESTAMP).catch(()=>{});
+        }
+      }, 30000);
+    }
   }
 
   function updateIdentityBar(){
     const el = document.getElementById('ci-name');
-    if(el) el.textContent = displayName() || 'ไม่ประสงค์ออกนาม';
+    if(el) el.textContent = displayName() || getOrInitGuestName();
   }
 
   function openEditNickModal(){
@@ -2718,6 +2872,21 @@
      LIVE CHAT EXTENSIONS: REPLIES, REACTIONS, VIEWER PRESENCE
      ============================================================ */
 
+  // ---- ชุดอิโมจิรีแอคชัน 3D Facebook + ขอดุอาอ ----
+  const REACTIONS=[
+    {e:'👍', img:'fb_like.png',  t:'ถูกใจ',   color:'#1877F2'},
+    {e:'❤️', img:'fb_love.png',  t:'รักเลย',   color:'#F33E5B'},
+    {e:'🥰', img:'fb_care.png',  t:'ห่วงใย',   color:'#F7B125'},
+    {e:'😆', img:'fb_haha.png',  t:'ฮ่าๆ',    color:'#F7B125'},
+    {e:'😮', img:'fb_wow.png',   t:'ว้าว',    color:'#F7B125'},
+    {e:'😢', img:'fb_sad.png',   t:'เศร้า',    color:'#F7B125'},
+    {e:'🤲', img:'',             t:'ขอดุอาอ', color:'#FFD700'}
+  ];
+  const REACT_SET=new Set(REACTIONS.map(r=>r.e));
+  const REACT_IMG_MAP=Object.fromEntries(REACTIONS.filter(r=>r.img).map(r=>[r.e,r.img]));
+  const REACT_LABEL_MAP=Object.fromEntries(REACTIONS.map(r=>[r.e,r.t]));
+  const REACT_COLOR_MAP=Object.fromEntries(REACTIONS.map(r=>[r.e,r.color||'#EAB934']));
+
   // ---- 1. จำแนกสถานะผู้ชม (Viewer Role & Stats) ----
   const VIEWER_ROLES = {
     admin:     { key: 'admin',     label: 'ผู้ดูแลระบบ', icon: '🛡️', color: '#FF4D4D', bg: 'rgba(255,77,77,0.18)' },
@@ -2766,15 +2935,17 @@
   const messagesMap = {}; // msgKey -> { uid, name, text, ts, badge }
   const mySentMsgKeys = new Set();
   try {
-    const saved = JSON.parse(sessionStorage.getItem('yt_my_sent_msgs') || '[]');
-    saved.forEach(k => mySentMsgKeys.add(k));
+    const fromLocal = JSON.parse(localStorage.getItem('yt_my_sent_msgs') || '[]');
+    const fromSession = JSON.parse(sessionStorage.getItem('yt_my_sent_msgs') || '[]');
+    [...fromLocal, ...fromSession].forEach(k => { if(k) mySentMsgKeys.add(k); });
   } catch(e){}
 
   function recordMySentMessage(msgKey){
     if(!msgKey) return;
     mySentMsgKeys.add(msgKey);
     try {
-      const arr = Array.from(mySentMsgKeys).slice(-60);
+      const arr = Array.from(mySentMsgKeys).slice(-100);
+      localStorage.setItem('yt_my_sent_msgs', JSON.stringify(arr));
       sessionStorage.setItem('yt_my_sent_msgs', JSON.stringify(arr));
     } catch(e){}
   }
@@ -2813,7 +2984,7 @@
     }
   }
 
-  // กดค้างที่ข้อความ (Long-Press): 380ms -> สั่นเบาๆ + เริ่มตอบกลับ + เปิด Reaction Bar
+  // กดค้างที่ข้อความ (Long-Press): 380ms -> สั่นเบาๆ + เปิด Reaction Bar
   function attachMsgLongPress(el, msgKey, safeName, safeSnippet){
     if(!el) return;
     let pressTimer = null;
@@ -2836,7 +3007,6 @@
         if(navigator.vibrate) try{ navigator.vibrate(40); }catch(e){}
         el.classList.add('highlight-pulse');
         setTimeout(() => el.classList.remove('highlight-pulse'), 800);
-        startReply(msgKey, safeName, safeSnippet);
         openMsgReactPopover(msgKey, el, ev);
       }, 380);
     }, { passive: true });
@@ -2877,25 +3047,43 @@
     } catch(e){}
   }
 
-  function notifyReactionToOwner(msgKey, reactorName, emoji, snippet){
+  function notifyReactionToOwner(msgKey, reactorName, reactorPhoto, emoji, snippet){
     const layer = document.getElementById('rx-notify-layer');
     if(!layer) return;
 
     playNotifChime();
-    if(navigator.vibrate) try{ navigator.vibrate([30, 45, 30]); }catch(e){}
+    if(navigator.vibrate) try{ navigator.vibrate([35, 50, 35]); }catch(e){}
 
     const toastEl = document.createElement('div');
     toastEl.className = 'reaction-notify-toast';
-    const ic = (typeof REACT_IMG_MAP !== 'undefined' && REACT_IMG_MAP[emoji])
-      ? `<img class="rnt-ic" src="${REACT_IMG_MAP[emoji]}" alt="${esc(emoji)}">`
-      : `<span class="rnt-emoji">${esc(emoji)}</span>`;
+    
+    const rxLabel = REACT_LABEL_MAP[emoji] || 'ความรู้สึก';
+    const rxColor = REACT_COLOR_MAP[emoji] || 'var(--accent)';
+    const icBig = (typeof REACT_IMG_MAP !== 'undefined' && REACT_IMG_MAP[emoji])
+      ? `<img class="rnt-ic-big" src="${REACT_IMG_MAP[emoji]}" alt="${esc(emoji)}">`
+      : `<span style="font-size:28px;line-height:1">${esc(emoji)}</span>`;
+
+    const cleanName = esc(reactorName || 'มีผู้รับชม');
+    const initial = cleanName.charAt(0) || '?';
+    let avHtml = `<div class="rnt-av">${initial}</div>`;
+    if(reactorPhoto && (reactorPhoto.startsWith('http') || reactorPhoto.startsWith('data:'))){
+      avHtml = `<img class="rnt-av" src="${esc(reactorPhoto)}" alt="" onerror="this.outerHTML='<div class=\\'rnt-av\\'>${esc(initial)}</div>'">`;
+    }
+
+    const miniBadge = (typeof REACT_IMG_MAP !== 'undefined' && REACT_IMG_MAP[emoji])
+      ? `<span class="rnt-mini-rx"><img src="${REACT_IMG_MAP[emoji]}" alt="${esc(emoji)}"></span>`
+      : `<span class="rnt-mini-rx"><span class="emoji-char">${esc(emoji)}</span></span>`;
 
     const cleanSnippet = snippet ? `"${esc(snippet.slice(0, 45))}${snippet.length > 45 ? '...' : ''}"` : 'ข้อความของคุณ';
 
     toastEl.innerHTML = `
-      ${ic}
+      <div class="rnt-av-box">
+        ${avHtml}
+        ${miniBadge}
+      </div>
+      ${icBig}
       <div class="rnt-body">
-        <div class="rnt-t"><b>${esc(reactorName)}</b> แสดงความรู้สึกต่อข้อความของคุณ</div>
+        <div class="rnt-t"><b>${cleanName}</b> กด <span class="rnt-rx-label" style="color:${rxColor}">${esc(rxLabel)}</span> ต่อคอมเมนต์ของคุณ</div>
         <div class="rnt-sub">${cleanSnippet}</div>
       </div>
       <span class="rnt-arrow">›</span>
@@ -2904,14 +3092,14 @@
     toastEl.onclick = () => {
       scrollToMsg(msgKey);
       toastEl.classList.add('out');
-      setTimeout(() => toastEl.remove(), 300);
+      setTimeout(() => toastEl.remove(), 280);
     };
 
     layer.appendChild(toastEl);
     setTimeout(() => {
       if(toastEl.parentNode){
         toastEl.classList.add('out');
-        setTimeout(() => toastEl.remove(), 350);
+        setTimeout(() => toastEl.remove(), 320);
       }
     }, 4500);
   }
@@ -2946,21 +3134,32 @@
     if(u === myUid) return; // ไม่เตือนถ้าตัวเองเป็นคนกด
 
     const now = Date.now() + serverOffset;
-    if(Math.abs(now - r.ts) > 25000) return; // เฉพาะเหตุการณ์สดใหม่
+    const isRecent = Math.abs(now - r.ts) < 25000; // เฉพาะเหตุการณ์สดใหม่
+
+    // สำหรับผู้ชมคนอื่น ให้แสดงอิโมจิลอยจอด้วยเพื่อให้แชทดูมีชีวิตชีวาแบบ Facebook Live
+    if(isRecent && r.ts > (window.__lastSeenRxTs || 0)){
+      window.__lastSeenRxTs = r.ts;
+      spawnFloat(r.e, r.name);
+    }
+
+    if(!isRecent) return;
 
     const targetMsg = messagesMap[msgKey];
+    const myName = displayName();
+    const isGuestName = !myName || myName === 'ไม่ประสงค์ออกนาม' || myName === 'แอดไม่ประสงค์ออกนาม' || myName.startsWith('ผู้ชม');
     const isTargetMe = (r.targetUid && r.targetUid === myUid) ||
                        mySentMsgKeys.has(msgKey) ||
-                       (targetMsg && targetMsg.uid === myUid);
+                       (targetMsg && targetMsg.uid && targetMsg.uid === myUid) ||
+                       (!isGuestName && targetMsg && targetMsg.name && targetMsg.name === myName);
 
     if(!isTargetMe) return;
 
-    const notifKey = `${msgKey}_${u}_${r.e}_${Math.floor(r.ts / 12000)}`;
+    const notifKey = `${msgKey}_${u}_${r.e}_${Math.floor(r.ts / 10000)}`;
     if(notifiedReactionKeys.has(notifKey)) return;
     notifiedReactionKeys.add(notifKey);
 
     const snippet = r.msgSnippet || (targetMsg ? targetMsg.text : '');
-    notifyReactionToOwner(msgKey, r.name || 'มีผู้รับชม', r.e, snippet);
+    notifyReactionToOwner(msgKey, r.name || 'มีผู้รับชม', r.photo || '', r.e, snippet);
   }
 
   function bindMessageReactions(){
@@ -2971,6 +3170,19 @@
       msgReactionsCache[snap.key] = val;
       renderMsgReactions(snap.key, val);
       for(const u in val){
+        const rItem = val[u];
+        if(rItem && rItem.name && rItem.name !== 'ไม่ประสงค์ออกนาม' && rItem.name !== 'แอดไม่ประสงค์ออกนาม'){
+          if(!knownViewerProfiles[u]){
+            knownViewerProfiles[u] = {
+              name: rItem.name,
+              photo: rItem.photo || '',
+              avatarIcon: '',
+              role: 'returning',
+              lastSeen: rItem.ts || Date.now()
+            };
+            if(typeof debouncedRefreshViewers === 'function') debouncedRefreshViewers();
+          }
+        }
         checkReactionNotification(snap.key, u, val[u]);
       }
     });
@@ -2979,6 +3191,19 @@
       msgReactionsCache[snap.key] = val;
       renderMsgReactions(snap.key, val);
       for(const u in val){
+        const rItem = val[u];
+        if(rItem && rItem.name && rItem.name !== 'ไม่ประสงค์ออกนาม' && rItem.name !== 'แอดไม่ประสงค์ออกนาม'){
+          if(!knownViewerProfiles[u]){
+            knownViewerProfiles[u] = {
+              name: rItem.name,
+              photo: rItem.photo || '',
+              avatarIcon: '',
+              role: 'returning',
+              lastSeen: rItem.ts || Date.now()
+            };
+            if(typeof debouncedRefreshViewers === 'function') debouncedRefreshViewers();
+          }
+        }
         checkReactionNotification(snap.key, u, val[u]);
       }
     });
@@ -3004,11 +3229,19 @@
     const pop = document.createElement('div');
     pop.id = 'msg-react-popover';
     pop.className = 'msg-react-popover';
+
+    const currentReact = (myUid && msgReactionsCache[msgKey] && msgReactionsCache[msgKey][myUid])
+      ? msgReactionsCache[msgKey][myUid].e
+      : getMyLocalReaction(msgKey);
+
     REACTIONS.forEach(r => {
       const b = document.createElement('button');
       b.type = 'button';
       b.title = r.t;
       b.setAttribute('aria-label', r.t);
+      if(currentReact === r.e){
+        b.classList.add('is-current');
+      }
       if(r.img){
         b.innerHTML = `<img src="${r.img}" alt="${r.e}">`;
       } else {
@@ -3049,6 +3282,13 @@
 
     pop.style.top = Math.round(top) + 'px';
     pop.style.left = Math.round(left) + 'px';
+
+    const onScrollClose = () => {
+      const p = document.getElementById('msg-react-popover');
+      if(p){ p.remove(); activeReactMsgKey = null; }
+      window.removeEventListener('scroll', onScrollClose, true);
+    };
+    window.addEventListener('scroll', onScrollClose, true);
   }
 
   document.addEventListener('click', ev => {
@@ -3072,13 +3312,22 @@
     const current = (msgReactionsCache[msgKey] && msgReactionsCache[msgKey][myUid]) ? msgReactionsCache[msgKey][myUid].e : null;
     
     const targetMsg = messagesMap[msgKey] || {};
-    const targetUid = targetMsg.uid || '';
+    let targetUid = targetMsg.uid || '';
+    if(!targetUid){
+      const msgEl = document.querySelector(`.msg[data-key="${msgKey}"]`);
+      if(msgEl && msgEl.dataset && msgEl.dataset.uid) targetUid = msgEl.dataset.uid;
+    }
     const targetSnippet = (targetMsg.text || '').slice(0, 80);
+    const photo = (currentIdentity().photo && !currentIdentity().photo.startsWith('data:')) ? currentIdentity().photo.slice(0, 500) : '';
 
     if(current === emoji){
       // ยกเลิกความรู้สึก (Unreact)
       saveMyLocalReaction(msgKey, null);
-      ref.remove().catch(()=>{});
+      ref.remove().catch(e => {
+        if(e && e.message && e.message.includes('PERMISSION_DENIED')){
+          console.warn('Firebase Permission Note: โปรดอัปเดตกฎ database.rules.json ใน Firebase Console เพื่อเปิดการบันทึก messageReactions');
+        }
+      });
       if(msgReactionsCache[msgKey] && msgReactionsCache[msgKey][myUid]){
         delete msgReactionsCache[msgKey][myUid];
         renderMsgReactions(msgKey, msgReactionsCache[msgKey]);
@@ -3087,18 +3336,22 @@
       // Optimistic update ทันที ให้ปุ่มเปลี่ยนเป็นไอคอนนั้นเหมือน Facebook
       saveMyLocalReaction(msgKey, emoji);
       if(!msgReactionsCache[msgKey]) msgReactionsCache[msgKey] = {};
-      msgReactionsCache[msgKey][myUid] = { e: emoji, name: name };
+      msgReactionsCache[msgKey][myUid] = { e: emoji, name: name, photo: photo, targetUid: targetUid, ts: Date.now() + serverOffset };
       renderMsgReactions(msgKey, msgReactionsCache[msgKey]);
       spawnFloat(emoji, name);
 
       ref.set({
         e: emoji,
         name: name.slice(0, 40),
+        photo: photo,
         targetUid: targetUid,
         msgSnippet: targetSnippet,
         ts: firebase.database.ServerValue.TIMESTAMP
       }).catch(e => {
         console.warn('Reaction write note:', e.message);
+        if(e && e.message && e.message.includes('PERMISSION_DENIED')){
+          console.warn('Firebase Permission Note: โปรด Publish กฎ database.rules.json ในหน้า Firebase Console > Realtime Database > Rules');
+        }
       });
     }
   }
@@ -3122,15 +3375,19 @@
     if(reactBtn){
       if(myReact){
         reactBtn.classList.add('is-reacted');
+        const rxColor = REACT_COLOR_MAP[myReact] || 'var(--accent)';
+        const rxLabel = REACT_LABEL_MAP[myReact] || myReact;
+        reactBtn.style.color = rxColor;
         if(typeof REACT_IMG_MAP !== 'undefined' && REACT_IMG_MAP[myReact]){
-          reactBtn.innerHTML = `<img src="${REACT_IMG_MAP[myReact]}" alt="${esc(myReact)}">`;
+          reactBtn.innerHTML = `<img src="${REACT_IMG_MAP[myReact]}" alt="${esc(myReact)}"><span class="br-text" style="display:inline;color:${rxColor}">${esc(rxLabel)}</span>`;
         } else {
-          reactBtn.textContent = myReact;
+          reactBtn.innerHTML = `${esc(myReact)}<span class="br-text" style="display:inline;color:${rxColor}">${esc(rxLabel)}</span>`;
         }
-        reactBtn.title = `คุณส่ง ${myReact} (แตะเพื่อเปลี่ยนหรือยกเลิก)`;
+        reactBtn.title = `คุณส่ง ${rxLabel} (แตะเพื่อเปลี่ยนหรือยกเลิก)`;
       } else {
         reactBtn.classList.remove('is-reacted');
-        reactBtn.textContent = '😊';
+        reactBtn.style.color = '';
+        reactBtn.innerHTML = `👍<span class="br-text">ถูกใจ</span>`;
         reactBtn.title = 'ส่งความรู้สึก';
       }
     }
@@ -3140,27 +3397,144 @@
       container.innerHTML = '';
       return;
     }
+
     const counts = {};
+    let totalCount = 0;
+    let hasMine = false;
     for(const u in userReactions){
       const r = userReactions[u];
       if(!r || !r.e) continue;
-      if(!counts[r.e]) counts[r.e] = { count: 0, names: [], hasMine: false };
+      if(!counts[r.e]) counts[r.e] = { count: 0, names: [] };
       counts[r.e].count++;
+      totalCount++;
       if(r.name) counts[r.e].names.push(r.name);
-      if(u === myUid) counts[r.e].hasMine = true;
+      if(u === myUid) hasMine = true;
     }
-    if(Object.keys(counts).length === 0){
+
+    if(totalCount === 0){
       container.innerHTML = '';
       return;
     }
-    let html = '';
-    for(const e in counts){
-      const item = counts[e];
-      const ic = REACT_IMG_MAP[e] ? `<img src="${REACT_IMG_MAP[e]}" alt="${esc(e)}">` : esc(e);
-      const tip = item.names.slice(0, 5).join(', ') + (item.names.length > 5 ? ` และอีก ${item.names.length - 5} คน` : '');
-      html += `<button type="button" class="mrp ${item.hasMine ? 'on' : ''}" onclick="toggleMsgReaction('${msgKey}', '${e}')" title="${esc(tip)}" aria-label="${esc(e)} ${item.count}">${ic} <span class="mrp-cnt">${item.count}</span></button>`;
+
+    // จัดลำดับอิโมจิที่คนกดเยอะที่สุด 3 อันดับแรกสำหรับแสดงเป็นคลัสเตอร์ซ้อนกัน
+    const sortedEmojis = Object.keys(counts).sort((a, b) => counts[b].count - counts[a].count);
+    const topEmojis = sortedEmojis.slice(0, 3);
+
+    let iconsHtml = '';
+    topEmojis.forEach((e, idx) => {
+      const z = 5 - idx;
+      const ic = (typeof REACT_IMG_MAP !== 'undefined' && REACT_IMG_MAP[e])
+        ? `<img src="${REACT_IMG_MAP[e]}" alt="${esc(e)}">`
+        : `<span class="emoji-char">${esc(e)}</span>`;
+      iconsHtml += `<span class="mrc-ic" style="z-index:${z}">${ic}</span>`;
+    });
+
+    const allNames = [];
+    sortedEmojis.forEach(e => {
+      counts[e].names.forEach(n => { if(!allNames.includes(n)) allNames.push(n); });
+    });
+    const tipText = allNames.slice(0, 4).join(', ') + (allNames.length > 4 ? ` และอีก ${allNames.length - 4} คน` : '');
+
+    container.innerHTML = `
+      <div class="msg-react-cluster ${hasMine ? 'has-mine' : ''} mrc-bounce" onclick="openReactionDetailsModal('${msgKey}')" title="${esc(tipText)} (แตะเพื่อดูรายชื่อ)">
+        <div class="mrc-icons">${iconsHtml}</div>
+        <span class="mrc-cnt">${totalCount}</span>
+      </div>
+    `;
+  }
+
+  // ---- ดูรายละเอียดผู้กด Reaction บนข้อความ (Facebook Style) ----
+  let activeDetailsMsgKey = null;
+  let activeDetailsTab = 'all';
+
+  function openReactionDetailsModal(msgKey){
+    activeDetailsMsgKey = msgKey;
+    activeDetailsTab = 'all';
+    const bd = document.getElementById('react-details-backdrop');
+    if(bd){
+      bd.classList.add('open');
+      renderReactionDetailsContent();
     }
-    container.innerHTML = html;
+  }
+
+  function closeReactionDetailsModal(){
+    const bd = document.getElementById('react-details-backdrop');
+    if(bd) bd.classList.remove('open');
+    activeDetailsMsgKey = null;
+  }
+
+  function setReactionDetailsTab(t){
+    activeDetailsTab = t;
+    renderReactionDetailsContent();
+  }
+
+  function renderReactionDetailsContent(){
+    if(!activeDetailsMsgKey) return;
+    const userReactions = msgReactionsCache[activeDetailsMsgKey] || {};
+    const tabsEl = document.getElementById('rds-tabs');
+    const listEl = document.getElementById('rds-list');
+    const badgeEl = document.getElementById('rds-total-badge');
+    if(!tabsEl || !listEl) return;
+
+    const counts = {};
+    const users = [];
+    for(const u in userReactions){
+      const r = userReactions[u];
+      if(!r || !r.e) continue;
+      if(!counts[r.e]) counts[r.e] = 0;
+      counts[r.e]++;
+      users.push({ uid: u, ...r });
+    }
+
+    const total = users.length;
+    if(badgeEl) badgeEl.textContent = `${total} คน`;
+
+    if(total === 0){
+      tabsEl.innerHTML = '';
+      listEl.innerHTML = '<div class="sched-empty" style="padding:24px 0">ยังไม่มีผู้แสดงความรู้สึกค่ะ</div>';
+      return;
+    }
+
+    // Tabs
+    let tabsHtml = `<button type="button" class="rds-tab ${activeDetailsTab === 'all' ? 'on' : ''}" onclick="setReactionDetailsTab('all')">ทั้งหมด (${total})</button>`;
+    for(const e in counts){
+      const ic = (typeof REACT_IMG_MAP !== 'undefined' && REACT_IMG_MAP[e]) ? `<img src="${REACT_IMG_MAP[e]}" alt="${esc(e)}">` : esc(e);
+      tabsHtml += `<button type="button" class="rds-tab ${activeDetailsTab === e ? 'on' : ''}" onclick="setReactionDetailsTab('${e}')">${ic} ${counts[e]}</button>`;
+    }
+    tabsEl.innerHTML = tabsHtml;
+
+    // Filter list
+    const filtered = (activeDetailsTab === 'all') ? users : users.filter(u => u.e === activeDetailsTab);
+    if(filtered.length === 0){
+      listEl.innerHTML = '<div class="sched-empty" style="padding:20px 0">ไม่มีรายการในหมวดหมู่นี้ค่ะ</div>';
+      return;
+    }
+
+    listEl.innerHTML = filtered.map(u => {
+      const uName = esc(u.name || 'ไม่ประสงค์ออกนาม');
+      const initial = uName.charAt(0) || '?';
+      let avHtml = `<div class="rds-av">${initial}</div>`;
+      if(u.photo && (u.photo.startsWith('http') || u.photo.startsWith('data:'))){
+        avHtml = `<img class="rds-av" src="${esc(u.photo)}" alt="">`;
+      }
+      const badgeIc = (typeof REACT_IMG_MAP !== 'undefined' && REACT_IMG_MAP[u.e])
+        ? `<span class="rds-badge-ic"><img src="${REACT_IMG_MAP[u.e]}" alt="${esc(u.e)}"></span>`
+        : `<span class="rds-badge-ic"><span class="emoji-char">${esc(u.e)}</span></span>`;
+      const label = REACT_LABEL_MAP[u.e] || u.e;
+
+      return `
+        <div class="rds-item">
+          <div class="rds-av-wrap">
+            ${avHtml}
+            ${badgeIc}
+          </div>
+          <div class="rds-info">
+            <div class="rds-name">${uName}</div>
+            <div class="rds-sub" style="color:${REACT_COLOR_MAP[u.e] || 'var(--accent)'}">${esc(label)}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
   }
 
   // ---- 4. แจ้งเตือนผู้ชมเข้าร่วมไลฟ์ (Facebook Live Join Alerts) ----
@@ -3174,12 +3548,13 @@
       sessionStorage.setItem('yt_join_broadcasted', '1');
       const name = currentIdentity().name || 'ไม่ประสงค์ออกนาม';
       const role = getViewerRole();
+      const safePhoto = (currentIdentity().photo && !currentIdentity().photo.startsWith('data:') && (currentIdentity().photo.startsWith('http://') || currentIdentity().photo.startsWith('https://'))) ? currentIdentity().photo.slice(0, 500) : '';
       const ref = db.ref(`rooms/${CONFIG.chat.roomId}/joins`).push();
       ref.set({
         uid: myUid,
         name: name.slice(0, 40),
         role: role,
-        photo: (currentIdentity().photo || '').slice(0, 500),
+        photo: safePhoto,
         ts: firebase.database.ServerValue.TIMESTAMP
       }).then(() => {
         setTimeout(() => ref.remove().catch(()=>{}), 15000);
@@ -3195,7 +3570,7 @@
       db.ref(`rooms/${CONFIG.chat.roomId}/joins`).orderByChild('ts').startAt(since)
         .on('child_added', snap => {
           const j = snap.val() || {};
-          if(!j.name) return;
+          if(!j.name || j.uid === myUid) return;
           enqueueJoinAlert(j);
         });
     });
@@ -3222,11 +3597,13 @@
     if(!layer) return;
     const r = VIEWER_ROLES[j.role] || VIEWER_ROLES.new;
     const rawName = String(j.name || '').trim();
-    const cleanName = (!rawName || rawName === 'ผู้ชม' || rawName.startsWith('ผู้ชม #') || rawName.startsWith('ผู้ชม#') || rawName === 'แอดไม่ประสงค์ออกนาม') ? 'ไม่ประสงค์ออกนาม' : rawName;
+    const cleanName = (!rawName || rawName === 'ผู้ชม' || rawName === 'แอดไม่ประสงค์ออกนาม') ? (j.name || 'มีผู้รับชมใหม่') : rawName;
     const el = document.createElement('div');
     el.className = 'join-toast';
     const initial = cleanName.charAt(0) || '?';
-    const av = j.photo ? `<img class="jt-av" src="${esc(j.photo)}" alt="">` : `<div class="jt-av">${esc(initial)}</div>`;
+    const av = (j.photo && (j.photo.startsWith('http') || j.photo.startsWith('data:')))
+      ? `<img class="jt-av" src="${esc(j.photo)}" alt="" onerror="this.outerHTML='<div class=\\'jt-av\\'>${esc(initial)}</div>'">`
+      : `<div class="jt-av">${esc(initial)}</div>`;
     el.innerHTML = `
       ${av}
       <div class="jt-info">
@@ -3246,7 +3623,36 @@
   // ---- 5. รายชื่อผู้รับชมสด (Facebook Live Style Viewers Bar & Modal) ----
   let currentViewersList = [];
   let viewersTab = 'all';
-  const knownViewerProfiles = {}; // uid -> { name, photo, avatarIcon, role, lastSeen }
+  let lastPresenceRaw = {};
+  let refreshViewersTimer = null;
+
+  // แคชโปรไฟล์ผู้ชมที่รู้จัก (ดึงจากผู้ที่เคยแชทและมีปฏิสัมพันธ์ในห้องถ่ายทอดสด)
+  const knownViewerProfiles = {
+    'jqHeOLrSTqNxQ9vtUpBiw1z2JDh1': { name: 'บังฮาซัน ทดสอบชื่อใหม่', photo: '', avatarIcon: '👳‍♂️', role: 'returning', lastSeen: Date.now() - 3600000 },
+    'N6T9uIgjyCVq6tROlCTLdRSb2KG2': { name: 'Idris', photo: 'https://profile.line-scdn.net/0hp4xxvF5cLxtVATPlLKpRJSVRLHF2cHYJeTNiLmdRIy88ZmoafzU3KGVTdCNpOGpPfDQweTIEciJ3LQpLLjNiBjACGkIpSAk4JhkhBzt-AWs7YwsLHnskJ2UAMlgceAhNIScoPStIH2M-UGARfjdmdD8FBWA7TAoIF1ZDTVAzQZg6A1hOeGdgfWEIdS_v', avatarIcon: '', role: 'member', lastSeen: Date.now() - 7200000 },
+    '2d118TTb5rdS9wBOcHGzB3PD0WM2': { name: 'Khalid Poothong', photo: 'https://lh3.googleusercontent.com/a/ACg8ocLoprk0F-AWMsjqmjlnFKjk2qRKfQNyWSIJ1NELV3lbxdwbceY=s96-c', avatarIcon: '', role: 'member', lastSeen: Date.now() - 10800000 },
+    'AwShsvKrLKdoLZa5RQrNdh0YxkV2': { name: 'Sebastian', photo: '', avatarIcon: '⭐', role: 'member', lastSeen: Date.now() - 14400000 },
+    'yoygNXWTkcZejmNap74rHix5ezj1': { name: 'แอดริทเอง', photo: '', avatarIcon: '👑', role: 'member', lastSeen: Date.now() - 18000000 },
+    's5UehZRudGOAcbYgusT3zSjKsLD3': { name: 'ทดสอบชื่อ', photo: '', avatarIcon: '🌱', role: 'member', lastSeen: Date.now() - 21600000 }
+  };
+
+  function hashStr(str){
+    let h = 0;
+    const s = String(str || '');
+    for(let i = 0; i < s.length; i++){
+      h = ((h << 5) - h) + s.charCodeAt(i);
+      h |= 0;
+    }
+    return h;
+  }
+
+  function debouncedRefreshViewers(){
+    if(refreshViewersTimer) return;
+    refreshViewersTimer = setTimeout(() => {
+      refreshViewersTimer = null;
+      rebuildAndRenderViewers();
+    }, 200);
+  }
 
   function renderViewersBar(){
     const bar = document.getElementById('viewers-bar');
@@ -3264,12 +3670,13 @@
     const displayList = currentViewersList.slice(0, 6);
     let html = '';
     displayList.forEach(v => {
-      const initial = (v.name || '?').trim().charAt(0) || '?';
+      const vName = (v.name || '').trim() || 'ผู้ชม';
+      const initial = vName.charAt(0) || '?';
       const roleCls = (v.role === 'top_fan') ? 'gold' : (v.role === 'member' ? 'green' : (v.role === 'new' ? 'blue' : ''));
       const meBorder = v.isMe ? 'border:2px solid var(--accent);box-shadow:0 0 6px var(--accent);' : '';
-      const titleName = (v.name || 'ไม่ประสงค์ออกนาม') + (v.isMe ? ' (คุณ)' : '');
+      const titleName = vName + (v.isMe ? ' (คุณ)' : '');
       if(v.photo && (v.photo.startsWith('http') || v.photo.startsWith('data:'))){
-        html += `<img class="vb-av ${roleCls}" style="${meBorder}" src="${esc(v.photo)}" alt="${esc(titleName)}" title="${esc(titleName)}">`;
+        html += `<img class="vb-av ${roleCls}" style="${meBorder}" src="${esc(v.photo)}" alt="${esc(titleName)}" title="${esc(titleName)}" onerror="this.outerHTML='<div class=\\'vb-av ${roleCls}\\' style=\\'${meBorder}\\' title=\\'${esc(titleName)}\\'>${esc(initial)}</div>'">`;
       } else if(v.avatarIcon){
         html += `<div class="vb-av ${roleCls}" style="${meBorder}" title="${esc(titleName)}">${esc(v.avatarIcon)}</div>`;
       } else {
@@ -3310,7 +3717,18 @@
     const bd = document.getElementById('viewers-backdrop');
     if(!bd || !bd.classList.contains('open')) return;
     const badge = document.getElementById('vs-total-badge');
-    if(badge) badge.textContent = (currentViewersList.length || 0) + ' คน';
+    const total = currentViewersList.length || 0;
+    if(badge) badge.textContent = total + ' คน';
+
+    const vipCount = currentViewersList.filter(v => v.role === 'top_fan' || v.role === 'member' || v.role === 'admin').length;
+    const genCount = total - vipCount;
+
+    const tabAll = document.getElementById('vs-tab-all');
+    const tabVip = document.getElementById('vs-tab-vip');
+    const tabNew = document.getElementById('vs-tab-new');
+    if(tabAll) tabAll.textContent = `ทั้งหมด (${total})`;
+    if(tabVip) tabVip.textContent = `👑 แฟนตัวยง & สมาชิก (${vipCount})`;
+    if(tabNew) tabNew.textContent = `🌱 ผู้ชมทั่วไป (${genCount})`;
 
     const listEl = document.getElementById('vs-list');
     if(!listEl) return;
@@ -3330,11 +3748,11 @@
     listEl.innerHTML = filtered.map(v => {
       const r = VIEWER_ROLES[v.role] || VIEWER_ROLES.new;
       const rawName = String(v.name || '').trim();
-      const cleanName = (!rawName || rawName === 'ผู้ชม' || rawName.startsWith('ผู้ชม #') || rawName.startsWith('ผู้ชม#') || rawName === 'แอดไม่ประสงค์ออกนาม') ? 'ไม่ประสงค์ออกนาม' : rawName;
+      const cleanName = (!rawName || rawName === 'ผู้ชม' || rawName === 'แอดไม่ประสงค์ออกนาม' || rawName === 'ไม่ประสงค์ออกนาม') ? (v.isMe ? (displayName() || 'คุณ (ผู้ชม)') : 'ผู้ชมทั่วไป') : rawName;
       const initial = cleanName.charAt(0) || '?';
       let avHtml = `<div class="av">${esc(initial)}</div>`;
       if(v.photo && (v.photo.startsWith('http') || v.photo.startsWith('data:'))){
-        avHtml = `<img class="av" src="${esc(v.photo)}" alt="">`;
+        avHtml = `<img class="av" src="${esc(v.photo)}" alt="" onerror="this.outerHTML='<div class=\\'av\\'>${esc(initial)}</div>'">`;
       } else if(v.avatarIcon){
         avHtml = `<div class="av">${esc(v.avatarIcon)}</div>`;
       }
@@ -3356,6 +3774,165 @@
     }).join('');
   }
 
+  function rebuildAndRenderViewers(){
+    const raw = lastPresenceRaw || {};
+    const list = [];
+    const seenUids = new Set();
+    const seenNames = new Set();
+
+    const myKey = myPresenceRef ? myPresenceRef.key : null;
+    const myId = currentIdentity();
+    const myUidVal = (typeof myUid !== 'undefined' && myUid) || (firebase.auth && firebase.auth().currentUser && firebase.auth().currentUser.uid) || '';
+    let foundMe = false;
+    const nowTs = Date.now() + (typeof serverOffset === 'number' ? serverOffset : 0);
+    const STALE_MS = 120000; // ตัดการเชื่อมต่อที่ค้างเกิน 2 นาที
+
+    // 1. วนอ่านจาก Realtime Database presence เฉพาะผู้รับชมที่กำลังดูสดอยู่จริงในขณะนี้
+    for(const k in raw){
+      const v = raw[k];
+      if(v === false || v === null || v === undefined || v === 'false') continue;
+      if(k === 'p1' || k === 'testconn1') continue;
+
+      const isMyKey = !!(myKey && k === myKey);
+      let vUid = '';
+      let vName = '';
+      let vPhoto = '';
+      let vAvatarIcon = '';
+      let vRole = 'new';
+      let vJoinedAt = 0;
+      let isMe = false;
+
+      if(v && typeof v === 'object'){
+        vUid = v.uid || '';
+        vName = (v.name || '').trim();
+        vPhoto = v.photo || '';
+        vAvatarIcon = v.avatarIcon || '';
+        vRole = v.role || 'new';
+        vJoinedAt = v.joinedAt || 0;
+        const vLastSeen = v.lastSeen || v.joinedAt || 0;
+
+        // หากไม่ใช่ตัวเอง และไม่มีกิจกรรมสดเกิน 2 นาที ถือว่าหลุดการเชื่อมต่อไปแล้ว
+        if(!isMyKey && vLastSeen && (nowTs - vLastSeen > STALE_MS)){
+          continue;
+        }
+      } else if(v === true){
+        // คีย์ boolean เก่าที่ไม่ใช่ของตัวเอง ไม่นำมานับเป็นยอดคนดูสด
+        if(!isMyKey) continue;
+      }
+
+      // ตรวจสอบว่าเป็นตัวเองหรือไม่
+      if(isMyKey || (myUidVal && vUid === myUidVal)){
+        isMe = true;
+        foundMe = true;
+        vUid = myUidVal || '';
+        vName = myId.name || displayName() || getOrInitGuestName();
+        vPhoto = myId.photo || '';
+        vAvatarIcon = myId.avatarIcon || '';
+        vRole = myId.role || getViewerRole();
+      } else {
+        // หากเป็นผู้ชมอื่น และเคยมีแคชชื่อไว้
+        if(vUid && knownViewerProfiles[vUid]){
+          const kp = knownViewerProfiles[vUid];
+          if(!vName || vName === 'ไม่ประสงค์ออกนาม' || vName === 'แอดไม่ประสงค์ออกนาม') vName = kp.name;
+          if(!vPhoto) vPhoto = kp.photo || '';
+          if(!vAvatarIcon) vAvatarIcon = kp.avatarIcon || '';
+          if(kp.role) vRole = kp.role;
+        }
+
+        // หากยังไม่มีชื่อ หรือเป็นชื่อว่าง/ไม่ประสงค์ออกนาม ให้แสดงเป็นชื่อผู้ชมที่มีหมายเลขกำกับชัดเจน
+        if(!vName || vName === 'ผู้ชม' || vName === 'ไม่ประสงค์ออกนาม' || vName === 'แอดไม่ประสงค์ออกนาม'){
+          const seed = vUid || k;
+          const code = (Math.abs(hashStr(seed)) % 9000) + 1000;
+          vName = 'ผู้ชม #' + code;
+          if(!vAvatarIcon && !vPhoto){
+            const emojis = ['🌱', '⭐', '🕊️', '🌿', '🌙', '💫', '🌸', '☕', '🎈', '✨'];
+            vAvatarIcon = emojis[code % emojis.length];
+          }
+        }
+      }
+
+      // ป้องกันชื่อหรือ UID ซ้ำกรณีเปิดซ้ำในเบราว์เซอร์เดียวกัน
+      if(isMe){
+        if(seenUids.has('__me__')) continue;
+        seenUids.add('__me__');
+        if(vUid) seenUids.add(vUid);
+        if(vName) seenNames.add(vName);
+        list.push({
+          key: k,
+          uid: vUid,
+          name: vName,
+          photo: vPhoto,
+          avatarIcon: vAvatarIcon,
+          role: vRole,
+          joinedAt: vJoinedAt,
+          isMe: true
+        });
+      } else {
+        if((vUid && seenUids.has(vUid)) || (!vUid && vName && seenNames.has(vName))){
+          continue;
+        }
+        if(vUid) seenUids.add(vUid);
+        if(vName) seenNames.add(vName);
+        list.push({
+          key: k,
+          uid: vUid,
+          name: vName,
+          photo: vPhoto,
+          avatarIcon: vAvatarIcon,
+          role: vRole,
+          joinedAt: vJoinedAt,
+          isMe: false
+        });
+      }
+    }
+
+    // 2. หากตนเองกำลังเปิดดูสดอยู่แต่ Firebase ยังไม่รวมคีย์ ให้ใส่ตัวเองไว้ลำดับแรก
+    if(!foundMe && (myPresenceRef || chatOn) && !seenUids.has('__me__')){
+      seenUids.add('__me__');
+      list.unshift({
+        key: myKey || 'me',
+        uid: myUidVal || '',
+        name: myId.name || displayName() || getOrInitGuestName(),
+        photo: myId.photo || '',
+        avatarIcon: myId.avatarIcon || '',
+        role: myId.role || getViewerRole(),
+        joinedAt: Date.now(),
+        isMe: true
+      });
+    }
+
+    // 3. จัดลำดับการแสดงผล: ตัวเองอันดับแรก -> แอดมิน/VIP/สมาชิก -> ผู้ชมทั่วไป
+    list.sort((a, b) => {
+      if(a.isMe && !b.isMe) return -1;
+      if(!a.isMe && b.isMe) return 1;
+
+      const roleWeight = { admin: 5, top_fan: 4, member: 3, returning: 2, new: 1 };
+      const aWeight = roleWeight[a.role] || 1;
+      const bWeight = roleWeight[b.role] || 1;
+      if(aWeight !== bWeight) return bWeight - aWeight;
+
+      const aGuest = (a.name || '').startsWith('ผู้ชม #') ? 1 : 0;
+      const bGuest = (b.name || '').startsWith('ผู้ชม #') ? 1 : 0;
+      if(aGuest !== bGuest) return aGuest - bGuest;
+
+      return (a.name || '').localeCompare(b.name || '', 'th');
+    });
+
+    currentViewersList = list;
+
+    // ยอดผู้รับชมสดจริงๆ ในขณะนี้ (ไม่มีการบวมตัวเลขหรือนำแชทเก่ามาปน)
+    const totalViewers = list.length;
+    const elCount = document.getElementById('viewer-count');
+    if(elCount) elCount.textContent = totalViewers;
+    trackPeakPresence(totalViewers);
+
+    const badge = document.getElementById('vs-total-badge');
+    if(badge) badge.textContent = totalViewers + ' คน';
+
+    renderViewersBar();
+    renderViewersModalContent();
+  }
+
   function bindPresence(){
     const root=`rooms/${CONFIG.chat.roomId}/presence`;
     const connectedRef=db.ref('.info/connected');
@@ -3369,101 +3946,8 @@
       }
     });
     listRef.on('value',snap=>{
-      const count = snap.numChildren() || 0;
-      const elCount = document.getElementById('viewer-count');
-      if(elCount) elCount.textContent = count;
-      trackPeakPresence(count);
-
-      const raw = snap.val() || {};
-      const list = [];
-      let foundMe = false;
-      const myKey = myPresenceRef ? myPresenceRef.key : null;
-      const myId = currentIdentity();
-
-      for(const k in raw){
-        const v = raw[k];
-        const isMyKey = !!(myKey && k === myKey);
-        let vUid = '';
-        let vName = '';
-        let vPhoto = '';
-        let vAvatarIcon = '';
-        let vRole = 'new';
-        let vJoinedAt = 0;
-        let isMe = false;
-
-        if(v && typeof v === 'object'){
-          vUid = v.uid || '';
-          vName = (v.name || '').trim();
-          vPhoto = v.photo || '';
-          vAvatarIcon = v.avatarIcon || '';
-          vRole = v.role || 'new';
-          vJoinedAt = v.joinedAt || 0;
-        }
-
-        // ตรวจสอบว่าเป็นตัวผู้ใช้เองหรือไม่ (จาก connection key หรือ uid)
-        if(isMyKey || (myUid && vUid === myUid)){
-          isMe = true;
-          foundMe = true;
-          vUid = myUid || '';
-          vName = myId.name || displayName();
-          vPhoto = myId.photo || '';
-          vAvatarIcon = myId.avatarIcon || '';
-          vRole = myId.role || getViewerRole();
-        } else {
-          // หากเป็นผู้ชมอื่น และเคยมีแคชชื่อไว้
-          if(vUid && knownViewerProfiles[vUid]){
-            const kp = knownViewerProfiles[vUid];
-            if(!vName || vName === 'ไม่ประสงค์ออกนาม') vName = kp.name;
-            if(!vPhoto) vPhoto = kp.photo || '';
-            if(!vAvatarIcon) vAvatarIcon = kp.avatarIcon || '';
-            if(kp.role) vRole = kp.role;
-          }
-        }
-
-        // กรองชื่อ ถ้าไม่มีหรือเป็นชื่อระบบเริ่มต้น
-        if(!vName || vName === 'ผู้ชม' || vName.startsWith('ผู้ชม #') || vName.startsWith('ผู้ชม#') || vName === 'แอดไม่ประสงค์ออกนาม'){
-          vName = isMe ? (displayName() || 'ไม่ประสงค์ออกนาม') : 'ไม่ประสงค์ออกนาม';
-        }
-
-        list.push({
-          key: k,
-          uid: vUid,
-          name: vName,
-          photo: vPhoto,
-          avatarIcon: vAvatarIcon,
-          role: vRole,
-          joinedAt: vJoinedAt,
-          isMe: isMe
-        });
-      }
-
-      // หากตนเองออนไลน์อยู่แต่ Firebase ยังไม่รวมคีย์ ให้ใส่ตัวเองไว้ด้านบน
-      if(!foundMe && (myPresenceRef || chatOn)){
-        list.unshift({
-          key: myKey || 'me',
-          uid: myUid || '',
-          name: myId.name || displayName() || 'ไม่ประสงค์ออกนาม',
-          photo: myId.photo || '',
-          avatarIcon: myId.avatarIcon || '',
-          role: myId.role || getViewerRole(),
-          joinedAt: Date.now(),
-          isMe: true
-        });
-      }
-
-      // จัดลำดับ: ตนเองอยู่ลำดับแรกสุดเสมอ -> ผู้ชมที่มีชื่อ -> ผู้ชมที่ไม่ประสงค์ออกนาม
-      list.sort((a, b) => {
-        if(a.isMe && !b.isMe) return -1;
-        if(!a.isMe && b.isMe) return 1;
-        const aNamed = (a.name && a.name !== 'ไม่ประสงค์ออกนาม') ? 1 : 0;
-        const bNamed = (b.name && b.name !== 'ไม่ประสงค์ออกนาม') ? 1 : 0;
-        if(aNamed !== bNamed) return bNamed - aNamed;
-        return 0;
-      });
-
-      currentViewersList = list;
-      renderViewersBar();
-      renderViewersModalContent();
+      lastPresenceRaw = snap.val() || {};
+      rebuildAndRenderViewers();
     });
   }
 
@@ -3519,14 +4003,16 @@
         ts: m.ts || 0,
         badge: parsed.badge || ''
       };
-      if(m.uid && m.name && m.name !== 'ไม่ประสงค์ออกนาม' && m.name !== 'แอดไม่ประสงค์ออกนาม' && !m.name.startsWith('ผู้ชม')){
-        knownViewerProfiles[m.uid] = {
+      if(m.name && m.name !== 'ไม่ประสงค์ออกนาม' && m.name !== 'แอดไม่ประสงค์ออกนาม'){
+        const profKey = m.uid || ('name:' + m.name);
+        knownViewerProfiles[profKey] = {
           name: m.name,
           photo: m.photo || '',
           avatarIcon: m.avatarIcon || '',
           role: parsed.badge || 'member',
           lastSeen: m.ts || Date.now()
         };
+        if(typeof debouncedRefreshViewers === 'function') debouncedRefreshViewers();
       }
       if(m.uid === myUid){
         recordMySentMessage(snap.key);
@@ -3546,6 +4032,8 @@
         list.appendChild(sep);
       }
       const el=document.createElement('div'); el.className='msg'; el.dataset.key=snap.key;
+      el.dataset.uid=m.uid || '';
+      el.dataset.name=m.name || '';
       const initial=(m.name||'?').trim().charAt(0)||'?';
       let av = `<div class="av">${esc(initial)}</div>`;
       if(m.photo && (m.photo.startsWith('http') || m.photo.startsWith('data:'))){
@@ -3566,13 +4054,15 @@
 
       const myInitReact = getMyLocalReaction(snap.key);
       const btnReactCls = myInitReact ? ' is-reacted' : '';
-      let btnReactIcon = '😊';
+      let btnReactIcon = '👍<span class="br-text">ถูกใจ</span>';
       let btnReactTitle = 'ส่งความรู้สึก';
       if(myInitReact){
+        const rxColor = (typeof REACT_COLOR_MAP !== 'undefined' && REACT_COLOR_MAP[myInitReact]) ? REACT_COLOR_MAP[myInitReact] : 'var(--accent)';
+        const rxLabel = (typeof REACT_LABEL_MAP !== 'undefined' && REACT_LABEL_MAP[myInitReact]) ? REACT_LABEL_MAP[myInitReact] : myInitReact;
         btnReactIcon = (typeof REACT_IMG_MAP !== 'undefined' && REACT_IMG_MAP[myInitReact])
-          ? `<img src="${REACT_IMG_MAP[myInitReact]}" alt="${esc(myInitReact)}">`
-          : esc(myInitReact);
-        btnReactTitle = `คุณส่ง ${myInitReact} (แตะเพื่อเปลี่ยนหรือยกเลิก)`;
+          ? `<img src="${REACT_IMG_MAP[myInitReact]}" alt="${esc(myInitReact)}"><span class="br-text" style="display:inline;color:${rxColor}">${esc(rxLabel)}</span>`
+          : `${esc(myInitReact)}<span class="br-text" style="display:inline;color:${rxColor}">${esc(rxLabel)}</span>`;
+        btnReactTitle = `คุณส่ง ${rxLabel} (แตะเพื่อเปลี่ยนหรือยกเลิก)`;
       }
 
       el.innerHTML = `${av}<div class="body">
@@ -4407,8 +4897,13 @@
       const excess = keys.length - keepN;
       if(excess <= 0){ if(opts.manual) toast('แชทยังไม่เกิน '+keepN+' ข้อความ ไม่ต้องล้างค่ะ'); return 0; }
       const updates = {};
-      for(let i=0;i<excess;i++){ updates[keys[i]] = null; }  // ลบข้อความเก่าสุด (excess อัน) ทีเดียว
+      const rxUpdates = {};
+      for(let i=0;i<excess;i++){
+        updates[keys[i]] = null;
+        rxUpdates[keys[i]] = null;
+      }  // ลบข้อความเก่าสุด (excess อัน) ทีเดียว
       await ref.update(updates);
+      db.ref(`rooms/${CONFIG.chat.roomId}/messageReactions`).update(rxUpdates).catch(()=>{});
       if(opts.manual){
         toast(opts.all ? ('ล้างแชททั้งหมดแล้ว '+excess+' ข้อความ ✅')
                        : ('ล้างแชทเก่าแล้ว '+excess+' ข้อความ (เก็บ '+keepN+' ล่าสุด) ✅'));
@@ -5675,17 +6170,6 @@
      7) Reactions / Share / Now-playing / Prayer / Quran / Lightbox
      ============================================================ */
   // ---- รีแอคชัน (ชุดอิโมจิ 3D Facebook + ขอดุอาอ) ----
-  const REACTIONS=[
-    {e:'👍', img:'fb_like.png',  t:'ถูกใจ'},
-    {e:'❤️', img:'fb_love.png',  t:'รักเลย'},
-    {e:'🥰', img:'fb_care.png',  t:'ห่วงใย'},
-    {e:'😆', img:'fb_haha.png',  t:'ฮ่าๆ'},
-    {e:'😮', img:'fb_wow.png',   t:'ว้าว'},
-    {e:'😢', img:'fb_sad.png',   t:'เศร้า'},
-    {e:'🤲', img:'',             t:'ขอดุอาอ'}
-  ];
-  const REACT_SET=new Set(REACTIONS.map(r=>r.e));
-  const REACT_IMG_MAP=Object.fromEntries(REACTIONS.filter(r=>r.img).map(r=>[r.e,r.img]));
   let lastReact=0, reactCloseTimer=null;
 
   function renderReactions(){
@@ -7336,9 +7820,19 @@
     updateHdrInstall();
     try{ const t=+localStorage.getItem('yt_install_dismiss_at')||0; if(Date.now()-t < INSTALL_SNOOZE_MS) return; }catch(e){}
     if(isStandalone()) return;
-    const b=document.getElementById('install-banner'); if(b) b.style.display='flex';
+    const b=document.getElementById('install-banner');
+    if(b){
+      b.style.display='flex';
+      document.body.classList.add('has-install-banner');
+    }
   }
-  function dismissInstall(perm){ const b=document.getElementById('install-banner'); if(b) b.style.display='none'; if(perm){ try{localStorage.setItem('yt_install_dismiss_at', String(Date.now()));}catch(e){} } updateHdrInstall(); }
+  function dismissInstall(perm){
+    const b=document.getElementById('install-banner');
+    if(b) b.style.display='none';
+    document.body.classList.remove('has-install-banner');
+    if(perm){ try{localStorage.setItem('yt_install_dismiss_at', String(Date.now()));}catch(e){} }
+    updateHdrInstall();
+  }
 
   function renderInstallGuide(){
     const box = document.getElementById('install-guide-box');
