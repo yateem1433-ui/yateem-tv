@@ -137,11 +137,12 @@
     .chip.viewers{ color:var(--text); cursor:pointer; user-select:none; transition:transform .15s ease, background .2s ease, border-color .2s ease; }
     .chip.viewers:hover{ background:rgba(255,255,255,0.14); border-color:var(--accent); transform:translateY(-1px); }
     .chip.viewers:active{ transform:scale(0.96); }
-    /* คลัสเตอร์ ผู้ชม + โปรไฟล์ บนหัวจอ */
+    /* คลัสเตอร์ LIVE + ผู้ชม + โปรไฟล์ บนหัวจอ */
     header .live-cluster{ margin-left:auto; display:flex; align-items:center; gap:8px; }
     header .live-cluster .chip{ padding:5px 10px; font-size:12px; background:var(--glass); }
-    /* ป้าย LIVE ซ้อนบนวิดีโอ (มุมบนซ้าย — ตำแหน่งเดิม) */
-    .hero .live-tag{ position:absolute; top:12px; left:12px; z-index:8; color:#fff; }
+    header .live-cluster .chip.live{ background:rgba(255,59,70,0.18); border-color:rgba(255,59,70,0.42); color:#fff; }
+    body.is-offline #live-indicator, .hero.is-offline ~ * #live-indicator{ display:none; }
+    .hero .live-tag{ display:none; }
     .hero .offline{ position:absolute; inset:0; display:none; flex-direction:column; gap:8px;
       align-items:center; justify-content:center; text-align:center; color:var(--muted); padding:24px; }
     .hero.is-offline .offline{ display:flex; }
@@ -1480,6 +1481,7 @@
     <img id="brand-logo" src="logo.png" alt="Yateem TV" onerror="this.onerror=null;this.src='icon.jpg'">
     <div class="brand" data-lbl="brandName">Yateem TV</div>
     <div class="live-cluster">
+      <span class="chip live" id="live-indicator"><span class="dot"></span><span data-lbl="liveBadge">LIVE</span></span>
       <span class="chip viewers" id="viewers" onclick="openViewersModal()" role="button" tabindex="0" title="แตะเพื่อดูรายชื่อผู้ชมสดขณะนี้" style="cursor:pointer">👁 <span id="viewer-count">–</span> <span data-lbl="viewersSuffix">กำลังชม</span></span>
       <button class="hdr-install" id="hdr-install-btn" onclick="doInstall()" style="display:none" data-lbl="hdrInstallBtn">📲 ติดตั้ง</button>
       <button class="profile-btn" id="profile-btn" onclick="openLogin()" aria-label="เข้าสู่ระบบ" title="เข้าสู่ระบบ">👤</button>
@@ -1491,7 +1493,6 @@
     <section class="tab-panel" id="panel-live">
       <!-- HERO / LIVE -->
       <div class="hero" id="hero">
-        <span class="chip live live-tag"><span class="dot"></span><span data-lbl="liveBadge">LIVE</span></span>
         <video id="player" playsinline autoplay muted controls poster="icon.jpg"></video>
         <div class="offline">
           <div class="big">📺</div>
@@ -2572,7 +2573,7 @@
     if(hlsInstance){ try{hlsInstance.destroy();}catch(e){} hlsInstance=null; }
     hero.classList.remove('is-offline'); video.removeAttribute('src'); try{video.load();}catch(e){}
     hideUnmute();
-    const goOffline=()=>{ hero.classList.add('is-offline'); hideUnmute(); };
+    const goOffline=()=>{ hero.classList.add('is-offline'); document.body.classList.add('is-offline'); hideUnmute(); };
     if(!url){ goOffline(); return; }
     if(window.Hls && Hls.isSupported()){
       // config แบบทนเน็ตสะดุด: ไม่ไล่ live edge (กันกระตุก) + ให้ hls.js retry เองก่อน
@@ -2585,10 +2586,10 @@
       });
       let netRetries=0, mediaRetries=0, offlineTimer=null;
       const scheduleOffline=()=>{ clearTimeout(offlineTimer); offlineTimer=setTimeout(goOffline, 12000); };
-      const cancelOffline=()=>{ clearTimeout(offlineTimer); offlineTimer=null; };
+      const cancelOffline=()=>{ clearTimeout(offlineTimer); offlineTimer=null; document.body.classList.remove('is-offline'); };
       hlsInstance.loadSource(url); hlsInstance.attachMedia(video);
-      hlsInstance.on(Hls.Events.MANIFEST_PARSED, ()=>{ netRetries=0; mediaRetries=0; cancelOffline(); hero.classList.remove('is-offline'); tryPlayWithSound(); });
-      hlsInstance.on(Hls.Events.FRAG_BUFFERED, ()=>{ netRetries=0; mediaRetries=0; cancelOffline(); hero.classList.remove('is-offline'); });
+      hlsInstance.on(Hls.Events.MANIFEST_PARSED, ()=>{ netRetries=0; mediaRetries=0; cancelOffline(); hero.classList.remove('is-offline'); document.body.classList.remove('is-offline'); tryPlayWithSound(); });
+      hlsInstance.on(Hls.Events.FRAG_BUFFERED, ()=>{ netRetries=0; mediaRetries=0; cancelOffline(); hero.classList.remove('is-offline'); document.body.classList.remove('is-offline'); });
       hlsInstance.on(Hls.Events.ERROR,(evt,data)=>{
         if(!data || !data.fatal) return;                       // error ไม่ร้ายแรง hls.js จัดการเอง
         if(url!==curStream || !hlsInstance) return;             // สตรีมถูกเปลี่ยน/ทำลายไปแล้ว
@@ -2602,7 +2603,7 @@
       });
     }else if(video.canPlayType('application/vnd.apple.mpegurl')){
       video.src=url;                              // iOS/Safari/LINE-iOS native HLS
-      video.addEventListener('loadedmetadata', ()=>{ hero.classList.remove('is-offline'); tryPlayWithSound(); }, {once:true});
+      video.addEventListener('loadedmetadata', ()=>{ hero.classList.remove('is-offline'); document.body.classList.remove('is-offline'); tryPlayWithSound(); }, {once:true});
       let nativeReloaded=false;                   // ลองรีโหลด 1 ครั้งก่อนขึ้นออฟไลน์
       video.addEventListener('error',()=>{
         if(url!==curStream) return;
@@ -4877,8 +4878,10 @@
   }
 
   function delMsg(key){
-    if(!document.body.classList.contains('is-mod')) return;
-    db.ref(`rooms/${CONFIG.chat.roomId}/messages/${key}`).remove().catch(()=>toast('ลบไม่สำเร็จ'));
+    if(!document.body.classList.contains('is-mod') && !isAdmin) return;
+    db.ref(`rooms/${CONFIG.chat.roomId}/messages/${key}`).remove()
+      .then(()=>toast('ลบข้อความแล้ว'))
+      .catch(()=>toast('ลบไม่สำเร็จ'));
     db.ref(`rooms/${CONFIG.chat.roomId}/messageReactions/${key}`).remove().catch(()=>{});
   }
 
