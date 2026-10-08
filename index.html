@@ -2878,6 +2878,7 @@
       firebase.auth().onAuthStateChanged(u=>{ if(u){ myUid=u.uid; } applyUserState(u); bindAdminsSync(); refreshMineMarks(); });
       recordVisitStats();
       chatOn=true; note.textContent='ใส่ชื่อเล่นแล้วพิมพ์ได้เลยค่ะ';
+      setTimeout(()=>{ try{ migrateDataAvatar(); }catch(e){} }, 3000);   // รูปสมาชิก base64 รุ่นเก่า → Cloudinary
       bindPresence();
       bindAdminsSync();
       bindMessages();
@@ -4439,7 +4440,7 @@
 
     const fullText = (prefix + cleanText).slice(0, 300);
 
-    // ส่งเฉพาะฟิลด์ที่กฎความปลอดภัย Firebase Cloud รับรอง 100% (uid, name, photo, text, ts) ไม่ใส่ root key แปลกปลอม
+    // ส่งเฉพาะฟิลด์ที่กฎ Firebase รับรอง (uid, name, photo, text, ts + avatarIcon ถ้ามี) ไม่ใส่ key แปลกปลอม
     const payload = {
       uid: myUid,
       name: name.slice(0,40),
@@ -4447,6 +4448,7 @@
       text: fullText,
       ts: firebase.database.ServerValue.TIMESTAMP
     };
+    if(ident.avatarIcon) payload.avatarIcon = String(ident.avatarIcon).slice(0,30);   // อิโมจิโปรไฟล์ของสมาชิก (ไม่มีรูป)
 
     try{
       const newRef = await db.ref(`rooms/${CONFIG.chat.roomId}/messages`).push(payload);
@@ -4686,6 +4688,23 @@
 
   /* ---- Avatar Management ---- */
   let currentMemberAvatar = '';
+  let avatarUploading = false;
+
+  // รูปสมาชิกรุ่นเก่าเก็บเป็น base64 ในเครื่อง → ย้ายขึ้น Cloudinary ครั้งเดียว ให้ผู้ชมคนอื่นเห็นรูปในแชท
+  let avatarMigrateTried = false;
+  async function migrateDataAvatar(){
+    if(avatarMigrateTried) return;
+    avatarMigrateTried = true;
+    const mem = readMemberProfile() || readSavedMember();
+    if(!mem || !mem.avatar || !String(mem.avatar).startsWith('data:')) return;
+    try{
+      const blob = await (await fetch(mem.avatar)).blob();
+      const up = await uploadToCloudinary(new File([blob], 'avatar.jpg', { type: blob.type || 'image/jpeg' }));
+      const cur = readMemberProfile() || readSavedMember() || mem;
+      if(cur.avatar !== mem.avatar) return;            // ระหว่างนั้นผู้ใช้เปลี่ยนรูปไปแล้ว
+      saveMemberProfile(Object.assign({}, cur, { avatar: up.url, updatedAt: Date.now() }));
+    }catch(e){ console.warn('migrateDataAvatar', e); }   // ไม่สำเร็จ → ลองใหม่ครั้งหน้าที่เปิดเว็บ
+  }
   const AVATAR_PRESETS = ['🌟', '👨🏻‍🍳', '🧕', '👳‍♂️', '👑', '🍲', '🌙', '🕌', '👦', '👧'];
 
   function renderAvatarPresets(){
@@ -4750,10 +4769,26 @@
           canvas.height = h;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, w, h);
-          currentMemberAvatar = canvas.toDataURL('image/jpeg', 0.82);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+          currentMemberAvatar = dataUrl;                 // พรีวิวทันทีระหว่างอัปโหลด
           updateAvatarFormPreview();
           renderAvatarPresets();
-          toast('เลือกรูปโปรไฟล์เรียบร้อยแล้วค่ะ');
+          // อัปขึ้น Cloudinary ให้ได้ลิงก์ https — base64 ใส่ในแชทไม่ได้ (กฎจำกัด photo 500 ตัวอักษร) คนอื่นจึงไม่เห็นรูป
+          avatarUploading = true;
+          toast('กำลังอัปโหลดรูป...');
+          canvas.toBlob(async blob => {
+            try{
+              if(!blob) throw new Error('no blob');
+              const up = await uploadToCloudinary(new File([blob], 'avatar.jpg', { type:'image/jpeg' }));
+              if(currentMemberAvatar === dataUrl) currentMemberAvatar = up.url;   // ผู้ใช้ยังไม่ได้เปลี่ยนไปเลือกรูปอื่น
+              toast('เลือกรูปโปรไฟล์เรียบร้อยแล้วค่ะ');
+            }catch(err){
+              console.error(err);
+              toast('อัปโหลดรูปไม่สำเร็จ รูปจะเห็นเฉพาะเครื่องนี้ค่ะ');
+            }finally{
+              avatarUploading = false;
+            }
+          }, 'image/jpeg', 0.82);
         }catch(err){
           console.error(err);
           currentMemberAvatar = evt.target.result;
@@ -5004,6 +5039,7 @@
     const address = adEl ? adEl.value.trim() : '';
     const nickname = nkEl ? nkEl.value.trim() : '';
 
+    if(avatarUploading){ toast('รอรูปอัปโหลดเสร็จก่อนค่ะ'); return; }
     if(!fullname){ toast('กรุณาระบุชื่อ-นามสกุลค่ะ'); return; }
     if(!phone || phone.length < 9){ toast('กรุณาระบุเบอร์โทรศัพท์ 9-10 หลักให้ถูกต้องค่ะ'); return; }
 
