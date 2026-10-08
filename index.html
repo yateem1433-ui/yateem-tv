@@ -142,6 +142,10 @@
     header .live-cluster .chip{ padding:5px 10px; font-size:12px; background:var(--glass); }
     header .live-cluster .chip.live{ background:rgba(255,59,70,0.18); border-color:rgba(255,59,70,0.42); color:#fff; }
     header #viewers{ display:none !important; }
+    header .live-cluster .chip.live{ cursor:pointer; user-select:none; }
+    header .live-cluster .chip.live .live-count{ margin-left:4px; padding-left:6px; border-left:1px solid rgba(255,255,255,0.35); font-weight:600; }
+    /* แถบ "กำลังชม" เหนือแชทซ่อนไว้ — จำนวนผู้ชมย้ายไปอยู่ในปุ่ม LIVE บนหัวจอ */
+    #viewers-bar{ display:none !important; }
     body.is-offline #live-indicator, .hero.is-offline ~ * #live-indicator{ display:none; }
     .hero .live-tag{ display:none; }
     .hero .offline{ position:absolute; inset:0; display:none; flex-direction:column; gap:8px;
@@ -182,6 +186,13 @@
     .msg-act-btn:hover{ color:var(--accent); transform:scale(1.15); }
     .msg .del{ margin-left:2px; background:none; border:none; color:#ff6b73; font-size:12px; cursor:pointer; display:none; }
     body.is-mod .msg .del, .msg.is-mine .del{ display:inline; }
+    /* ข้อความของตัวเอง: ปุ่ม "แก้ไข" + ปุ่มลบเปลี่ยนคำเป็น "ยกเลิกส่ง" (ตาม class is-mine — เปลี่ยนบัญชีแล้วตามเอง) */
+    .msg .edit{ background:none; border:none; color:var(--muted); font-size:12px; cursor:pointer; font-family:inherit; padding:1px 4px; display:none; }
+    .msg .edit:hover{ color:var(--accent); }
+    .msg.is-mine .edit{ display:inline; }
+    .msg.is-mine .del{ font-size:0; }
+    .msg.is-mine .del::after{ content:'ยกเลิกส่ง'; font-size:12px; }
+    .msg .tx .msg-edited{ font-size:10.5px; color:var(--muted); margin-left:6px; font-style:italic; }
     .legal-links{ text-align:center; font-size:12px; color:var(--muted); margin:10px 0 4px; }
     .legal-links a{ color:var(--muted); }
     .chat-empty{ margin:auto; text-align:center; color:var(--muted); font-size:14px; }
@@ -618,6 +629,9 @@
     .wallet-bal{ font-size:15px; } .wallet-bal b{ color:var(--accent); font-size:18px; }
     .wallet-topup{ border:none; border-radius:10px; padding:8px 12px; font-family:inherit; font-weight:700; font-size:14px; cursor:pointer;
       color:#04150E; background:linear-gradient(135deg,var(--accent),var(--accent-2)); }
+    .wallet-acts{ display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
+    .wallet-lb{ border:1px solid var(--accent); border-radius:10px; padding:7px 10px; font-family:inherit; font-weight:700; font-size:13px; cursor:pointer;
+      color:var(--accent); background:transparent; }
     .wallet-code{ text-align:center; font-size:14px; margin-top:10px; }
     .wallet-code b{ letter-spacing:2px; color:var(--accent); font-size:16px; }
     .wallet-code button{ border:none; background:none; cursor:pointer; font-size:16px; }
@@ -926,12 +940,6 @@
       #react-pop button img{ width:25px; height:25px; }
     }
 
-    /* ---- ปุ่มอันดับผู้สนับสนุน (ซ้ายสุดของแถบพิมพ์แชท) ---- */
-    .lb-btn{ width:42px; height:42px; min-width:42px; flex:0 0 auto; border-radius:12px; border:1px solid var(--stroke); cursor:pointer;
-      background:var(--glass-2); font-size:21px; display:flex; align-items:center; justify-content:center;
-      transition:transform .15s ease, background .15s ease, border-color .15s ease; padding:0; line-height:1; }
-    .lb-btn:hover{ background:rgba(255,255,255,.16); border-color:var(--accent); transform:scale(1.06); }
-    .lb-btn:active{ transform:scale(.92); }
 
     .react-float{ position:absolute; inset:0; z-index:12; pointer-events:none; overflow:hidden; border-radius:var(--radius); }
     .react-float .fx{ position:absolute; bottom:56px; font-size:28px;
@@ -1508,7 +1516,7 @@
     <img id="brand-logo" src="logo.png" alt="Yateem TV" onerror="this.onerror=null;this.src='icon.jpg'">
     <div class="brand" data-lbl="brandName">Yateem TV</div>
     <div class="live-cluster">
-      <span class="chip live" id="live-indicator"><span class="dot"></span><span data-lbl="liveBadge">LIVE</span></span>
+      <span class="chip live" id="live-indicator" onclick="openViewersModal()" role="button" tabindex="0" title="แตะเพื่อดูรายชื่อผู้ชมสดขณะนี้"><span class="dot"></span><span data-lbl="liveBadge">LIVE</span><span class="live-count">👁 <span id="live-viewer-count">–</span></span></span>
       <span class="chip viewers" id="viewers" onclick="openViewersModal()" role="button" tabindex="0" title="แตะเพื่อดูรายชื่อผู้ชมสดขณะนี้" style="cursor:pointer;display:none">👁 <span id="viewer-count">–</span> <span data-lbl="viewersSuffix">กำลังชม</span></span>
       <button class="hdr-install" id="hdr-install-btn" onclick="doInstall()" style="display:none" data-lbl="hdrInstallBtn">📲 ติดตั้ง</button>
       <button class="profile-btn" id="profile-btn" onclick="openLogin()" aria-label="เข้าสู่ระบบ" title="เข้าสู่ระบบ">👤</button>
@@ -1571,6 +1579,17 @@
           <button type="button" class="cib-edit-btn" onclick="openEditNickModal()" title="แตะเพื่อเปลี่ยนชื่อ">✏️ เปลี่ยนชื่อ</button>
         </div>
         <!-- แถบพรีวิวการตอบกลับข้อความ -->
+        <!-- แถบแสดงว่ากำลังแก้ไขข้อความของตัวเอง -->
+        <div class="chat-reply-bar" id="chat-edit-bar" style="display:none">
+          <div class="crb-content">
+            <span class="crb-icon">✏️</span>
+            <div class="crb-text">
+              <span class="crb-name">กำลังแก้ไขข้อความ</span>
+              <span class="crb-msg" id="ceb-msg">ข้อความ</span>
+            </div>
+          </div>
+          <button type="button" class="crb-cancel" onclick="cancelEdit()" aria-label="ยกเลิกการแก้ไข">✕</button>
+        </div>
         <div class="chat-reply-bar" id="chat-reply-bar" style="display:none">
           <div class="crb-content">
             <span class="crb-icon">↩️</span>
@@ -1583,7 +1602,6 @@
         </div>
         <!-- ช่องพิมพ์แชท + ปุ่มรีแอคชัน -->
         <div class="chat-input glass">
-          <button type="button" class="lb-btn" onclick="openLeaderboard()" aria-label="อันดับผู้สนับสนุน" title="อันดับผู้สนับสนุน">🏆</button>
           <input id="chat-text" type="text" placeholder="พิมพ์ข้อความ..." data-ph="chatPlaceholder" maxlength="300"
                  autocomplete="off" onkeydown="if(event.key==='Enter')sendMessage()">
           <div class="react-bar" id="react-bar"></div>
@@ -1833,7 +1851,10 @@
       <h2>🎁 ส่งของขวัญ</h2>
       <div class="wallet-bar">
         <span class="wallet-bal"><img class="coin-ic" src="gift_gold.png" alt=""> <b class="js-wallet-bal">0</b> เหรียญ</span>
-        <button type="button" class="wallet-topup" onclick="openTopup()">+ เติมเหรียญ</button>
+        <div class="wallet-acts">
+          <button type="button" class="wallet-lb" onclick="closeGift();openLeaderboard()" title="อันดับผู้สนับสนุน">🏆 อันดับ</button>
+          <button type="button" class="wallet-topup" onclick="openTopup()">+ เติมเหรียญ</button>
+        </div>
       </div>
       <div class="gift-grid" id="gift-grid"></div>
       <label class="gift-anon"><input type="checkbox" id="gift-anon"> ไม่แสดงชื่อ (ขึ้นเป็น "ผู้ใจบุญ")</label>
@@ -3123,6 +3144,8 @@
   }
 
   function startReply(msgId, name, text){
+    cancelEdit();                                  // ทำได้ทีละโหมด: ตอบกลับ หรือ แก้ไข
+    if(messagesMap[msgId]) text = messagesMap[msgId].text;   // ใช้ข้อความล่าสุด (เผื่อถูกแก้ไขหลังแสดงผล)
     currentReplyTarget = { id: msgId, name: String(name||'ผู้ใช้').slice(0, 40), text: String(text||'').slice(0, 150) };
     const bar = document.getElementById('chat-reply-bar');
     const nameEl = document.getElementById('crb-name');
@@ -3143,6 +3166,59 @@
     currentReplyTarget = null;
     const bar = document.getElementById('chat-reply-bar');
     if(bar) bar.style.display = 'none';
+  }
+
+  // ---- แก้ไขข้อความของตัวเอง (ข้อความอยู่ที่เดิม ขึ้นป้าย "แก้ไขแล้ว") ----
+  let editingMsgKey = null;
+  // prefix ⟦r:…⟧⟦b:…⟧ ที่ฝังอยู่หน้าข้อความ — เก็บไว้เหมือนเดิมตอนแก้ (quote ตอบกลับ + badge ไม่หาย)
+  function msgPrefixOf(raw){
+    const m = String(raw||'').match(/^(⟦r:[^|]+\|[^|]+\|[^⟧]+⟧)?(⟦b:[a-zA-Z0-9_]+⟧)?/);
+    return m ? m[0] : '';
+  }
+  function startEdit(key){
+    const info = messagesMap[key];
+    if(!info || !info.uid || info.uid !== myUid){ toast('แก้ไขได้เฉพาะข้อความของตัวเองค่ะ'); return; }
+    cancelReply();
+    editingMsgKey = key;
+    const inp = document.getElementById('chat-text');
+    const bar = document.getElementById('chat-edit-bar');
+    const msgEl = document.getElementById('ceb-msg');
+    if(msgEl) msgEl.textContent = info.text;
+    if(bar) bar.style.display = 'flex';
+    if(inp){
+      inp.value = info.text;
+      inp.focus();
+      try{ inp.setSelectionRange(inp.value.length, inp.value.length); }catch(e){}
+      try{ inp.scrollIntoView({ behavior: 'smooth', block: 'center' }); }catch(e){}
+    }
+  }
+  function cancelEdit(clearInput){
+    if(!editingMsgKey) return;
+    editingMsgKey = null;
+    const bar = document.getElementById('chat-edit-bar');
+    if(bar) bar.style.display = 'none';
+    const inp = document.getElementById('chat-text');
+    if(inp && clearInput !== false) inp.value = '';
+  }
+  async function saveEdit(){
+    const key = editingMsgKey;
+    const info = messagesMap[key];
+    const input = document.getElementById('chat-text');
+    const body = (input.value||'').trim();
+    if(!info){ cancelEdit(); toast('ข้อความนี้ถูกลบไปแล้วค่ะ'); return; }
+    if(!body){ toast('พิมพ์ข้อความก่อนบันทึกค่ะ (ถ้าไม่ต้องการแล้ว กด "ยกเลิกส่ง" ที่ข้อความได้เลย)'); return; }
+    if(!chatOn){ toast('แชทยังไม่พร้อมค่ะ'); return; }
+    if(body.length>CONFIG.chat.maxLen){ toast('ข้อความยาวเกินไปค่ะ'); return; }
+    const cleaned = clean(body);
+    if(cleaned === info.text){ cancelEdit(); return; }       // ไม่ได้เปลี่ยนอะไร
+    try{
+      await db.ref(`rooms/${CONFIG.chat.roomId}/messages/${key}`).update({
+        text: (msgPrefixOf(info.raw) + cleaned).slice(0, 300),
+        editedAt: firebase.database.ServerValue.TIMESTAMP
+      });
+      cancelEdit();
+      toast('แก้ไขข้อความแล้ว');
+    }catch(e){ console.error(e); toast('แก้ไขไม่สำเร็จค่ะ'); }
   }
 
   function scrollToMsg(msgId){
@@ -3825,6 +3901,7 @@
     const avContainer = document.getElementById('vb-avatars');
     const moreEl = document.getElementById('vb-more');
     if(!bar || !avContainer) return;
+    if(getComputedStyle(bar).display === 'none') return;   // แถบถูกซ่อนอยู่ — ไม่ต้องโหลดรูปผู้ชม
 
     const total = currentViewersList.length || 0;
     if(total === 0){
@@ -4090,6 +4167,8 @@
     const totalViewers = list.length;
     const elCount = document.getElementById('viewer-count');
     if(elCount) elCount.textContent = totalViewers;
+    const elLiveCount = document.getElementById('live-viewer-count');   // จำนวนผู้ชมในปุ่ม LIVE บนหัวจอ
+    if(elLiveCount) elLiveCount.textContent = totalViewers;
     trackPeakPresence(totalViewers);
 
     const badge = document.getElementById('vs-total-badge');
@@ -4167,6 +4246,12 @@
     return { text, replyTo, badge };
   }
 
+  // เนื้อความในฟองแชท (อิโมจิรีแอคชันเป็นรูป) + ป้าย "แก้ไขแล้ว"
+  function msgTextHtml(txt, editedAt){
+    const body = (typeof REACT_IMG_MAP!=='undefined' && REACT_IMG_MAP[txt]) ? `<img src="${REACT_IMG_MAP[txt]}" alt="${esc(txt)}" style="width:26px;height:26px;vertical-align:middle;display:inline-block">` : esc(txt);
+    return body + (editedAt ? '<span class="msg-edited">(แก้ไขแล้ว)</span>' : '');
+  }
+
   function bindMessages(){
     chatRef=db.ref(`rooms/${CONFIG.chat.roomId}/messages`).limitToLast(100);
     const list=document.getElementById('chat-list'), empty=document.getElementById('chat-empty');
@@ -4180,6 +4265,7 @@
         uid: m.uid || '',
         name: m.name || '',
         text: txt,
+        raw: String(m.text || ''),
         ts: m.ts || 0,
         badge: parsed.badge || ''
       };
@@ -4229,7 +4315,7 @@
           <div class="mq-text">${esc(parsed.replyTo.text||'')}</div>
         </div>
       ` : '';
-      const txHtml = (typeof REACT_IMG_MAP!=='undefined' && REACT_IMG_MAP[txt]) ? `<img src="${REACT_IMG_MAP[txt]}" alt="${esc(txt)}" style="width:26px;height:26px;vertical-align:middle;display:inline-block">` : esc(txt);
+      const txHtml = msgTextHtml(txt, m.editedAt);
       const safeName = esc(m.name||'ไม่ระบุชื่อ');
       const safeSnippet = esc(txt.slice(0, 80));
 
@@ -4252,6 +4338,7 @@
           <div class="msg-actions">
             <button type="button" class="msg-act-btn" onclick="startReply(${jsArg(snap.key)}, ${jsArg(m.name||'ไม่ระบุชื่อ')}, ${jsArg(txt.slice(0, 80))})" title="ตอบกลับ">↩️</button>
             <button type="button" class="msg-act-btn btn-react${btnReactCls}" id="btn-react-${snap.key}" onclick="onMsgReactClick(${jsArg(snap.key)}, this, event)" title="${btnReactTitle}">${btnReactIcon}</button>
+            <button class="edit" onclick="startEdit(${jsArg(snap.key)})">แก้ไข</button>
             <button class="del" onclick="delMsg(${jsArg(snap.key)})">ลบ</button>
           </div>
         </div>
@@ -4270,7 +4357,19 @@
       while(list.firstChild && list.firstChild.classList && list.firstChild.classList.contains('chat-daysep')) list.removeChild(list.firstChild);
       list.scrollTop=list.scrollHeight;
     });
+    // ข้อความถูกแก้ไข → อัปเดตเนื้อความในที่เดิม
+    chatRef.on('child_changed',snap=>{
+      if(!/^[A-Za-z0-9_-]{1,40}$/.test(snap.key)) return;
+      const m=snap.val()||{};
+      const txt=parseMsgContent(m).text.trim();
+      if(messagesMap[snap.key]){ messagesMap[snap.key].text=txt; messagesMap[snap.key].raw=String(m.text||''); }
+      const el=list.querySelector(`.msg[data-key="${snap.key}"]`);
+      const tx=el && el.querySelector('.tx');
+      if(tx) tx.innerHTML=msgTextHtml(txt, m.editedAt);
+      if(editingMsgKey===snap.key){ const mb=document.getElementById('ceb-msg'); if(mb) mb.textContent=txt; }
+    });
     chatRef.on('child_removed',snap=>{
+      if(editingMsgKey===snap.key) cancelEdit();
       const el=list.querySelector(`[data-key="${snap.key}"]`); if(el) el.remove();
       delete msgReactionsCache[snap.key];
       delete messagesMap[snap.key];
@@ -4309,6 +4408,7 @@
     return t;
   }
   async function sendMessage(){
+    if(editingMsgKey){ saveEdit(); return; }       // อยู่ในโหมดแก้ไข → บันทึกการแก้แทนการส่งใหม่
     const input=document.getElementById('chat-text');
     let text=(input.value||'').trim();
     if(!text) return;
@@ -5170,12 +5270,12 @@
     const info = messagesMap[key];
     const mine = !!(info && info.uid && info.uid === myUid);
     if(!isMod && !mine) return;
-    if(!confirm('ลบข้อความนี้ใช่ไหมคะ?')) return;
+    if(!confirm(mine ? 'ยกเลิกการส่งข้อความนี้ใช่ไหมคะ? ข้อความจะหายจากแชททุกคน' : 'ลบข้อความนี้ใช่ไหมคะ?')) return;
     const base = `rooms/${CONFIG.chat.roomId}`;
     // ลบข้อความก่อน แล้วค่อยล้างรีแอคชัน — กฎยอมให้เจ้าของล้างรีแอคชันได้เมื่อข้อความไม่อยู่แล้วเท่านั้น
     db.ref(`${base}/messages/${key}`).remove()
       .then(()=>{
-        toast('ลบข้อความแล้ว');
+        toast(mine ? 'ยกเลิกข้อความแล้ว' : 'ลบข้อความแล้ว');
         return db.ref(`${base}/messageReactions/${key}`).remove().catch(()=>{});
       })
       .catch(e=>{ console.error(e); toast('ลบไม่สำเร็จ'); });
