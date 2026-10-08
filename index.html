@@ -181,7 +181,7 @@
     .msg-act-btn{ background:none; border:none; color:var(--muted); font-size:12px; cursor:pointer; padding:1px 4px; border-radius:6px; font-family:inherit; transition:color .12s, transform .12s; }
     .msg-act-btn:hover{ color:var(--accent); transform:scale(1.15); }
     .msg .del{ margin-left:2px; background:none; border:none; color:#ff6b73; font-size:12px; cursor:pointer; display:none; }
-    body.is-mod .msg .del{ display:inline; }
+    body.is-mod .msg .del, .msg.is-mine .del{ display:inline; }
     .legal-links{ text-align:center; font-size:12px; color:var(--muted); margin:10px 0 4px; }
     .legal-links a{ color:var(--muted); }
     .chat-empty{ margin:auto; text-align:center; color:var(--muted); font-size:14px; }
@@ -746,7 +746,7 @@
     #gift-admin-fab{ position:fixed; right:14px; bottom:calc(86px + env(safe-area-inset-bottom)); z-index:45; display:none;
       border:none; border-radius:999px; padding:10px 16px; font-family:inherit; font-weight:700; font-size:14px; cursor:pointer;
       color:#04150E; background:linear-gradient(135deg,var(--accent),var(--accent-2)); box-shadow:0 10px 30px -8px var(--glow); }
-    body.is-mod #gift-admin-fab{ display:block; }
+    body.is-admin #gift-admin-fab{ display:block; }
     #gift-admin-fab.has{ animation:fabPulse 1.6s ease-in-out infinite; }
     @keyframes fabPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.08); } }
     .ga-row{ display:flex; gap:10px; align-items:center; padding:10px; border-radius:14px; background:var(--glass-2); border:1px solid var(--stroke); }
@@ -2544,7 +2544,7 @@
             <span class="vs-count-badge" id="mgr-total-badge">0 คน</span>
           </div>
           <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">
-            แต่งตั้งหรือเพิกถอนสิทธิ์ผู้จัดการระบบ สำหรับช่วยดูแลห้องแชท ลบข้อความที่ไม่เหมาะสม และจัดการเนื้อหาบน Yateem TV
+            แต่งตั้งหรือเพิกถอนสิทธิ์ — ผู้จัดการ (Manager) ดูแลห้องแชทและลบข้อความได้อย่างเดียว ส่วนผู้ดูแลระบบ (Admin) เปิดแผงควบคุม อนุมัติเติมเหรียญ และแต่งตั้งผู้อื่นได้
           </div>
 
           <!-- Add Manager Form Card -->
@@ -2568,7 +2568,7 @@
 
             <label style="font-size:12px;color:var(--muted);margin-top:8px">ระดับสิทธิ์ (Role)</label>
             <select id="mgr-input-role">
-              <option value="manager">🛡️ ผู้จัดการ (Manager - ลบแชท & ช่วยดูแลทั่วไป)</option>
+              <option value="manager">🛡️ ผู้จัดการ (Manager - ดูแลแชท ลบข้อความได้อย่างเดียว)</option>
               <option value="admin">⭐ ผู้ดูแลระบบ (Admin - สิทธิ์ดูแลเต็มรูปแบบ)</option>
             </select>
 
@@ -2771,15 +2771,23 @@
      ============================================================ */
   let db=null, chatRef=null, myUid=null, lastSend=0, chatOn=false;
   const OWNER_UID='qDOL6lE687ejMumQcpOWtEjAMJ92';   // ต้องตรงกับ database.rules.json
-  let adminUidsMap = { [OWNER_UID]: true };
-  // เป็นแอดมินจริงเฉพาะ owner, ผู้ล็อกอินด้วย email/password, หรือมี UID ใน /admins
-  function isAdminUser(u){
-    if(!u) return false;
-    if(u.uid === OWNER_UID) return true;
-    if((u.providerData||[]).some(p=>p && p.providerId==='password')) return true;
-    if(adminUidsMap && adminUidsMap[u.uid]) return true;
-    return false;
+  // สิทธิ์ของผู้ใช้ปัจจุบัน อ่านจาก /admins/<uid> (ต้องตรงกับ database.rules.json)
+  //   'admin'   = สิทธิ์เต็ม (owner, ค่าเก่า true/'true', หรือ role:'admin')
+  //   'manager' = ดูแลแชทอย่างเดียว (มีชื่อใน /admins แต่ role ไม่ใช่ admin)
+  // ล็อกอินด้วยอีเมล/รหัสผ่านอย่างเดียว *ไม่* ได้สิทธิ์ — ต้องมีชื่อใน /admins
+  let myAdminRole='', myAdminRoleUid=null;
+  function adminRoleFromVal(v){
+    if(v === true || v === 'true') return 'admin';
+    if(v && typeof v === 'object') return v.role === 'admin' ? 'admin' : 'manager';
+    return v ? 'manager' : '';
   }
+  function adminRoleOf(u){
+    if(!u) return '';
+    if(u.uid === OWNER_UID) return 'admin';
+    return (u.uid === myAdminRoleUid) ? myAdminRole : '';
+  }
+  function isAdminUser(u){ return adminRoleOf(u) === 'admin'; }
+  function isModUser(u){ return !!adminRoleOf(u); }
   function fbConfigured(){ return CONFIG.firebase && CONFIG.firebase.apiKey && CONFIG.firebase.databaseURL; }
   function initFirebaseApp(){                      // เรียกได้ครั้งเดียว ใช้ร่วมกันทั้ง settings/schedule/chat
     if(!fbConfigured()) return false;
@@ -2788,20 +2796,39 @@
     return true;
   }
 
+  // ฟังสิทธิ์ของตัวเองแบบสด (ถอดสิทธิ์แล้วมีผลทันที) — เรียกซ้ำได้ทุกครั้งที่ผู้ใช้เปลี่ยน
+  let adminSyncUid, myAdminRef=null, allAdminsRef=null;
   function bindAdminsSync(){
     if(!db) return;
-    db.ref('admins').on('value', snap => {
+    const u = firebase.auth().currentUser;
+    const uid = u ? u.uid : null;
+    if(uid === adminSyncUid) return;
+    adminSyncUid = uid;
+    if(myAdminRef){ myAdminRef.off(); myAdminRef=null; }
+    unbindAllAdmins();
+    if(myAdminRoleUid !== uid){ myAdminRole=''; myAdminRoleUid=uid; }   // ล็อกอินอีเมลอาจตั้ง role ไว้ก่อนแล้ว
+    if(!uid) return;
+    myAdminRef = db.ref('admins/'+uid);
+    myAdminRef.on('value', snap => {
+      if(adminSyncUid !== uid) return;
+      myAdminRole = adminRoleFromVal(snap.val());
+      const cu = firebase.auth().currentUser;
+      if(cu && cu.uid === uid) applyUserState(cu);
+      if(isAdmin) bindAllAdmins(); else unbindAllAdmins();
+    }, () => {});
+  }
+  // รายชื่อทั้งหมดใน /admins — อ่านได้เฉพาะแอดมินสิทธิ์เต็ม (ใช้ในแท็บผู้จัดการ)
+  function bindAllAdmins(){
+    if(allAdminsRef || !db) return;
+    allAdminsRef = db.ref('admins');
+    allAdminsRef.on('value', snap => {
       const val = snap.val() || {};
-      adminUidsMap = { [OWNER_UID]: true };
-      Object.keys(val).forEach(k => {
-        if(val[k]) adminUidsMap[k] = true;
-      });
-      const u = (firebase.auth && firebase.auth().currentUser);
-      if(u) applyUserState(u);
-      if(document.getElementById('apane-managers') && document.getElementById('apane-managers').style.display === 'block'){
-        if(typeof renderManagersList === 'function') renderManagersList(val);
-      }
-    });
+      const pane = document.getElementById('apane-managers');
+      if(pane && pane.style.display === 'block' && typeof renderManagersList === 'function') renderManagersList(val);
+    }, () => { allAdminsRef = null; });
+  }
+  function unbindAllAdmins(){
+    if(allAdminsRef){ allAdminsRef.off(); allAdminsRef=null; }
   }
 
   async function initChat(){
@@ -2827,7 +2854,7 @@
       }catch(e){}
       try{ trackVisitor(); }catch(e){}   // บันทึกสถิติหลัง auth พร้อมแล้ว (กัน PERMISSION_DENIED ตอน anon ยังไม่เสร็จ)
       // อัปเดตสถานะเมื่อผู้ใช้ล็อกอิน/ออกภายหลัง (social redirect กลับมา ฯลฯ)
-      firebase.auth().onAuthStateChanged(u=>{ if(u){ myUid=u.uid; } applyUserState(u); });
+      firebase.auth().onAuthStateChanged(u=>{ if(u){ myUid=u.uid; } applyUserState(u); bindAdminsSync(); refreshMineMarks(); });
       recordVisitStats();
       chatOn=true; note.textContent='ใส่ชื่อเล่นแล้วพิมพ์ได้เลยค่ะ';
       bindPresence();
@@ -2842,15 +2869,17 @@
       updateChatNote();
       updateIdentityBar();
       // ล้างแชทเก่าอัตโนมัติเมื่อเป็นแอดมิน (ผู้ชมทั่วไปไม่มีสิทธิ์ลบ — pruneChat กันเองอยู่แล้ว)
-      setTimeout(()=>{ if(isAdmin) pruneChat(CONFIG.chat.keepLast||200, {auto:true}); }, 8000);
-      setInterval(()=>{ if(isAdmin) pruneChat(CONFIG.chat.keepLast||200, {auto:true}); }, 300000);  // ทุก 5 นาที
+      setTimeout(()=>{ if(isMod) pruneChat(CONFIG.chat.keepLast||200, {auto:true}); }, 8000);
+      setInterval(()=>{ if(isMod) pruneChat(CONFIG.chat.keepLast||200, {auto:true}); }, 300000);  // ทุก 5 นาที
     }catch(e){ note.textContent='เชื่อมต่อแชทไม่สำเร็จค่ะ'; console.error(e); }
   }
-  // ตั้งสถานะแอดมิน (is-mod) + ปุ่มโปรไฟล์ ตามผู้ใช้ปัจจุบัน
+  // ตั้งสถานะ: is-admin = สิทธิ์เต็ม, is-mod = แอดมินหรือผู้จัดการ (ลบแชท) + ปุ่มโปรไฟล์ ตามผู้ใช้ปัจจุบัน
   function applyUserState(user){
     const admin=isAdminUser(user);
     isAdmin=admin;
-    document.body.classList.toggle('is-mod', admin);
+    isMod=isModUser(user);
+    document.body.classList.toggle('is-admin', admin);
+    document.body.classList.toggle('is-mod', isMod);
     const pAdmBtn = document.getElementById('profile-admin-btn');
     if(pAdmBtn) pAdmBtn.style.display = admin ? 'block' : 'none';
     bindGiftAdmin(admin);
@@ -2902,7 +2931,7 @@
     } else if(u && !u.isAnonymous) {
       photo = u.photoURL || '';
       name = hasCustomNick ? customNick : (u.displayName || (u.email ? u.email.split('@')[0] : ''));
-    } else if(isAdmin || (u && isAdminUser(u))) {
+    } else if(isMod || (u && isModUser(u))) {
       role = 'admin';
       photo = (u && u.photoURL) || '';
       name = hasCustomNick ? customNick : 'แอดมิน (ผู้ดูแล)';
@@ -3051,11 +3080,11 @@
   }
 
   function getViewerRole(){
-    if(isAdmin) return 'admin';
+    if(isMod) return 'admin';
     const mem = readMemberProfile() || (typeof readSavedMember === 'function' ? readSavedMember() : null);
     if(mem && (mem.fullname || mem.phone || mem.nickname)) return 'member';
     const u = (typeof firebase!=='undefined' && firebase.auth) ? firebase.auth().currentUser : null;
-    if(u && !u.isAnonymous) return isAdminUser(u) ? 'admin' : 'member';
+    if(u && !u.isAnonymous) return isModUser(u) ? 'admin' : 'member';
     if(lineProfile && lineProfile.displayName) return 'member';
     try {
       if(localStorage.getItem('yt_top_fan') === '1' || (typeof walletBal !== 'undefined' && walletBal > 0)) return 'top_fan';
@@ -3210,7 +3239,7 @@
     const initial = cleanName.charAt(0) || '?';
     let avHtml = `<div class="rnt-av">${initial}</div>`;
     if(reactorPhoto && (reactorPhoto.startsWith('http') || reactorPhoto.startsWith('data:'))){
-      avHtml = `<img class="rnt-av" src="${esc(reactorPhoto)}" alt="" onerror="this.outerHTML='<div class=\\'rnt-av\\'>${esc(initial)}</div>'">`;
+      avHtml = `<img class="rnt-av" src="${esc(reactorPhoto)}" alt="" data-cls="rnt-av" data-fb="${esc(initial)}" onerror="avFallback(this)">`;
     }
 
     const miniBadge = (typeof REACT_IMG_MAP !== 'undefined' && REACT_IMG_MAP[emoji])
@@ -3579,7 +3608,7 @@
     const tipText = allNames.slice(0, 4).join(', ') + (allNames.length > 4 ? ` และอีก ${allNames.length - 4} คน` : '');
 
     container.innerHTML = `
-      <div class="msg-react-cluster ${hasMine ? 'has-mine' : ''} mrc-bounce" onclick="openReactionDetailsModal('${msgKey}')" title="${esc(tipText)} (แตะเพื่อดูรายชื่อ)">
+      <div class="msg-react-cluster ${hasMine ? 'has-mine' : ''} mrc-bounce" onclick="openReactionDetailsModal(${jsArg(msgKey)})" title="${esc(tipText)} (แตะเพื่อดูรายชื่อ)">
         <div class="mrc-icons">${iconsHtml}</div>
         <span class="mrc-cnt">${totalCount}</span>
       </div>
@@ -3642,7 +3671,7 @@
     let tabsHtml = `<button type="button" class="rds-tab ${activeDetailsTab === 'all' ? 'on' : ''}" onclick="setReactionDetailsTab('all')">ทั้งหมด (${total})</button>`;
     for(const e in counts){
       const ic = (typeof REACT_IMG_MAP !== 'undefined' && REACT_IMG_MAP[e]) ? `<img src="${REACT_IMG_MAP[e]}" alt="${esc(e)}">` : esc(e);
-      tabsHtml += `<button type="button" class="rds-tab ${activeDetailsTab === e ? 'on' : ''}" onclick="setReactionDetailsTab('${e}')">${ic} ${counts[e]}</button>`;
+      tabsHtml += `<button type="button" class="rds-tab ${activeDetailsTab === e ? 'on' : ''}" onclick="setReactionDetailsTab(${jsArg(e)})">${ic} ${counts[e]}</button>`;
     }
     tabsEl.innerHTML = tabsHtml;
 
@@ -3745,7 +3774,7 @@
     el.className = 'join-toast';
     const initial = cleanName.charAt(0) || '?';
     const av = (j.photo && (j.photo.startsWith('http') || j.photo.startsWith('data:')))
-      ? `<img class="jt-av" src="${esc(j.photo)}" alt="" onerror="this.outerHTML='<div class=\\'jt-av\\'>${esc(initial)}</div>'">`
+      ? `<img class="jt-av" src="${esc(j.photo)}" alt="" data-cls="jt-av" data-fb="${esc(initial)}" onerror="avFallback(this)">`
       : `<div class="jt-av">${esc(initial)}</div>`;
     el.innerHTML = `
       ${av}
@@ -3770,14 +3799,8 @@
   let refreshViewersTimer = null;
 
   // แคชโปรไฟล์ผู้ชมที่รู้จัก (ดึงจากผู้ที่เคยแชทและมีปฏิสัมพันธ์ในห้องถ่ายทอดสด)
-  const knownViewerProfiles = {
-    'jqHeOLrSTqNxQ9vtUpBiw1z2JDh1': { name: 'บังฮาซัน ทดสอบชื่อใหม่', photo: '', avatarIcon: '👳‍♂️', role: 'returning', lastSeen: Date.now() - 3600000 },
-    'N6T9uIgjyCVq6tROlCTLdRSb2KG2': { name: 'Idris', photo: 'https://profile.line-scdn.net/0hp4xxvF5cLxtVATPlLKpRJSVRLHF2cHYJeTNiLmdRIy88ZmoafzU3KGVTdCNpOGpPfDQweTIEciJ3LQpLLjNiBjACGkIpSAk4JhkhBzt-AWs7YwsLHnskJ2UAMlgceAhNIScoPStIH2M-UGARfjdmdD8FBWA7TAoIF1ZDTVAzQZg6A1hOeGdgfWEIdS_v', avatarIcon: '', role: 'member', lastSeen: Date.now() - 7200000 },
-    '2d118TTb5rdS9wBOcHGzB3PD0WM2': { name: 'Khalid Poothong', photo: 'https://lh3.googleusercontent.com/a/ACg8ocLoprk0F-AWMsjqmjlnFKjk2qRKfQNyWSIJ1NELV3lbxdwbceY=s96-c', avatarIcon: '', role: 'member', lastSeen: Date.now() - 10800000 },
-    'AwShsvKrLKdoLZa5RQrNdh0YxkV2': { name: 'Sebastian', photo: '', avatarIcon: '⭐', role: 'member', lastSeen: Date.now() - 14400000 },
-    'yoygNXWTkcZejmNap74rHix5ezj1': { name: 'แอดริทเอง', photo: '', avatarIcon: '👑', role: 'member', lastSeen: Date.now() - 18000000 },
-    's5UehZRudGOAcbYgusT3zSjKsLD3': { name: 'ทดสอบชื่อ', photo: '', avatarIcon: '🌱', role: 'member', lastSeen: Date.now() - 21600000 }
-  };
+  // เติมจากแชท / รีแอคชัน / presence ระหว่างใช้งาน — ห้าม hardcode ข้อมูลผู้ใช้จริงไว้ในโค้ด (ไฟล์นี้เป็นสาธารณะ)
+  const knownViewerProfiles = {};
 
   function hashStr(str){
     let h = 0;
@@ -3819,7 +3842,7 @@
       const meBorder = v.isMe ? 'border:2px solid var(--accent);box-shadow:0 0 6px var(--accent);' : '';
       const titleName = vName + (v.isMe ? ' (คุณ)' : '');
       if(v.photo && (v.photo.startsWith('http') || v.photo.startsWith('data:'))){
-        html += `<img class="vb-av ${roleCls}" style="${meBorder}" src="${esc(v.photo)}" alt="${esc(titleName)}" title="${esc(titleName)}" onerror="this.outerHTML='<div class=\\'vb-av ${roleCls}\\' style=\\'${meBorder}\\' title=\\'${esc(titleName)}\\'>${esc(initial)}</div>'">`;
+        html += `<img class="vb-av ${roleCls}" style="${meBorder}" src="${esc(v.photo)}" alt="${esc(titleName)}" title="${esc(titleName)}" data-cls="vb-av ${roleCls}" data-fb="${esc(initial)}" onerror="avFallback(this)">`;
       } else if(v.avatarIcon){
         html += `<div class="vb-av ${roleCls}" style="${meBorder}" title="${esc(titleName)}">${esc(v.avatarIcon)}</div>`;
       } else {
@@ -3895,7 +3918,7 @@
       const initial = cleanName.charAt(0) || '?';
       let avHtml = `<div class="av">${esc(initial)}</div>`;
       if(v.photo && (v.photo.startsWith('http') || v.photo.startsWith('data:'))){
-        avHtml = `<img class="av" src="${esc(v.photo)}" alt="" onerror="this.outerHTML='<div class=\\'av\\'>${esc(initial)}</div>'">`;
+        avHtml = `<img class="av" src="${esc(v.photo)}" alt="" data-cls="av" data-fb="${esc(initial)}" onerror="avFallback(this)">`;
       } else if(v.avatarIcon){
         avHtml = `<div class="av">${esc(v.avatarIcon)}</div>`;
       }
@@ -4094,7 +4117,19 @@
     });
   }
 
-  function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+  function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  // ค่าที่จะใส่เป็นอาร์กิวเมนต์ใน onclick="fn(...)" — ห้ามใช้ '${esc(x)}' เพราะเบราว์เซอร์ถอด &#39; กลับเป็น ' ก่อนรัน JS (= XSS)
+  function jsArg(s){ return esc(JSON.stringify(String(s==null?'':s))); }
+  // รูปโปรไฟล์โหลดไม่ขึ้น → แทนด้วยวงกลมตัวอักษร (อ่านจาก data-* ไม่ประกอบ HTML จากชื่อผู้ใช้)
+  function avFallback(img){
+    if(!img || !img.parentNode) return;
+    const d=document.createElement('div');
+    d.className=img.dataset.cls||'av';
+    d.textContent=img.dataset.fb||'?';
+    if(img.title) d.title=img.title;
+    const st=img.getAttribute('style'); if(st) d.setAttribute('style', st);
+    img.replaceWith(d);
+  }
   // ---- เส้นคั่นแชทรายชั่วโมง (วัน–เวลาแบบจาง) ----
   let lastMsgHourKey=null;
   function hourKey(ts){ const d=ts?new Date(ts):new Date(); return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate()+'-'+d.getHours(); }
@@ -4136,6 +4171,8 @@
     chatRef=db.ref(`rooms/${CONFIG.chat.roomId}/messages`).limitToLast(100);
     const list=document.getElementById('chat-list'), empty=document.getElementById('chat-empty');
     chatRef.on('child_added',snap=>{
+      // คีย์ต้องเป็นรูปแบบ push id เท่านั้น — คีย์ Firebase ใส่ ' " ได้ ถ้าปล่อยผ่านจะถูกแทรกลง HTML (XSS)
+      if(!/^[A-Za-z0-9_-]{1,40}$/.test(snap.key)) return;
       const m=snap.val()||{};
       const parsed=parseMsgContent(m);
       const txt=parsed.text.trim();
@@ -4177,6 +4214,7 @@
       const el=document.createElement('div'); el.className='msg'; el.dataset.key=snap.key;
       el.dataset.uid=m.uid || '';
       el.dataset.name=m.name || '';
+      if(m.uid && m.uid === myUid) el.classList.add('is-mine');   // เจ้าของข้อความเห็นปุ่มลบของตัวเอง
       const initial=(m.name||'?').trim().charAt(0)||'?';
       let av = `<div class="av">${esc(initial)}</div>`;
       if(m.photo && (m.photo.startsWith('http') || m.photo.startsWith('data:'))){
@@ -4186,7 +4224,7 @@
       }
       const badgeHtml = renderBadgeHtml(parsed.badge);
       const quoteHtml = parsed.replyTo ? `
-        <div class="msg-quote" onclick="scrollToMsg('${esc(parsed.replyTo.id)}')" title="แตะเพื่อดูข้อความต้นทาง">
+        <div class="msg-quote" onclick="scrollToMsg(${jsArg(parsed.replyTo.id)})" title="แตะเพื่อดูข้อความต้นทาง">
           <div class="mq-name">↩️ ${esc(parsed.replyTo.name||'ผู้ใช้')}</div>
           <div class="mq-text">${esc(parsed.replyTo.text||'')}</div>
         </div>
@@ -4212,9 +4250,9 @@
         <div class="nm">
           <span>${safeName}</span>${badgeHtml}
           <div class="msg-actions">
-            <button type="button" class="msg-act-btn" onclick="startReply('${snap.key}', '${safeName}', '${safeSnippet}')" title="ตอบกลับ">↩️</button>
-            <button type="button" class="msg-act-btn btn-react${btnReactCls}" id="btn-react-${snap.key}" onclick="onMsgReactClick('${snap.key}', this, event)" title="${btnReactTitle}">${btnReactIcon}</button>
-            <button class="del" onclick="delMsg('${snap.key}')">ลบ</button>
+            <button type="button" class="msg-act-btn" onclick="startReply(${jsArg(snap.key)}, ${jsArg(m.name||'ไม่ระบุชื่อ')}, ${jsArg(txt.slice(0, 80))})" title="ตอบกลับ">↩️</button>
+            <button type="button" class="msg-act-btn btn-react${btnReactCls}" id="btn-react-${snap.key}" onclick="onMsgReactClick(${jsArg(snap.key)}, this, event)" title="${btnReactTitle}">${btnReactIcon}</button>
+            <button class="del" onclick="delMsg(${jsArg(snap.key)})">ลบ</button>
           </div>
         </div>
         ${quoteHtml}
@@ -4319,14 +4357,18 @@
   }
 
   /* แอดมิน — เปิดด้วย #mod (ลบแชทอย่างเดียว) หรือ #admin (เปิดแผงแก้ไข) */
-  let isAdmin=false;
+  let isAdmin=false;   // สิทธิ์เต็ม (แผงควบคุม เติมเหรียญ แต่งตั้งผู้จัดการ)
+  let isMod=false;     // แอดมินหรือผู้จัดการ — ลบแชทได้
   let adminPendingOpenPanel=false;
 
   function handleAdminHash(){
     const h=location.hash;
     if(h!=='#mod' && h!=='#admin') return;
-    if(isAdmin){                                   // ล็อกอินค้างอยู่แล้ว (จำไว้) — ไม่ต้องถามซ้ำ
-      if(h==='#admin') openAdmin();
+    if(isMod){                                     // ล็อกอินค้างอยู่แล้ว (จำไว้) — ไม่ต้องถามซ้ำ
+      if(h==='#admin'){
+        if(isAdmin) openAdmin();
+        else toast('บัญชีนี้เป็นผู้จัดการ ดูแลแชทได้อย่างเดียวค่ะ');
+      }
       return;
     }
     openAdminLoginModal(h==='#admin');
@@ -4353,7 +4395,7 @@
     const bd = document.getElementById('admin-login-backdrop');
     if(bd) bd.classList.remove('open');
     if(location.hash === '#admin' || location.hash === '#mod'){
-      if(!isAdmin) history.replaceState(null, document.title, location.pathname + location.search);
+      if(!isMod) history.replaceState(null, document.title, location.pathname + location.search);
     }
   }
 
@@ -4389,8 +4431,25 @@
 
       const cred = await firebase.auth().signInWithEmailAndPassword(email, pass);
       myUid = cred.user.uid;
-      isAdmin = true;
-      document.body.classList.add('is-mod');
+      // ล็อกอินอีเมลผ่านแล้วยังไม่พอ — ต้องมีชื่อใน /admins (หรือเป็น owner) ถึงจะได้สิทธิ์
+      let role = (cred.user.uid === OWNER_UID) ? 'admin' : '';
+      if(!role){
+        try{ role = adminRoleFromVal((await db.ref('admins/'+cred.user.uid).once('value')).val()); }catch(e){ role = ''; }
+      }
+      myAdminRoleUid = cred.user.uid; myAdminRole = role;
+      applyUserState(cred.user);
+      bindAdminsSync();
+      if(!role){
+        if(errEl){
+          errEl.textContent = 'บัญชีนี้ยังไม่ได้รับสิทธิ์ผู้ดูแลค่ะ ส่ง UID นี้ให้เจ้าของระบบแต่งตั้งในแท็บผู้จัดการ: ';
+          const code = document.createElement('code'); code.textContent = cred.user.uid; code.style.userSelect = 'all';
+          const cp = document.createElement('button'); cp.type = 'button'; cp.className = 'mini'; cp.textContent = 'คัดลอก UID'; cp.style.marginLeft = '6px';
+          cp.onclick = () => copyText(cred.user.uid).then(() => toast('คัดลอก UID แล้ว'));
+          errEl.appendChild(code); errEl.appendChild(cp);
+          errEl.style.display = 'block';
+        }
+        return;
+      }
 
       const admName = 'แอดมิน (' + (cred.user.email ? cred.user.email.split('@')[0] : 'ผู้ดูแล') + ')';
       const curNick = (localStorage.getItem('yt_nick') || '').trim();
@@ -4399,9 +4458,9 @@
       }
       applyUserState(cred.user);
       closeAdminLoginModal();
-      toast('เข้าสู่ระบบผู้ดูแลแล้ว ✅' + (remember ? ' (จำรหัสในเครื่องนี้)' : ''));
+      toast((role === 'admin' ? 'เข้าสู่ระบบผู้ดูแลแล้ว ✅' : 'เข้าสู่ระบบผู้จัดการแล้ว ✅ (ดูแลแชท)') + (remember ? ' (จำรหัสในเครื่องนี้)' : ''));
       broadcastJoinEvent(true);
-      if(adminPendingOpenPanel || location.hash === '#admin'){
+      if(role === 'admin' && (adminPendingOpenPanel || location.hash === '#admin')){
         openAdmin();
       }
     }catch(e){
@@ -4421,8 +4480,8 @@
     localStorage.removeItem('yt_admin_remember');
     firebase.auth().signOut().then(()=>{
       toast('ออกจากระบบแล้ว (ล้างการจำรหัสในเครื่องนี้)');
-      isAdmin = false;
-      document.body.classList.remove('is-mod');
+      isAdmin = false; isMod = false;
+      document.body.classList.remove('is-mod', 'is-admin');
       closeAdmin();
       location.hash = '';
       setTimeout(()=>location.reload(), 300);
@@ -5098,19 +5157,35 @@
     if(name==='faith' && !prayerTimings){ try{ const sel=document.getElementById('prayer-province'); loadPrayer((sel&&sel.value)||currentProvince()); }catch(e){} }
   }
 
+  // ผู้ใช้เปลี่ยนบัญชี → อัปเดตว่าข้อความไหนเป็นของเรา (ปุ่มลบของเจ้าของ)
+  function refreshMineMarks(){
+    document.querySelectorAll('#chat-list .msg').forEach(el=>{
+      el.classList.toggle('is-mine', !!(myUid && el.dataset.uid === myUid));
+    });
+  }
+
+  // ลบข้อความ (รวมข้อความตอบกลับ) — แอดมิน/ผู้จัดการลบได้ทุกข้อความ เจ้าของลบได้เฉพาะของตัวเอง (กฎ Firebase ตรวจซ้ำ)
   function delMsg(key){
-    if(!document.body.classList.contains('is-mod') && !isAdmin) return;
-    db.ref(`rooms/${CONFIG.chat.roomId}/messages/${key}`).remove()
-      .then(()=>toast('ลบข้อความแล้ว'))
-      .catch(()=>toast('ลบไม่สำเร็จ'));
-    db.ref(`rooms/${CONFIG.chat.roomId}/messageReactions/${key}`).remove().catch(()=>{});
+    if(!db || !key) return;
+    const info = messagesMap[key];
+    const mine = !!(info && info.uid && info.uid === myUid);
+    if(!isMod && !mine) return;
+    if(!confirm('ลบข้อความนี้ใช่ไหมคะ?')) return;
+    const base = `rooms/${CONFIG.chat.roomId}`;
+    // ลบข้อความก่อน แล้วค่อยล้างรีแอคชัน — กฎยอมให้เจ้าของล้างรีแอคชันได้เมื่อข้อความไม่อยู่แล้วเท่านั้น
+    db.ref(`${base}/messages/${key}`).remove()
+      .then(()=>{
+        toast('ลบข้อความแล้ว');
+        return db.ref(`${base}/messageReactions/${key}`).remove().catch(()=>{});
+      })
+      .catch(e=>{ console.error(e); toast('ลบไม่สำเร็จ'); });
   }
 
   // ---- ล้างแชทเก่า (แอดมินเท่านั้น) — เก็บ N ข้อความล่าสุด ที่เหลือลบทิ้ง กันฐานข้อมูลพอก ----
   let pruningChat=false;
   async function pruneChat(keepN, opts){
     opts = opts || {};
-    if(!db || !isAdmin){ if(opts.manual) toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return 0; }
+    if(!db || !isMod){ if(opts.manual) toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return 0; }
     if(pruningChat) return 0;                       // กันทำงานซ้อน (auto + manual)
     pruningChat=true;
     try{
@@ -5490,8 +5565,8 @@
   function fileHtml(label,f){
     if(!f||!f.url) return '';
     const inner = (f.type==='pdf')
-      ? `<a href="javascript:void(0)" onclick="openExternal('${esc(f.url)}')">${esc(lbl('schedPdfBtn'))}</a>`
-      : `<img src="${esc(f.url)}" alt="ผังรายการ" style="cursor:zoom-in" onclick="openLightbox('${esc(f.url)}')">`;
+      ? `<a href="javascript:void(0)" onclick="openExternal(${jsArg(f.url)})">${esc(lbl('schedPdfBtn'))}</a>`
+      : `<img src="${esc(f.url)}" alt="ผังรายการ" style="cursor:zoom-in" onclick="openLightbox(${jsArg(f.url)})">`;
     return `<div class="sched-file">${label?('<h4>'+esc(label)+'</h4>'):''}${inner}</div>`;
   }
   function nowHM(){ const d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
@@ -5714,7 +5789,7 @@
               <div class="mgr-meta">แต่งตั้งเมื่อ: ${esc(addedAt)}</div>
             </div>
             <div class="mgr-act">
-              <button type="button" class="mini danger-mini" onclick="adminRemoveManager('${esc(uid)}', '${esc(name)}')" title="เพิกถอนสิทธิ์ผู้จัดการนี้">
+              <button type="button" class="mini danger-mini" onclick="adminRemoveManager(${jsArg(uid)}, ${jsArg(name)})" title="เพิกถอนสิทธิ์ผู้จัดการนี้">
                 🗑️ ลบสิทธิ์
               </button>
             </div>

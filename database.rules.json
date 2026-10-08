@@ -4,150 +4,270 @@
       "$room": {
         "messages": {
           ".read": true,
-          ".write": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || auth.token.firebase.sign_in_provider === 'password')",
-          ".indexOn": ["ts"],
+          ".write": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists())",
+          ".indexOn": [
+            "ts"
+          ],
           "$msg": {
-            ".write": "(!data.exists() && auth != null && newData.child('uid').val() === auth.uid) || (data.exists() && !newData.exists() && auth != null && (data.child('uid').val() === auth.uid || auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || auth.token.firebase.sign_in_provider === 'password'))",
+            ".write": "(!data.exists() && auth != null && newData.child('uid').val() === auth.uid && $msg.matches(/^[A-Za-z0-9_-]{1,40}$/)) || (data.exists() && !newData.exists() && auth != null && (data.child('uid').val() === auth.uid || auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists()))",
             ".validate": "!newData.exists() || (newData.hasChildren(['uid','name','text','ts']) && newData.child('uid').isString() && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('text').isString() && newData.child('text').val().length >= 1 && newData.child('text').val().length <= 300 && newData.child('ts').val() === now)",
-            "photo": { ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 500)" },
-            "badge": { ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 30)" },
-            "avatarIcon": { ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 30)" },
+            "photo": {
+              ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 500)"
+            },
+            "badge": {
+              ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 30)"
+            },
+            "avatarIcon": {
+              ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 30)"
+            },
             "replyTo": {
               ".validate": "!newData.exists() || (newData.hasChildren(['id','name','text']) && newData.child('id').isString() && newData.child('id').val().length <= 100 && newData.child('name').isString() && newData.child('name').val().length <= 50 && newData.child('text').isString() && newData.child('text').val().length <= 300)"
             },
-            "uid":   { ".validate": true },
-            "name":  { ".validate": true },
-            "text":  { ".validate": true },
-            "ts":    { ".validate": true },
-            "$other": { ".validate": false }
+            "uid": {
+              ".validate": true
+            },
+            "name": {
+              ".validate": true
+            },
+            "text": {
+              ".validate": true
+            },
+            "ts": {
+              ".validate": true
+            },
+            "$other": {
+              ".validate": false
+            }
           }
         },
         "reactions": {
           ".read": true,
-          ".indexOn": ["ts"],
+          ".indexOn": [
+            "ts"
+          ],
           "$r": {
-            ".write": "(!data.exists() && auth != null && newData.child('uid').val() === auth.uid) || (data.exists() && !newData.exists() && auth != null && (data.child('uid').val() === auth.uid || auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || auth.token.firebase.sign_in_provider === 'password'))",
+            ".write": "(!data.exists() && auth != null && newData.child('uid').val() === auth.uid) || (data.exists() && !newData.exists() && auth != null && (data.child('uid').val() === auth.uid || auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists()))",
             ".validate": "!newData.exists() || (newData.hasChildren(['uid','name','e','ts']) && newData.child('uid').isString() && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('e').isString() && newData.child('e').val().length >= 1 && newData.child('e').val().length <= 8 && newData.child('ts').val() === now)",
-            "uid":  { ".validate": true },
-            "name": { ".validate": true },
-            "e":    { ".validate": true },
-            "ts":   { ".validate": true },
-            "$other": { ".validate": false }
+            "uid": {
+              ".validate": true
+            },
+            "name": {
+              ".validate": true
+            },
+            "e": {
+              ".validate": true
+            },
+            "ts": {
+              ".validate": true
+            },
+            "$other": {
+              ".validate": false
+            }
           }
         },
         "messageReactions": {
           ".read": true,
-          ".write": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || auth.token.firebase.sign_in_provider === 'password')",
+          ".write": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists())",
           "$msg": {
-            ".write": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || auth.token.firebase.sign_in_provider === 'password')",
+            ".write": "auth != null && ((auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists()) || (!newData.exists() && !root.child('rooms').child($room).child('messages').child($msg).exists()))",
             "$uid": {
-              ".write": "auth != null && (auth.uid === $uid || auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || auth.token.firebase.sign_in_provider === 'password')",
+              ".write": "auth != null && (auth.uid === $uid || auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists())",
               ".validate": "!newData.exists() || (newData.hasChildren(['e','name','ts']) && newData.child('e').isString() && newData.child('e').val().length <= 8 && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('ts').val() === now)",
-              "e":          { ".validate": true },
-              "name":       { ".validate": true },
-              "photo":      { ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 500)" },
-              "targetUid":  { ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 128)" },
-              "msgSnippet": { ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 100)" },
-              "ts":         { ".validate": true },
-              "$other":     { ".validate": false }
+              "e": {
+                ".validate": true
+              },
+              "name": {
+                ".validate": true
+              },
+              "photo": {
+                ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 500)"
+              },
+              "targetUid": {
+                ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 128)"
+              },
+              "msgSnippet": {
+                ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 100)"
+              },
+              "ts": {
+                ".validate": true
+              },
+              "$other": {
+                ".validate": false
+              }
             }
           }
         },
         "joins": {
           ".read": true,
-          ".indexOn": ["ts"],
+          ".indexOn": [
+            "ts"
+          ],
           "$j": {
-            ".write": "(!data.exists() && auth != null && newData.child('uid').val() === auth.uid) || (data.exists() && !newData.exists() && auth != null && (data.child('uid').val() === auth.uid || auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || auth.token.firebase.sign_in_provider === 'password'))",
+            ".write": "(!data.exists() && auth != null && newData.child('uid').val() === auth.uid) || (data.exists() && !newData.exists() && auth != null && (data.child('uid').val() === auth.uid || auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists()))",
             ".validate": "!newData.exists() || (newData.hasChildren(['uid','name','role','ts']) && newData.child('uid').isString() && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('role').isString() && newData.child('role').val().length <= 20 && newData.child('ts').val() === now)",
-            "uid":   { ".validate": true },
-            "name":  { ".validate": true },
-            "role":  { ".validate": true },
-            "photo": { ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 500)" },
-            "ts":    { ".validate": true },
-            "$other": { ".validate": false }
+            "uid": {
+              ".validate": true
+            },
+            "name": {
+              ".validate": true
+            },
+            "role": {
+              ".validate": true
+            },
+            "photo": {
+              ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 500)"
+            },
+            "ts": {
+              ".validate": true
+            },
+            "$other": {
+              ".validate": false
+            }
           }
         },
         "presence": {
           ".read": true,
           "$conn": {
-            ".write": "auth != null",
-            ".validate": "newData.isBoolean() || (newData.child('name').isString() && newData.child('name').val().length <= 40)"
+            ".write": "auth != null && (!data.exists() || data.val() === true || data.child('uid').val() === auth.uid) && (!newData.exists() || newData.val() === true || newData.child('uid').val() === auth.uid)",
+            ".validate": "newData.isBoolean() || (newData.child('name').isString() && newData.child('name').val().length <= 40)",
+            "photo": {
+              ".validate": "newData.isString() && newData.val().length <= 500"
+            },
+            "avatarIcon": {
+              ".validate": "newData.isString() && newData.val().length <= 30"
+            }
           }
         }
       }
     },
     "settings": {
       ".read": true,
-      ".write": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || auth.token.firebase.sign_in_provider === 'password')"
+      ".write": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || root.child('admins').child(auth.uid).child('role').val() === 'admin')"
     },
     "schedule": {
       ".read": true,
-      ".write": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || auth.token.firebase.sign_in_provider === 'password')"
+      ".write": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || root.child('admins').child(auth.uid).child('role').val() === 'admin')"
     },
     "stats": {
-      ".read": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || auth.token.firebase.sign_in_provider === 'password')",
+      ".read": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || root.child('admins').child(auth.uid).child('role').val() === 'admin')",
       "summary": {
         ".write": "auth != null"
       }
     },
     "topups": {
-      ".read": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || auth.token.firebase.sign_in_provider === 'password')",
-      ".indexOn": ["status", "slipHash", "ts"],
+      ".read": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || root.child('admins').child(auth.uid).child('role').val() === 'admin')",
+      ".indexOn": [
+        "status",
+        "slipHash",
+        "ts"
+      ],
       "$id": {
         ".read": "auth != null && data.child('uid').val() === auth.uid",
-        ".write": "(!data.exists() && auth != null && newData.child('uid').val() === auth.uid && newData.child('status').val() === 'pending') || (auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || auth.token.firebase.sign_in_provider === 'password'))",
+        ".write": "(!data.exists() && auth != null && newData.child('uid').val() === auth.uid && newData.child('status').val() === 'pending') || (auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || root.child('admins').child(auth.uid).child('role').val() === 'admin'))",
         ".validate": "!newData.exists() || (newData.hasChildren(['uid','name','amount','slipUrl','status','ts']) && (data.exists() || newData.child('ts').val() === now))",
-        "uid":       { ".validate": "newData.isString() && newData.val().length <= 128" },
-        "name":      { ".validate": "newData.isString() && newData.val().length <= 40" },
-        "amount":    { ".validate": "newData.isNumber() && newData.val() >= 20 && newData.val() <= 20000 && newData.val() % 1 === 0" },
-        "slipUrl":   { ".validate": "newData.isString() && newData.val().beginsWith('https://res.cloudinary.com/') && newData.val().length <= 500" },
-        "slipHash":  { ".validate": "newData.isString() && newData.val().length <= 80" },
-        "status":    { ".validate": "newData.val() === 'pending' || newData.val() === 'approved' || newData.val() === 'rejected'" },
-        "ts":        { ".validate": "newData.isNumber()" },
-        "decidedAt": { ".validate": "newData.isNumber()" },
-        "$other":    { ".validate": false }
+        "uid": {
+          ".validate": "newData.isString() && newData.val().length <= 128"
+        },
+        "name": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "amount": {
+          ".validate": "newData.isNumber() && newData.val() >= 20 && newData.val() <= 20000 && newData.val() % 1 === 0"
+        },
+        "slipUrl": {
+          ".validate": "newData.isString() && newData.val().beginsWith('https://res.cloudinary.com/') && newData.val().length <= 500"
+        },
+        "slipHash": {
+          ".validate": "newData.isString() && newData.val().length <= 80"
+        },
+        "status": {
+          ".validate": "newData.val() === 'pending' || newData.val() === 'approved' || newData.val() === 'rejected'"
+        },
+        "ts": {
+          ".validate": "newData.isNumber()"
+        },
+        "decidedAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "$other": {
+          ".validate": false
+        }
       }
     },
     "wallets": {
-      ".read": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || auth.token.firebase.sign_in_provider === 'password')",
+      ".read": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || root.child('admins').child(auth.uid).child('role').val() === 'admin')",
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && ((auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || auth.token.firebase.sign_in_provider === 'password') || (auth.uid === $uid && (data.exists() || (newData.child('balance').val() === 0 && !newData.child('credited').exists()))))",
-        "balance": { ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= 0 && ((auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || auth.token.firebase.sign_in_provider === 'password') || (!data.exists() && newData.val() === 0) || (newData.parent().child('lastGiftId').isString() && !root.child('giftFeed').child(newData.parent().child('lastGiftId').val()).exists() && newData.val() === data.val() - newData.parent().parent().parent().child('giftFeed').child(newData.parent().child('lastGiftId').val()).child('amount').val())))" },
-        "lastGiftId": { ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 40)" },
-        "credited":   { ".validate": "!newData.exists() || (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || auth.token.firebase.sign_in_provider === 'password')" },
-        "$other":     { ".validate": false }
+        ".write": "auth != null && ((auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || root.child('admins').child(auth.uid).child('role').val() === 'admin') || (auth.uid === $uid && (data.exists() || (newData.child('balance').val() === 0 && !newData.child('credited').exists()))))",
+        "balance": {
+          ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= 0 && ((auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || root.child('admins').child(auth.uid).child('role').val() === 'admin') || (!data.exists() && newData.val() === 0) || (newData.parent().child('lastGiftId').isString() && !root.child('giftFeed').child(newData.parent().child('lastGiftId').val()).exists() && newData.val() === data.val() - newData.parent().parent().parent().child('giftFeed').child(newData.parent().child('lastGiftId').val()).child('amount').val())))"
+        },
+        "lastGiftId": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 40)"
+        },
+        "credited": {
+          ".validate": "!newData.exists() || (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || root.child('admins').child(auth.uid).child('role').val() === 'admin')"
+        },
+        "$other": {
+          ".validate": false
+        }
       }
     },
     "giftPrices": {
       ".read": true,
-      ".write": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || auth.token.firebase.sign_in_provider === 'password')",
-      "$g": { ".validate": "!newData.exists() || (newData.isNumber() && newData.val() > 0)" }
+      ".write": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || root.child('admins').child(auth.uid).child('role').val() === 'admin')",
+      "$g": {
+        ".validate": "!newData.exists() || (newData.isNumber() && newData.val() > 0)"
+      }
     },
     "giftFeed": {
       ".read": true,
-      ".indexOn": ["ts"],
+      ".indexOn": [
+        "ts"
+      ],
       "$id": {
-        ".write": "auth != null && ((!data.exists() && newData.child('uid').val() === auth.uid) || (!newData.exists() && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || auth.token.firebase.sign_in_provider === 'password')))",
+        ".write": "auth != null && ((!data.exists() && newData.child('uid').val() === auth.uid) || (!newData.exists() && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || root.child('admins').child(auth.uid).child('role').val() === 'admin')))",
         ".validate": "!newData.exists() || (newData.hasChildren(['uid','name','giftId','amount','ts']) && newData.child('ts').val() === now && newData.child('giftId').isString() && newData.child('amount').isNumber() && root.child('giftPrices').child(newData.child('giftId').val()).val() === newData.child('amount').val() && newData.parent().parent().child('wallets').child(auth.uid).child('lastGiftId').val() === $id && newData.parent().parent().child('wallets').child(auth.uid).child('balance').val() === root.child('wallets').child(auth.uid).child('balance').val() - newData.child('amount').val())",
-        "uid":    { ".validate": "newData.isString()" },
-        "name":   { ".validate": "newData.isString() && newData.val().length <= 40" },
-        "anon":   { ".validate": "newData.isBoolean()" },
-        "giftId": { ".validate": "newData.val().length <= 20" },
-        "amount": { ".validate": "newData.val() > 0" },
-        "ts":     { ".validate": true },
-        "$other": { ".validate": false }
+        "uid": {
+          ".validate": "newData.isString()"
+        },
+        "name": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "anon": {
+          ".validate": "newData.isBoolean()"
+        },
+        "giftId": {
+          ".validate": "newData.val().length <= 20"
+        },
+        "amount": {
+          ".validate": "newData.val() > 0"
+        },
+        "ts": {
+          ".validate": true
+        },
+        "$other": {
+          ".validate": false
+        }
       }
     },
     "giftDemo": {
       ".read": true,
-      ".indexOn": ["ts"],
+      ".indexOn": [
+        "ts"
+      ],
       "$id": {
-        ".write": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || auth.token.firebase.sign_in_provider === 'password')",
+        ".write": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || root.child('admins').child(auth.uid).child('role').val() === 'admin')",
         ".validate": "!newData.exists() || (newData.hasChildren(['giftId','ts']) && (data.exists() || newData.child('ts').val() === now))",
-        "giftId": { ".validate": "newData.isString() && newData.val().length <= 20" },
-        "ts":     { ".validate": "newData.isNumber()" },
-        "$other": { ".validate": false }
+        "giftId": {
+          ".validate": "newData.isString() && newData.val().length <= 20"
+        },
+        "ts": {
+          ".validate": "newData.isNumber()"
+        },
+        "$other": {
+          ".validate": false
+        }
       }
     },
     "kitchen": {
@@ -155,8 +275,11 @@
       ".write": false
     },
     "admins": {
-      ".read": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || auth.token.firebase.sign_in_provider === 'password')",
-      ".write": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || auth.token.firebase.sign_in_provider === 'password')"
+      ".read": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || root.child('admins').child(auth.uid).child('role').val() === 'admin')",
+      ".write": "auth != null && (auth.uid === 'qDOL6lE687ejMumQcpOWtEjAMJ92' || root.child('admins').child(auth.uid).val() === true || root.child('admins').child(auth.uid).val() === 'true' || root.child('admins').child(auth.uid).child('role').val() === 'admin')",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid"
+      }
     }
   }
 }
