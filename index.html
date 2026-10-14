@@ -1239,6 +1239,13 @@
     .mwt-sub{ font-size:11.5px; color:rgba(255,255,255,0.7); line-height:1.25; }
     .mwt-close{ width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.16); color:rgba(255,255,255,0.75); font-size:18px; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0; transition:all .15s ease; }
     .mwt-close:hover{ background:rgba(255,100,100,0.2); border-color:#ff6b73; color:#fff; transform:scale(1.08); }
+    /* การ์ดชวนผู้ชมใหม่สมัครสมาชิก/เข้าสู่ระบบ */
+    #signup-invite{ align-items:flex-start; cursor:default; }
+    .si-actions{ display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+    .si-go{ flex:1 1 auto; padding:9px 14px; border-radius:12px; border:0; cursor:pointer; font:inherit; font-size:13.5px; font-weight:700;
+      color:#1f1600; background:linear-gradient(135deg,#ffcf40,#e6a817); box-shadow:0 4px 14px rgba(255,207,64,.35); }
+    .si-later{ padding:9px 12px; border-radius:12px; cursor:pointer; font:inherit; font-size:12.5px;
+      color:rgba(255,255,255,0.75); background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.16); }
 
     /* ---- admin stats dashboard ---- */
     .stats-overview-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-top:8px; }
@@ -1299,7 +1306,7 @@
     const CONFIG = {
       liffId: '2011108556-eU5IPMeB',            // LIFF ของ Yateem TV (endpoint = yateem-tv) — เอาชื่อ/รูปในแชท + เปิดลิงก์นอกแอป
       streamUrl: 'https://vdo.plathong.net/muslimonair1/live/playlist.m3u8', // สตรีมสด Yateem TV (HLS)
-      posterUrl: 'icon.jpg',
+      posterUrl: 'logo.png',
       social: {
         youtube:   '',   // เช่น https://youtube.com/@yateemtv
         facebook:  '',   // เช่น https://facebook.com/yateemtv
@@ -1528,7 +1535,8 @@
     <section class="tab-panel" id="panel-live">
       <!-- HERO / LIVE -->
       <div class="hero" id="hero">
-        <video id="player" playsinline autoplay muted controls poster="icon.jpg"></video>
+        <video id="player" playsinline autoplay muted controls poster="logo.png"></video>
+        <audio id="bg-audio" playsinline preload="none" style="display:none"></audio>
         <div class="offline">
           <div class="big">📺</div>
           <div data-lbl="offlineTitle">ขณะนี้ยังไม่มีการถ่ายทอดสด ค่ะ</div>
@@ -2623,6 +2631,20 @@
     </div>
     <button type="button" class="mwt-close" onclick="event.stopPropagation(); closeMemberWelcomeBanner()" aria-label="ปิด">&times;</button>
   </div>
+  <!-- การ์ดชวนผู้ชมใหม่ (ยังไม่ล็อกอิน) สมัครสมาชิก / เข้าสู่ระบบ -->
+  <div id="signup-invite" class="member-welcome-toast glass" role="dialog" aria-live="polite" aria-labelledby="si-title">
+    <div class="mwt-avatar">👤</div>
+    <div class="mwt-content">
+      <div class="mwt-badge">✨ ยินดีต้อนรับสู่ YATEEM TV</div>
+      <div class="mwt-name" id="si-title">สมัครสมาชิกฟรี หรือเข้าสู่ระบบด้วย LINE / Google ค่ะ</div>
+      <div class="mwt-sub" id="si-sub">แชทด้วยชื่อและรูปของคุณ ส่งของขวัญ และสั่งอาหารได้โดยไม่ต้องพิมพ์ข้อมูลซ้ำค่ะ</div>
+      <div class="si-actions">
+        <button type="button" class="si-go" id="si-go" onclick="acceptSignupInvite()">สมัคร / เข้าสู่ระบบ</button>
+        <button type="button" class="si-later" onclick="dismissSignupInvite()">ไว้ทีหลัง</button>
+      </div>
+    </div>
+    <button type="button" class="mwt-close" onclick="dismissSignupInvite()" aria-label="ปิด">&times;</button>
+  </div>
   <button id="gift-admin-fab" onclick="openGiftAdmin()">💰 สลิป</button>
 
   <script>
@@ -2696,17 +2718,18 @@
   function unmuteNow(){
     const video=document.getElementById('player'); if(!video) return;
     video.muted=false; video.volume=1; try{ video.play(); }catch(e){}
-    hideUnmute();
+    hideUnmute(); unlockBgAudio();
   }
   // แตะที่ไหนก็ได้ครั้งแรก = ถือเป็น gesture เปิดเสียง (เผื่อ autoplay มีเสียงถูกบล็อก)
   document.addEventListener('pointerdown', function firstTapUnmute(){
     const video=document.getElementById('player');
     if(video && video.muted && wantSound && curStream){ video.muted=false; try{ video.play(); }catch(e){} hideUnmute(); }
+    unlockBgAudio();
   }, {once:true, passive:true});
 
   function setStream(url){
     const hero=document.getElementById('hero'), video=document.getElementById('player');
-    if(CONFIG.posterUrl) video.poster=CONFIG.posterUrl;
+    const poster=CONFIG.logoUrl||CONFIG.posterUrl; if(poster) video.poster=poster;   // จอก่อนเล่น = โลโก้ล้วน (ไม่มีคำ Yateem Market)
     if(url===curStream) return;                   // ไม่มีอะไรเปลี่ยน
     curStream=url;
     if(hlsInstance){ try{hlsInstance.destroy();}catch(e){} hlsInstance=null; }
@@ -2714,7 +2737,9 @@
     hideUnmute();
     const goOffline=()=>{ hero.classList.add('is-offline'); document.body.classList.add('is-offline'); hideUnmute(); };
     if(!url){ goOffline(); return; }
-    if(window.Hls && Hls.isSupported()){
+    // iPhone/iPad: ใช้ HLS ของเครื่องก่อน — hls.js บน iOS ใช้ ManagedMediaSource ซึ่งหยุดโหลดตอนออกจากแอพ
+    const preferNative = isIOS() && video.canPlayType('application/vnd.apple.mpegurl');
+    if(!preferNative && window.Hls && Hls.isSupported()){
       // config แบบทนเน็ตสะดุด: ไม่ไล่ live edge (กันกระตุก) + ให้ hls.js retry เองก่อน
       hlsInstance=new Hls({
         lowLatencyMode:false,
@@ -2750,7 +2775,100 @@
         else goOffline();
       });
     }else{ goOffline(); }
+    setupMediaSession();
   }
+
+  /* ---- เสียงไลฟ์เล่นต่อเมื่อออกจากแอพ (กดโฮม/ล็อกจอ) ----
+     Android Chrome/PWA: วิดีโอเล่นเสียงต่อได้เอง ถ้าเบราว์เซอร์ pause ให้สั่งเล่นคืน
+     iPhone: ระบบหยุด <video> ทุกครั้งที่ออกจากแอพ → ส่งต่อเสียงให้ <audio id="bg-audio"> แทน
+     กลับเข้าแอพ → ปิด audio แล้วเล่นวิดีโอต่อที่ขอบสด */
+  let userPaused=false, userPauseAt=0, bgHandoff=false, bgUnlocked=false, bgHiddenAt=0, wasPlayingAtHide=false;
+  function silentWavUrl(){                       // WAV เงียบ 0.1 วิ ไว้ปลดล็อก audio ตอนผู้ใช้แตะ (iOS ต้องมี gesture)
+    const n=800, b=new Uint8Array(44+n), v=new DataView(b.buffer);
+    const s=(o,t)=>{ for(let i=0;i<t.length;i++) b[o+i]=t.charCodeAt(i); };
+    s(0,'RIFF'); v.setUint32(4,36+n,true); s(8,'WAVEfmt '); v.setUint32(16,16,true);
+    v.setUint16(20,1,true); v.setUint16(22,1,true); v.setUint32(24,8000,true); v.setUint32(28,8000,true);
+    v.setUint16(32,1,true); v.setUint16(34,8,true); s(36,'data'); v.setUint32(40,n,true); b.fill(128,44);
+    return URL.createObjectURL(new Blob([b],{type:'audio/wav'}));
+  }
+  function unlockBgAudio(){
+    if(bgUnlocked) return;
+    const a=document.getElementById('bg-audio'); if(!a) return;
+    bgUnlocked=true;
+    try{ a.src=silentWavUrl(); const p=a.play(); if(p && p.then) p.then(()=>a.pause()).catch(()=>{ bgUnlocked=false; }); }catch(e){ bgUnlocked=false; }
+  }
+  function liveIsAudible(v){ return v && curStream && !v.muted && !userPaused && !document.body.classList.contains('is-offline'); }
+  function setupMediaSession(){
+    if(!('mediaSession' in navigator) || !window.MediaMetadata) return;
+    try{
+      const t=document.getElementById('now-title');
+      navigator.mediaSession.metadata=new MediaMetadata({
+        title: (t && t.textContent.trim()) || 'ถ่ายทอดสด',
+        artist: 'Yateem TV',
+        artwork: [
+          {src:new URL('icon-192.png',location.href).href, sizes:'192x192', type:'image/png'},
+          {src:new URL('icon-512.png',location.href).href, sizes:'512x512', type:'image/png'}
+        ]
+      });
+      navigator.mediaSession.setActionHandler('play', ()=>{
+        userPaused=false;
+        const a=document.getElementById('bg-audio');
+        if(bgHandoff && a){ try{ a.play(); }catch(e){} }
+        else{ const v=document.getElementById('player'); if(v){ v.muted=false; try{ v.play(); }catch(e){} } }
+      });
+      navigator.mediaSession.setActionHandler('pause', ()=>{
+        userPaused=true;
+        try{ document.getElementById('bg-audio').pause(); }catch(e){}
+        try{ document.getElementById('player').pause(); }catch(e){}
+      });
+    }catch(e){}
+  }
+  (function initBackgroundAudio(){
+    const v=document.getElementById('player'), a=document.getElementById('bg-audio');
+    if(!v || !a) return;
+    // ผู้ใช้กด pause เองตอนแอพอยู่หน้าจอ → ไม่ฝืนเล่นต่อตอนออกจากแอพ
+    v.addEventListener('pause', ()=>{
+      if(document.visibilityState==='visible' && !bgHandoff){ userPaused=true; userPauseAt=Date.now(); return; }
+      // Android: เบราว์เซอร์ pause เองตอนอยู่เบื้องหลัง → สั่งเล่นคืน
+      if(document.visibilityState==='hidden' && !bgHandoff && !isIOS() && !userPaused && !v.muted && curStream){
+        setTimeout(()=>{ try{ v.play().catch(()=>{}); }catch(e){} }, 150);
+      }
+    });
+    v.addEventListener('play', ()=>{ if(document.visibilityState==='visible') userPaused=false; });
+    document.addEventListener('visibilitychange', ()=>{
+      if(document.visibilityState==='hidden'){
+        bgHiddenAt=Date.now();
+        // iOS อาจ pause วิดีโอก่อน visibilitychange จะมา — pause ภายใน 1 วิ ถือว่าระบบทำ ไม่ใช่ผู้ใช้
+        if(userPaused && bgHiddenAt-userPauseAt < 1000) userPaused=false;
+        wasPlayingAtHide = liveIsAudible(v) && (!v.paused || bgHiddenAt-userPauseAt < 1000);
+        const inPip = document.pictureInPictureElement===v || v.webkitPresentationMode==='picture-in-picture';
+        if(!isIOS() || inPip || !wasPlayingAtHide) return;
+        // iPhone: ส่งต่อเสียงให้ <audio> (native HLS เล่นเบื้องหลังได้) — หยุดวิดีโอเมื่อ audio เล่นได้จริงเท่านั้น
+        bgHandoff=true;
+        try{
+          a.src=curStream; a.muted=false; a.volume=1;
+          const p=a.play();
+          const stopVideo=()=>{ if(bgHandoff){ try{ v.pause(); }catch(e){} } };
+          if(p && p.then) p.then(stopVideo).catch(()=>{ bgHandoff=false; try{ a.removeAttribute('src'); }catch(e){} });
+          else stopVideo();
+        }catch(e){ bgHandoff=false; }
+      }else{
+        if(bgHandoff){
+          bgHandoff=false;
+          try{ a.pause(); a.removeAttribute('src'); a.load(); }catch(e){}
+        }
+        const resume = wasPlayingAtHide && v.paused;
+        wasPlayingAtHide=false;
+        if(!resume || userPaused || !curStream) return;
+        // กลับเข้าแอพ → เล่นวิดีโอต่อที่ขอบสด (ไม่ย้อนไปจุดที่ค้างไว้)
+        try{
+          if(hlsInstance && hlsInstance.liveSyncPosition) v.currentTime=hlsInstance.liveSyncPosition;
+          else if(Date.now()-bgHiddenAt > 5000) v.load();
+          v.muted=false; v.play().catch(()=>{ v.muted=true; v.play().catch(()=>{}); showUnmute(); });
+        }catch(e){}
+      }
+    });
+  })();
 
   /* ============================================================
      3) Social rail
@@ -4867,11 +4985,55 @@
     clearTimeout(welcomeBannerTimer);
   }
 
+  // ล็อกอินแล้ว = มีบัญชีโซเชียล (Google) หรือโปรไฟล์ LINE หรือเป็นสมาชิกที่ลงทะเบียนไว้
+  function isViewerLoggedIn(){
+    const u = (typeof firebase!=='undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    const mem = readMemberProfile();
+    return !!((u && !u.isAnonymous) || (lineProfile && lineProfile.displayName) || (mem && (mem.fullname || mem.phone)));
+  }
+
+  // ---- ชวนผู้ชมใหม่ (ยังไม่ล็อกอิน) สมัครสมาชิก/เข้าสู่ระบบ ----
+  const SIGNUP_INVITE_SNOOZE_MS = 3*24*3600*1000;   // กด "ไว้ทีหลัง" แล้วเงียบ 3 วัน
+  let signupInviteTimer=null;
+  function maybeInviteSignup(tries){
+    tries = tries||0;
+    try{
+      if(sessionStorage.getItem('yt_signup_invited')==='1') return;
+      if(Date.now() - (+localStorage.getItem('yt_signup_invite_snooze')||0) < SIGNUP_INVITE_SNOOZE_MS) return;
+    }catch(e){}
+    if(isViewerLoggedIn() || isMod) return;
+    // มีหน้าต่างอื่นเปิดอยู่ (ติดตั้งแอพ / เปิดในเบราว์เซอร์ / ล็อกอิน) → รอแล้วเช็กใหม่
+    const busy = document.querySelector('.backdrop.open') || document.getElementById('member-welcome-banner').classList.contains('show');
+    if(busy || document.visibilityState!=='visible'){
+      if(tries < 6) setTimeout(()=>maybeInviteSignup(tries+1), 10000);
+      return;
+    }
+    const saved = readSavedMember();
+    const hasSaved = !!(saved && (saved.fullname || saved.phone));
+    document.getElementById('si-title').textContent = hasSaved
+      ? 'เข้าสู่ระบบต่อด้วยชื่อ ' + (saved.nickname || saved.fullname || 'เดิม') + ' ได้เลยค่ะ'
+      : 'สมัครสมาชิกฟรี หรือเข้าสู่ระบบด้วย LINE / Google ค่ะ';
+    document.getElementById('si-go').textContent = hasSaved ? 'เข้าสู่ระบบ' : 'สมัคร / เข้าสู่ระบบ';
+    try{ sessionStorage.setItem('yt_signup_invited','1'); }catch(e){}
+    document.getElementById('signup-invite').classList.add('show');
+    clearTimeout(signupInviteTimer);
+    signupInviteTimer = setTimeout(hideSignupInvite, 15000);
+  }
+  function hideSignupInvite(){
+    clearTimeout(signupInviteTimer);
+    const el=document.getElementById('signup-invite'); if(el) el.classList.remove('show');
+  }
+  function dismissSignupInvite(){
+    try{ localStorage.setItem('yt_signup_invite_snooze', String(Date.now())); }catch(e){}
+    hideSignupInvite();
+  }
+  function acceptSignupInvite(){ hideSignupInvite(); openLogin(); }
+
   function openLogin(){
     const u = (typeof firebase!=='undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     const mem = readMemberProfile();
     const id = currentIdentity();
-    const loggedIn = !!((u && !u.isAnonymous) || (lineProfile && lineProfile.displayName) || (mem && (mem.fullname || mem.phone)));
+    const loggedIn = isViewerLoggedIn();
 
     const formWrap = document.getElementById('member-form-wrap');
     if(formWrap) formWrap.style.display = 'none';
@@ -8599,6 +8761,8 @@
         showMemberWelcomeBanner(m);
       }
     }, 1200);
+    // ผู้ชมใหม่ที่ยังไม่ล็อกอิน → ชวนสมัครสมาชิก/เข้าสู่ระบบ
+    setTimeout(maybeInviteSignup, 8000);
   })();
   </script>
 </body>
