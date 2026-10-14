@@ -2779,10 +2779,12 @@
   }
 
   /* ---- เสียงไลฟ์เล่นต่อเมื่อออกจากแอพ (กดโฮม/ล็อกจอ) ----
-     Android Chrome/PWA: วิดีโอเล่นเสียงต่อได้เอง ถ้าเบราว์เซอร์ pause ให้สั่งเล่นคืน
-     iPhone: ระบบหยุด <video> ทุกครั้งที่ออกจากแอพ → ส่งต่อเสียงให้ <audio id="bg-audio"> แทน
+     มือถือหยุด <video> ที่อยู่เบื้องหลัง (iPhone ทุกครั้ง, Android บางรุ่น เช่น Honor) แต่ <audio> เล่นต่อได้
+     → ส่งต่อเสียงให้ <audio id="bg-audio"> ที่เล่นสตรีมเดียวกัน (สตรีมเป็นภาพ+เสียงก้อนเดียว ไม่มีแทร็กเสียงแยก)
+       iPhone: ส่งต่อทันทีที่ออกจากแอพ · Android: ส่งต่อเฉพาะเมื่อวิดีโอถูกระบบหยุด (ถ้าไม่หยุดก็ไม่ต้องทำอะไร)
      กลับเข้าแอพ → ปิด audio แล้วเล่นวิดีโอต่อที่ขอบสด */
   let userPaused=false, userPauseAt=0, bgHandoff=false, bgUnlocked=false, bgHiddenAt=0, wasPlayingAtHide=false;
+  let bgHls=null, bgFail='', bgCut=false, bgCheckTimer=null;
   function silentWavUrl(){                       // WAV เงียบ 0.1 วิ ไว้ปลดล็อก audio ตอนผู้ใช้แตะ (iOS ต้องมี gesture)
     const n=800, b=new Uint8Array(44+n), v=new DataView(b.buffer);
     const s=(o,t)=>{ for(let i=0;i<t.length;i++) b[o+i]=t.charCodeAt(i); };
@@ -2798,6 +2800,38 @@
     try{ a.src=silentWavUrl(); const p=a.play(); if(p && p.then) p.then(()=>a.pause()).catch(()=>{ bgUnlocked=false; }); }catch(e){ bgUnlocked=false; }
   }
   function liveIsAudible(v){ return v && curStream && !v.muted && !userPaused && !document.body.classList.contains('is-offline'); }
+  function setMediaState(s){ try{ if('mediaSession' in navigator) navigator.mediaSession.playbackState=s; }catch(e){} }
+
+  // เริ่มเล่นเสียงไลฟ์ผ่าน <audio> — หยุดวิดีโอเมื่อ audio เล่นได้จริงเท่านั้น
+  function startBgAudio(){
+    const v=document.getElementById('player'), a=document.getElementById('bg-audio');
+    if(!v || !a || bgHandoff || !curStream) return;
+    bgHandoff=true; bgFail=''; bgCut=false;
+    const fail=(e)=>{ bgFail=(e && (e.name||e.type||e.details)) || 'error'; stopBgAudio(); };
+    try{
+      a.muted=false; a.volume=1;
+      if(a.canPlayType('application/vnd.apple.mpegurl')){
+        a.src=curStream;                                   // HLS ของเครื่อง (iOS / Chrome รุ่นใหม่)
+      }else if(window.Hls && Hls.isSupported()){
+        bgHls=new Hls({ lowLatencyMode:false, liveSyncDurationCount:3,
+          manifestLoadingMaxRetry:6, manifestLoadingRetryDelay:1000,
+          levelLoadingMaxRetry:6,    levelLoadingRetryDelay:1000,
+          fragLoadingMaxRetry:8,     fragLoadingRetryDelay:1000 });
+        bgHls.on(Hls.Events.ERROR,(evt,d)=>{ if(d && d.fatal) fail(d); });
+        bgHls.loadSource(curStream); bgHls.attachMedia(a);
+      }else{ fail({name:'no-hls'}); return; }
+      const p=a.play();
+      const ok=()=>{ if(bgHandoff){ try{ v.pause(); }catch(e){} setMediaState('playing'); } };
+      if(p && p.then) p.then(ok).catch(fail); else ok();
+    }catch(e){ fail(e); }
+  }
+  function stopBgAudio(){
+    const a=document.getElementById('bg-audio');
+    bgHandoff=false;
+    if(bgHls){ try{ bgHls.destroy(); }catch(e){} bgHls=null; }
+    if(a){ try{ a.pause(); a.removeAttribute('src'); a.load(); }catch(e){} }
+  }
+
   function setupMediaSession(){
     if(!('mediaSession' in navigator) || !window.MediaMetadata) return;
     try{
@@ -2812,14 +2846,17 @@
       });
       navigator.mediaSession.setActionHandler('play', ()=>{
         userPaused=false;
-        const a=document.getElementById('bg-audio');
+        const a=document.getElementById('bg-audio'), v=document.getElementById('player');
         if(bgHandoff && a){ try{ a.play(); }catch(e){} }
-        else{ const v=document.getElementById('player'); if(v){ v.muted=false; try{ v.play(); }catch(e){} } }
+        else if(document.visibilityState==='hidden'){ if(v) v.muted=false; startBgAudio(); }   // กดเล่นจากแถบแจ้งเตือน
+        else if(v){ v.muted=false; try{ v.play(); }catch(e){} }
+        setMediaState('playing');
       });
       navigator.mediaSession.setActionHandler('pause', ()=>{
         userPaused=true;
         try{ document.getElementById('bg-audio').pause(); }catch(e){}
         try{ document.getElementById('player').pause(); }catch(e){}
+        setMediaState('paused');
       });
     }catch(e){}
   }
@@ -2829,46 +2866,50 @@
     // ผู้ใช้กด pause เองตอนแอพอยู่หน้าจอ → ไม่ฝืนเล่นต่อตอนออกจากแอพ
     v.addEventListener('pause', ()=>{
       if(document.visibilityState==='visible' && !bgHandoff){ userPaused=true; userPauseAt=Date.now(); return; }
-      // Android: เบราว์เซอร์ pause เองตอนอยู่เบื้องหลัง → สั่งเล่นคืน
-      if(document.visibilityState==='hidden' && !bgHandoff && !isIOS() && !userPaused && !v.muted && curStream){
-        setTimeout(()=>{ try{ v.play().catch(()=>{}); }catch(e){} }, 150);
-      }
+      // ระบบหยุดวิดีโอตอนอยู่เบื้องหลัง → ส่งต่อเสียงให้ <audio>
+      if(document.visibilityState==='hidden' && !bgHandoff && wasPlayingAtHide && !userPaused) startBgAudio();
     });
     v.addEventListener('play', ()=>{ if(document.visibilityState==='visible') userPaused=false; });
+    // audio ถูกระบบหยุดระหว่างอยู่เบื้องหลัง (ไม่ใช่เราหยุดเอง) → จำไว้แจ้งผู้ใช้ตอนกลับมา
+    a.addEventListener('pause', ()=>{ if(bgHandoff && document.visibilityState==='hidden' && !userPaused) bgCut=true; });
     document.addEventListener('visibilitychange', ()=>{
       if(document.visibilityState==='hidden'){
-        bgHiddenAt=Date.now();
-        // iOS อาจ pause วิดีโอก่อน visibilitychange จะมา — pause ภายใน 1 วิ ถือว่าระบบทำ ไม่ใช่ผู้ใช้
+        bgHiddenAt=Date.now(); bgFail=''; bgCut=false;
+        // มือถืออาจ pause วิดีโอก่อน visibilitychange จะมา — pause ภายใน 1 วิ ถือว่าระบบทำ ไม่ใช่ผู้ใช้
         if(userPaused && bgHiddenAt-userPauseAt < 1000) userPaused=false;
         wasPlayingAtHide = liveIsAudible(v) && (!v.paused || bgHiddenAt-userPauseAt < 1000);
         const inPip = document.pictureInPictureElement===v || v.webkitPresentationMode==='picture-in-picture';
-        if(!isIOS() || inPip || !wasPlayingAtHide) return;
-        // iPhone: ส่งต่อเสียงให้ <audio> (native HLS เล่นเบื้องหลังได้) — หยุดวิดีโอเมื่อ audio เล่นได้จริงเท่านั้น
-        bgHandoff=true;
-        try{
-          a.src=curStream; a.muted=false; a.volume=1;
-          const p=a.play();
-          const stopVideo=()=>{ if(bgHandoff){ try{ v.pause(); }catch(e){} } };
-          if(p && p.then) p.then(stopVideo).catch(()=>{ bgHandoff=false; try{ a.removeAttribute('src'); }catch(e){} });
-          else stopVideo();
-        }catch(e){ bgHandoff=false; }
+        if(inPip || !wasPlayingAtHide) return;
+        if(isIOS() || v.paused){ startBgAudio(); return; }     // iPhone หยุดวิดีโอเสมอ → ส่งต่อทันที
+        // Android: เผื่อเครื่องหยุดวิดีโอเงียบ ๆ โดยไม่ยิง event pause
+        clearTimeout(bgCheckTimer);
+        bgCheckTimer=setTimeout(()=>{ if(document.visibilityState==='hidden' && v.paused && !userPaused) startBgAudio(); }, 1500);
       }else{
-        if(bgHandoff){
-          bgHandoff=false;
-          try{ a.pause(); a.removeAttribute('src'); a.load(); }catch(e){}
-        }
+        clearTimeout(bgCheckTimer);
+        const hadSound = wasPlayingAtHide && !userPaused;
+        const lost = hadSound && (bgHandoff ? (a.paused || bgCut) : (!!bgFail || v.paused));
+        if(bgHandoff) stopBgAudio();
         const resume = wasPlayingAtHide && v.paused;
         wasPlayingAtHide=false;
+        if(lost && Date.now()-bgHiddenAt > 5000) tipBackgroundAudio();
         if(!resume || userPaused || !curStream) return;
         // กลับเข้าแอพ → เล่นวิดีโอต่อที่ขอบสด (ไม่ย้อนไปจุดที่ค้างไว้)
         try{
           if(hlsInstance && hlsInstance.liveSyncPosition) v.currentTime=hlsInstance.liveSyncPosition;
           else if(Date.now()-bgHiddenAt > 5000) v.load();
           v.muted=false; v.play().catch(()=>{ v.muted=true; v.play().catch(()=>{}); showUnmute(); });
+          setMediaState('playing');
         }catch(e){}
       }
     });
   })();
+  // เครื่องที่ระบบประหยัดแบตปิดเสียงเบื้องหลังเอง (เช่น Honor/Huawei) — เว็บแก้เองไม่ได้ แนะนำให้ตั้งค่าเครื่อง วันละครั้ง
+  function tipBackgroundAudio(){
+    try{ if(localStorage.getItem('yt_bg_tip_day')===todayKey()) return; localStorage.setItem('yt_bg_tip_day', todayKey()); }catch(e){}
+    toast(isIOS()
+      ? 'iPhone หยุดเสียงตอนออกจากแอพ — เปิดผ่าน Safari แล้วแตะเปิดเสียงก่อนออกจากแอพนะคะ'
+      : 'มือถือเครื่องนี้หยุดเสียงตอนออกจากแอพ — ไปที่ตั้งค่า › แบตเตอรี่/แอป › Chrome ให้ทำงานเบื้องหลังได้ (ไม่จำกัด) แล้วลองใหม่นะคะ');
+  }
 
   /* ============================================================
      3) Social rail
