@@ -776,7 +776,7 @@
     /* ---- toast ---- */
     .toast{ position:fixed; left:50%; bottom:32px; transform:translateX(-50%) translateY(20px);
       background:rgba(20,24,32,.9); border:1px solid var(--stroke); color:var(--text); padding:12px 20px;
-      border-radius:14px; z-index:80; opacity:0; transition:opacity .25s, transform .25s; pointer-events:none; }
+      border-radius:14px; z-index:1000; opacity:0; transition:opacity .25s, transform .25s; pointer-events:none; }
     .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
     footer{ text-align:center; color:var(--muted); font-size:12px; margin-top:32px; }
@@ -870,6 +870,35 @@
     .vid-item img{ width:60px; height:34px; object-fit:cover; border-radius:6px; }
     .vid-item .rm{ margin-left:auto; background:none; border:none; color:#ff6b73; cursor:pointer; font-size:18px; }
     .filehint{ font-size:12px; color:var(--muted); margin-top:6px; word-break:break-all; }
+
+    /* ---- อ่านผังจากภาพ (AI) ---- */
+    .ai-sched-box .save-btn:disabled{ opacity:.6; cursor:wait; }
+    .ai-settings{ margin-top:12px; font-size:13px; }
+    .ai-settings summary{ cursor:pointer; color:var(--muted); }
+    .ai-settings summary .filehint{ display:inline; }
+    .ai-review{ width:100%; max-width:1100px; margin:0 auto; display:flex; flex-direction:column; height:100vh; height:100dvh; }
+    .ai-review-body{ flex:1; min-height:0; display:grid; grid-template-columns:minmax(0,1fr); overflow-y:auto; overflow-x:hidden; }
+    .ai-review-days .row-edit{ flex-wrap:wrap; }
+    .ai-review-days .row-edit input:not(.t){ flex:1 1 150px; min-width:0; }
+    .ai-review-days .row-edit .row-btns{ margin-left:auto; }
+    .ai-review-img{ padding:12px 16px 0; text-align:center; }
+    .ai-review-img img{ max-width:100%; max-height:38vh; border-radius:12px; border:1px solid var(--stroke); cursor:zoom-in; }
+    .ai-review-img.zoom img{ max-height:none; cursor:zoom-out; }
+    .ai-review-days{ padding:4px 16px 16px; }
+    .ai-day{ background:var(--glass); border:1px solid var(--stroke); border-radius:14px; padding:10px 12px; margin-top:12px; }
+    .ai-day-head{ display:flex; justify-content:space-between; gap:8px; align-items:baseline; margin-bottom:8px; }
+    .ai-day-count{ font-size:12px; color:var(--muted); }
+    .row-edit.ai-flag{ border-color:#f5b041; background:rgba(245,176,65,.10); flex-wrap:wrap; }
+    .row-edit.ai-flag::after{ content:"⚠️ " attr(data-why); flex-basis:100%; font-size:11px; color:#f5b041; }
+    .ai-review-foot{ padding:12px 16px; padding-bottom:calc(12px + env(safe-area-inset-bottom)); border-top:1px solid var(--stroke);
+      display:flex; flex-direction:column; gap:8px; }
+    @media (min-width:900px){
+      .ai-review-body{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); overflow:hidden; }
+      .ai-review-img{ overflow:auto; padding-bottom:16px; }
+      .ai-review-img img, .ai-review-img.zoom img{ max-height:none; }
+      .ai-review-img.zoom img{ max-width:none; }
+      .ai-review-days{ overflow-y:auto; }
+    }
     .logo-row{ display:flex; gap:12px; align-items:flex-start; }
     .logo-row img{ width:56px; height:56px; border-radius:14px; object-fit:cover; border:1px solid var(--stroke); background:var(--glass-2); }
     .theme-presets{ display:flex; gap:10px; flex-wrap:wrap; }
@@ -2315,6 +2344,29 @@
 
         <!-- TAB: schedule -->
         <div class="apane" id="apane-schedule" style="display:none">
+          <div class="grp" style="margin-top:4px;border-top:none;padding-top:0">📷 อ่านผังจากภาพ (AI)</div>
+          <div class="copy-box ai-sched-box">
+            <div class="filehint" style="margin-top:0">อัปโหลดภาพหรือ PDF ผังรายการ ระบบจะอ่านเวลาและชื่อรายการให้ แล้วเปิดหน้าตรวจทานก่อนใส่ลงผังค่ะ</div>
+            <label for="ai-sched-file">ภาพผังรายการ</label>
+            <input type="file" id="ai-sched-file" accept="image/*,application/pdf">
+            <label for="ai-sched-target">ใส่ลงที่</label>
+            <select id="ai-sched-target">
+              <option value="auto">อัตโนมัติตามวันที่พบในภาพ (ภาพทั้งสัปดาห์ → แม่แบบทุกวันที่พบ)</option>
+              <option value="tpl">แม่แบบของวันที่เลือกด้านล่าง</option>
+              <option value="ov">ผังเฉพาะวันที่ (ตามวันที่ที่เลือกด้านล่าง)</option>
+            </select>
+            <button type="button" class="save-btn" id="ai-sched-btn" onclick="readScheduleFromImage()" style="margin-top:12px">🔍 อ่านผังจากภาพ</button>
+            <details class="ai-settings" id="ai-settings">
+              <summary>⚙️ ตั้งค่า AI (Gemini) <span id="ai-key-status" class="filehint"></span></summary>
+              <label for="ai-key-input">Gemini API key</label>
+              <input type="password" id="ai-key-input" autocomplete="off" placeholder="วาง key จาก aistudio.google.com">
+              <label for="ai-model-input">โมเดล (เว้นว่าง = gemini-2.5-flash)</label>
+              <input type="text" id="ai-model-input" autocomplete="off" placeholder="gemini-2.5-flash">
+              <button type="button" class="mini primary-mini" onclick="saveAiSettings()">💾 บันทึกการตั้งค่า AI</button>
+              <div class="filehint">key เก็บใน Firebase ส่วนที่เฉพาะแอดมินอ่านได้ ไม่อยู่ในโค้ดหน้าเว็บค่ะ</div>
+            </details>
+          </div>
+
           <div class="grp">แม่แบบรายสัปดาห์</div>
           <label>เลือกวัน</label>
           <select id="tpl-day" onchange="adminLoadTemplateDay()">
@@ -2614,6 +2666,27 @@
           <div id="mgr-list" class="mgr-list" style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
             <div class="sched-empty" style="padding:20px 0">กำลังโหลดรายชื่อผู้จัดการ...</div>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI: หน้าต่างตรวจทานผังที่อ่านจากภาพ (ต้องอยู่หลัง admin-backdrop เพื่อซ้อนอยู่ด้านบน) -->
+  <div class="backdrop" id="ai-review-backdrop" style="align-items:stretch">
+    <div class="ai-review glass">
+      <div class="admin-head">
+        <b>📷 ตรวจทานผังที่อ่านจากภาพ</b>
+        <button class="close" style="position:static" onclick="closeAiReview()">×</button>
+      </div>
+      <div class="ai-review-body">
+        <div class="ai-review-img"><img id="ai-review-img" alt="ภาพผังรายการต้นฉบับ" title="แตะเพื่อขยาย/ย่อ" onclick="this.parentNode.classList.toggle('zoom')"></div>
+        <div class="ai-review-days apane" id="ai-review-days"></div>
+      </div>
+      <div class="ai-review-foot">
+        <div class="filehint" id="ai-review-summary" style="margin-top:0"></div>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="mini" style="margin-top:0;flex:1" onclick="closeAiReview()">ยกเลิก</button>
+          <button type="button" class="save-btn" style="margin-top:0;flex:2" id="ai-review-apply" onclick="applyAiSchedule()">✅ ใส่ลงผัง</button>
         </div>
       </div>
     </div>
@@ -5992,6 +6065,7 @@
       adminLoadTemplateDay();
       const ovD=document.getElementById('ov-date'); if(ovD && !ovD.value){ ovD.value=ymd(new Date()); }
       adminLoadOverride();
+      loadAiSecrets_().catch(e=>{ const s=document.getElementById('ai-key-status'); if(s) s.textContent='— อ่านการตั้งค่าไม่ได้ (ต้องอัปเดตกฎ Firebase)'; console.warn(e); });
     }
     if(t==='stats'){
       loadAdminStats();
@@ -6616,6 +6690,399 @@
       toast('บันทึกไฟล์ผังรวมแล้วค่ะ ✅'); document.getElementById('file-scope-file').value='';
     }catch(e){ saveErr(e); }
   }
+
+  /* ---- อ่านผังรายการจากภาพด้วย AI (Gemini) ----
+     key เก็บที่ adminSecrets/ ใน Firebase (กฎให้อ่านได้เฉพาะแอดมิน) — ห้ามฝัง key ในโค้ดหน้าเว็บ
+     ผลที่อ่านได้จะเปิดหน้าตรวจทานก่อนเสมอ ไม่เขียนลงผังเองโดยไม่ผ่านแอดมิน */
+  const AI_DEFAULT_MODEL='gemini-2.5-flash';
+  const AI_IMAGE_TYPES=['image/jpeg','image/png','image/webp','image/heic','image/heif'];
+  let aiSecrets=null;        // {geminiApiKey, geminiModel} — แคชหลังอ่านครั้งแรก
+  let aiDays=[];             // ผลที่อ่านได้ แยกตามวัน (ใช้ในหน้าตรวจทาน)
+  let aiPreviewUrl='';       // object URL ของภาพต้นฉบับ (คืนหน่วยความจำตอนปิด)
+  let aiBusy=false;
+
+  // แยกกรณีกฎ Firebase ยังไม่อัปเดต ออกจาก error อื่น — saveErr เดิมจะบอกว่า "ไม่มีสิทธิ์แอดมิน" ซึ่งทำให้เข้าใจผิด
+  function aiPermErr_(e){
+    const perm = e && (e.code==='PERMISSION_DENIED' || /permission[_ ]?denied/i.test(String(e.message||e)));
+    if(perm){ console.error(e); toast('อ่าน/บันทึก adminSecrets ไม่ได้ — ต้องอัปเดตกฎ database.rules.json ขึ้น Firebase ก่อนค่ะ'); return true; }
+    return false;
+  }
+  async function loadAiSecrets_(force){
+    if(aiSecrets && !force) return aiSecrets;
+    if(!isAdmin||!db) throw new Error('ต้องเข้าสู่ระบบแอดมินก่อนค่ะ');
+    const snap=await db.ref('adminSecrets').once('value');
+    aiSecrets=snap.val()||{};
+    refreshAiKeyStatus_();
+    return aiSecrets;
+  }
+  function refreshAiKeyStatus_(){
+    const el=document.getElementById('ai-key-status');
+    if(el) el.textContent = (aiSecrets&&aiSecrets.geminiApiKey) ? '— ตั้ง key แล้ว ✅' : '— ยังไม่ได้ตั้ง key';
+    const m=document.getElementById('ai-model-input');
+    if(m && aiSecrets && !m.value) m.value=aiSecrets.geminiModel||'';
+  }
+  async function saveAiSettings(){
+    if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
+    const keyInp=document.getElementById('ai-key-input');
+    const key=(keyInp.value||'').trim();
+    const model=(document.getElementById('ai-model-input').value||'').trim();
+    const upd={ geminiModel:model };
+    if(key) upd.geminiApiKey=key;   // เว้นช่อง key ว่าง = ใช้ key เดิม
+    try{
+      await db.ref('adminSecrets').update(upd);
+      aiSecrets=Object.assign(aiSecrets||{}, upd);
+      keyInp.value='';
+      refreshAiKeyStatus_();
+      toast('บันทึกการตั้งค่า AI แล้วค่ะ ✅');
+    }catch(e){ if(!aiPermErr_(e)) saveErr(e); }
+  }
+
+  // แปลงเวลาเป็น HH:MM (รองรับเลขไทย, 6.00, 6:00 น., 24:00)
+  function normClock_(s){
+    s=String(s||'').replace(/[๐-๙]/g, d=>'๐๑๒๓๔๕๖๗๘๙'.indexOf(d)).trim();
+    if(!s) return '';
+    const m=s.match(/(\d{1,2})\s*[:.]\s*(\d{2})/) || s.match(/^(\d{1,2})\s*(?:น\.?|นาฬิกา)?$/);
+    if(!m) return '';
+    const h=+m[1], mi=m[2]!==undefined ? +m[2] : 0;
+    if(h>24 || mi>59) return '';
+    return String(h===24?0:h).padStart(2,'0')+':'+String(mi).padStart(2,'0');
+  }
+  // คืนค่า t ในรูปแบบที่ parseSlotTime อ่านได้: "HH:MM" หรือ "HH:MM-HH:MM" ('' ถ้าอ่านไม่ได้)
+  function normalizeAiTime_(start, end){
+    let a=String(start||''), b=String(end||'');
+    if(!b){   // บางครั้ง AI ส่งช่วงเวลามาในช่องเดียว เช่น "6.00-7.30 น."
+      const parts=a.split(/\s*(?:-|–|—|ถึง|to)\s*/i);
+      if(parts.length>1){ a=parts[0]; b=parts[1]; }
+    }
+    const s=normClock_(a), e=normClock_(b);
+    if(!s) return '';
+    return (e && e!==s) ? s+'-'+e : s;
+  }
+  function blobToBase64_(blob){
+    return new Promise((resolve, reject)=>{
+      const r=new FileReader();
+      r.onload=()=>resolve(String(r.result).split(',')[1]||'');
+      r.onerror=()=>reject(new Error('อ่านไฟล์ไม่ได้ค่ะ'));
+      r.readAsDataURL(blob);
+    });
+  }
+  async function fileToInlinePart_(file){
+    let blob=file, mime=(file.type||'').toLowerCase();
+    if(mime==='application/pdf'){ /* ส่ง PDF ตรงๆ — Gemini อ่านได้ */ }
+    else if(mime.startsWith('image/')){
+      // ย่อแค่พอดี (3000px) ให้ตัวอักษรไทยตัวเล็กในตารางยังคมชัด
+      blob=await compressImage(file, 3000, 0.92);
+      mime=(blob.type||mime).toLowerCase();
+      if(!AI_IMAGE_TYPES.includes(mime)) throw new Error('รองรับภาพ JPG, PNG, WEBP, HEIC หรือไฟล์ PDF ค่ะ');
+    } else {
+      throw new Error('รองรับเฉพาะไฟล์ภาพหรือ PDF ค่ะ');
+    }
+    if(blob.size > 15*1024*1024) throw new Error('ไฟล์ใหญ่เกิน 15MB ค่ะ — ลองย่อภาพหรือแยก PDF เป็นหน้า');
+    return { inline_data:{ mime_type:mime, data:await blobToBase64_(blob) } };
+  }
+
+  const AI_SCHED_PROMPT=[
+    'You are transcribing a TV program schedule (ผังรายการ) for YATEEM TV, a Thai Muslim TV channel.',
+    'Extract EVERY program slot shown in the image/document. Completeness and exact text matter more than anything else.',
+    'Rules:',
+    '1. title: copy the program name character-for-character in its original script (usually Thai, sometimes Arabic/Malay/English). Do NOT translate, summarize, shorten, fix spelling, or add words. Keep Thai vowels and tone marks exactly. If one cell has several lines, join them with a single space.',
+    '2. start / end: 24-hour "HH:MM" with Arabic digits (convert Thai digits ๐-๙; "6.00" -> "06:00"; "18.30 น." -> "18:30"). Fill end only if an end time is printed; otherwise "".',
+    '3. Days: output one entry in days[] per day shown. dayOfWeek: 0=Sunday(อาทิตย์), 1=Monday(จันทร์), 2=Tuesday(อังคาร), 3=Wednesday(พุธ), 4=Thursday(พฤหัสบดี), 5=Friday(ศุกร์), 6=Saturday(เสาร์). A day range such as "จันทร์-ศุกร์" or "ทุกวัน" means: output a separate entry for EACH day in the range with the same items. A cell that spans several day columns belongs to each of those days.',
+    '4. date: if a calendar date is printed for that day, give "YYYY-MM-DD" in the Gregorian calendar (Buddhist Era year minus 543). Otherwise null. If only one day is shown and no weekday is printed, use dayOfWeek null.',
+    '5. label: the day heading exactly as printed (e.g. "วันจันทร์", "ศุกร์ 21 พ.ย."), or "" if none.',
+    '6. Keep items in the printed order. Include repeated programs, re-runs, news, adhan/prayer slots and breaks if they occupy a time slot.',
+    '7. uncertain: true when any part of that item (title or time) is blurry, cut off, or a guess. Otherwise false.',
+    '8. Never invent items that are not visible. If no schedule is found, return {"days": []}.'
+  ].join('\n');
+  const AI_SCHED_SCHEMA={
+    type:'OBJECT',
+    properties:{
+      days:{ type:'ARRAY', items:{
+        type:'OBJECT',
+        properties:{
+          dayOfWeek:{ type:'INTEGER', nullable:true },
+          date:{ type:'STRING', nullable:true },
+          label:{ type:'STRING' },
+          items:{ type:'ARRAY', items:{
+            type:'OBJECT',
+            properties:{
+              start:{ type:'STRING' }, end:{ type:'STRING' },
+              title:{ type:'STRING' }, uncertain:{ type:'BOOLEAN' }
+            },
+            required:['start','title','uncertain'],
+            propertyOrdering:['start','end','title','uncertain']
+          }}
+        },
+        required:['dayOfWeek','label','items'],
+        propertyOrdering:['dayOfWeek','date','label','items']
+      }}
+    },
+    required:['days']
+  };
+
+  async function callGeminiSchedule_(part){
+    const sec=await loadAiSecrets_(true);
+    const key=sec.geminiApiKey;
+    if(!key) throw new Error('ยังไม่ได้ตั้ง Gemini API key — เปิด "⚙️ ตั้งค่า AI" ด้านล่างปุ่มแล้วกรอก key ก่อนค่ะ');
+    const model=(sec.geminiModel||'').trim() || AI_DEFAULT_MODEL;
+    const ctrl=new AbortController(); const timer=setTimeout(()=>ctrl.abort(), 180000);
+    let res;
+    try{
+      // ส่ง key ทาง header ไม่ใส่ใน URL (กัน key ไปค้างใน log / history)
+      res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent',{
+        method:'POST', signal:ctrl.signal,
+        headers:{ 'Content-Type':'application/json', 'x-goog-api-key':key },
+        body:JSON.stringify({
+          contents:[{ role:'user', parts:[ part, { text:AI_SCHED_PROMPT } ] }],
+          generationConfig:{ temperature:0, responseMimeType:'application/json', responseSchema:AI_SCHED_SCHEMA }
+        })
+      });
+    }catch(e){
+      throw new Error(e && e.name==='AbortError' ? 'AI ใช้เวลานานเกินไป ลองใหม่อีกครั้งค่ะ' : 'เชื่อมต่อ Gemini ไม่ได้ ตรวจอินเทอร์เน็ตแล้วลองใหม่ค่ะ');
+    }finally{ clearTimeout(timer); }
+    let j={}; try{ j=await res.json(); }catch(_){}
+    if(!res.ok){
+      const msg=(j.error&&j.error.message)||'';
+      console.error('Gemini error', res.status, msg);
+      if(res.status===400 && /api key/i.test(msg)) throw new Error('Gemini API key ไม่ถูกต้องค่ะ — ตรวจ key ใน "⚙️ ตั้งค่า AI"');
+      if(res.status===401 || res.status===403) throw new Error('key นี้ไม่มีสิทธิ์ใช้ Gemini API ค่ะ — ตรวจใน aistudio.google.com');
+      if(res.status===404) throw new Error('ไม่พบโมเดล "'+model+'" ค่ะ — แก้ชื่อโมเดลใน "⚙️ ตั้งค่า AI" หรือเว้นว่าง');
+      if(res.status===429) throw new Error('โควตา Gemini เต็มชั่วคราวค่ะ — รอสักครู่แล้วลองใหม่');
+      if(res.status>=500) throw new Error('Gemini ไม่ว่างชั่วคราวค่ะ — ลองใหม่อีกครั้ง');
+      throw new Error('Gemini ตอบกลับผิดพลาด ('+res.status+')'+(msg?': '+msg:''));
+    }
+    if(j.promptFeedback && j.promptFeedback.blockReason) throw new Error('Gemini ปฏิเสธการอ่านภาพนี้ค่ะ ('+j.promptFeedback.blockReason+')');
+    const cand=(j.candidates||[])[0]||{};
+    const text=((cand.content&&cand.content.parts)||[]).filter(p=>!p.thought).map(p=>p.text||'').join('');
+    if(cand.finishReason==='MAX_TOKENS') throw new Error('ผังยาวเกินกว่าที่ AI ตอบได้ในครั้งเดียวค่ะ — ลองครอปภาพเป็นส่วนๆ แล้วอ่านทีละส่วน');
+    let data;
+    try{ data=JSON.parse(text); }catch(_){ console.error('Gemini raw', text); throw new Error('อ่านผลจาก AI ไม่ได้ค่ะ ลองใหม่อีกครั้ง'); }
+    return (data && Array.isArray(data.days)) ? data.days : [];
+  }
+
+  // แปลงผล AI -> โครงสร้างหน้าตรวจทาน + เลือกปลายทางเริ่มต้นตามตัวเลือก "ใส่ลงที่"
+  function buildAiDays_(rawDays, target){
+    const tplSel=+document.getElementById('tpl-day').value;
+    const ovDate=document.getElementById('ov-date').value || ymd(new Date());
+    const ovDow=new Date(ovDate+'T00:00:00').getDay();
+    const single=rawDays.length===1;
+    return rawDays.map(d=>{
+      let date=(typeof d.date==='string' && /^\d{4}-\d{2}-\d{2}$/.test(d.date)) ? d.date : null;
+      if(date && +date.slice(0,4)>2400) date=(+date.slice(0,4)-543)+date.slice(4);   // ปี พ.ศ. หลุดมา
+      let dow=(Number.isInteger(d.dayOfWeek) && d.dayOfWeek>=0 && d.dayOfWeek<=6) ? d.dayOfWeek : null;
+      if(dow===null && date) dow=new Date(date+'T00:00:00').getDay();
+      const rows=(d.items||[]).map(it=>{
+        const title=String(it.title||'').replace(/\s+/g,' ').trim();
+        const raw=[it.start,it.end].filter(Boolean).join('-');
+        const t=normalizeAiTime_(it.start, it.end) || String(raw).trim();   // อ่านไม่ได้ = เก็บข้อความดิบไว้ให้แอดมินเห็นและแก้
+        return { t, title, unsure:!!it.uncertain };
+      }).filter(r=>r.t||r.title);
+      let dest, destDate='';
+      if(target==='ov'){
+        dest='ov';
+        destDate = single ? ovDate : (date || (dow===null ? ovDate : ymdShift_(ovDate, (dow-ovDow+7)%7)));
+      } else if(target==='tpl' && single){
+        dest='tpl:'+tplSel;
+      } else {
+        dest='tpl:'+(dow===null ? tplSel : dow);
+      }
+      const label=String(d.label||'').trim() || (dow!==null ? 'วัน'+DOW_TH[dow] : (date||'ผังที่อ่านได้'));
+      return { label, date, dow, rows, dest, destDate };
+    });
+  }
+  function ymdShift_(dateStr, days){
+    const dt=new Date(dateStr+'T00:00:00'); dt.setDate(dt.getDate()+days); return ymd(dt);
+  }
+
+  async function readScheduleFromImage(){
+    if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
+    if(aiBusy) return;
+    const inp=document.getElementById('ai-sched-file');
+    const file=inp.files[0];
+    if(!file){ toast('เลือกภาพผังรายการก่อนค่ะ'); return; }
+    const target=document.getElementById('ai-sched-target').value;
+    const btn=document.getElementById('ai-sched-btn'); const btnTxt=btn.textContent;
+    aiBusy=true; btn.disabled=true; btn.textContent='⏳ กำลังอ่านภาพ... (ประมาณ 10-60 วินาที)';
+    try{
+      const part=await fileToInlinePart_(file);
+      const raw=await callGeminiSchedule_(part);
+      const days=buildAiDays_(raw, target);
+      if(!days.some(d=>d.rows.length)){ toast('ไม่พบรายการในภาพนี้ค่ะ — ลองภาพที่ชัดขึ้น หรือครอปเฉพาะส่วนตาราง'); return; }
+      aiDays=days;
+      openAiReview_(file);
+    }catch(e){
+      if(!aiPermErr_(e)){ console.error(e); toast(e && e.message ? e.message : 'อ่านภาพไม่สำเร็จค่ะ'); }
+    }finally{
+      aiBusy=false; btn.disabled=false; btn.textContent=btnTxt;
+    }
+  }
+
+  function aiDestOptions_(sel){
+    return [1,2,3,4,5,6,0].map(d=>`<option value="tpl:${d}"${sel==='tpl:'+d?' selected':''}>แม่แบบวัน${DOW_TH[d]}</option>`).join('')+
+      `<option value="ov"${sel==='ov'?' selected':''}>ผังเฉพาะวันที่…</option>`+
+      `<option value="skip"${sel==='skip'?' selected':''}>ไม่ใช้วันนี้</option>`;
+  }
+  function openAiReview_(file){
+    if(aiPreviewUrl){ URL.revokeObjectURL(aiPreviewUrl); aiPreviewUrl=''; }
+    aiPreviewUrl=URL.createObjectURL(file);
+    const imgBox=document.querySelector('.ai-review-img');
+    const img=document.getElementById('ai-review-img');
+    imgBox.classList.remove('zoom');
+    const oldLink=imgBox.querySelector('.ai-pdf-link'); if(oldLink) oldLink.remove();
+    if((file.type||'').startsWith('image/')){ img.style.display=''; img.src=aiPreviewUrl; }
+    else {
+      img.style.display='none'; img.removeAttribute('src');
+      imgBox.insertAdjacentHTML('beforeend', `<a class="mini ai-pdf-link" href="${aiPreviewUrl}" target="_blank" rel="noopener">📄 เปิดดูไฟล์ PDF ต้นฉบับ</a>`);
+    }
+    const box=document.getElementById('ai-review-days');
+    box.innerHTML=aiDays.map((d,i)=>
+      `<div class="ai-day" data-i="${i}">`+
+        `<div class="ai-day-head"><b>${esc(d.label)}</b><span class="ai-day-count" id="ai-count-${i}"></span></div>`+
+        `<div class="copy-row"><span>ใส่ลง:</span>`+
+          `<select class="ai-dest" id="ai-dest-${i}" onchange="aiDestChanged_(${i})">${aiDestOptions_(d.dest)}</select>`+
+          `<input type="date" class="ai-date" id="ai-date-${i}" value="${esc(d.destDate||d.date||'')}"${d.dest==='ov'?'':' style="display:none"'}>`+
+        `</div>`+
+        `<div id="ai-rows-${i}"></div>`+
+        `<div class="sched-row-tools">`+
+          `<button type="button" class="mini" onclick="adminAddRow('ai-rows-${i}')">+ เพิ่มรายการ</button>`+
+          `<button type="button" class="mini" onclick="sortRows('ai-rows-${i}')">⏱️ จัดเรียงตามเวลา</button>`+
+        `</div>`+
+      `</div>`).join('');
+    aiDays.forEach((d,i)=>{
+      const rb=document.getElementById('ai-rows-'+i);
+      d.rows.forEach(r=>{
+        rb.insertAdjacentHTML('beforeend', rowHtml(r.t, r.title));
+        if(r.unsure) rb.lastElementChild.dataset.unsure='1';
+      });
+      if(!d.rows.length) adminAddRow('ai-rows-'+i);
+    });
+    aiValidateAll_();
+    document.getElementById('ai-review-backdrop').classList.add('open');
+    box.scrollTop=0;
+  }
+  function aiDestChanged_(i){
+    const sel=document.getElementById('ai-dest-'+i), dt=document.getElementById('ai-date-'+i);
+    dt.style.display = sel.value==='ov' ? '' : 'none';
+    if(sel.value==='ov' && !dt.value) dt.value=document.getElementById('ov-date').value || ymd(new Date());
+  }
+  function closeAiReview(){
+    document.getElementById('ai-review-backdrop').classList.remove('open');
+    document.getElementById('ai-review-days').innerHTML='';
+    if(aiPreviewUrl){ URL.revokeObjectURL(aiPreviewUrl); aiPreviewUrl=''; }
+    aiDays=[];
+  }
+  // ไฮไลต์แถวที่ควรตรวจ: AI ไม่มั่นใจ / ไม่มีเวลา-อ่านเวลาไม่ได้ / ไม่มีชื่อ / เวลาย้อนหรือซ้อนกับแถวก่อน
+  function aiValidateAll_(){
+    let total=0, flagged=0;
+    aiDays.forEach((d,i)=>{
+      const rows=document.querySelectorAll('#ai-rows-'+i+' .row-edit');
+      let prev=null, n=0, bad=0;
+      rows.forEach(r=>{
+        const ins=r.querySelectorAll('input'); const t=(ins[0].value||'').trim(), title=(ins[1].value||'').trim();
+        let why='';
+        if(!t && !title){ r.classList.remove('ai-flag'); r.removeAttribute('data-why'); return; }
+        n++;
+        const p=parseSlotTime(t);
+        if(r.dataset.unsure==='1') why='AI ไม่แน่ใจ — เทียบกับภาพ';
+        else if(p.start===null) why='ไม่มีเวลา หรืออ่านเวลาไม่ได้';
+        else if(!title) why='ไม่มีชื่อรายการ';
+        else if(prev){
+          const crossMidnight = prev.start>=18*60 && p.start<6*60;   // ผังข้ามเที่ยงคืนไม่ถือว่าผิด
+          if(p.start<prev.start && !crossMidnight) why='เวลาย้อนกับแถวก่อนหน้า';
+          else if(prev.end!==null && prev.end>p.start && p.start>=prev.start) why='เวลาซ้อนกับแถวก่อนหน้า';
+        }
+        if(p.start!==null) prev=p;
+        r.classList.toggle('ai-flag', !!why);
+        if(why){ r.dataset.why=why; bad++; } else r.removeAttribute('data-why');
+      });
+      total+=n; flagged+=bad;
+      const c=document.getElementById('ai-count-'+i);
+      if(c) c.textContent = n+' รายการ'+(bad?' · ⚠️ '+bad+' จุดควรตรวจ':' · ✅');
+    });
+    const s=document.getElementById('ai-review-summary');
+    if(s) s.textContent = `อ่านได้ ${aiDays.length} วัน รวม ${total} รายการ`+(flagged?` · ⚠️ ${flagged} จุดที่ไฮไลต์ควรตรวจกับภาพก่อน`:'')+' — นับจำนวนให้ตรงกับภาพแล้วกดใส่ลงผังค่ะ';
+  }
+
+  async function applyAiSchedule(){
+    if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
+    const plan=[], seen={};
+    for(let i=0;i<aiDays.length;i++){
+      const dest=document.getElementById('ai-dest-'+i).value;
+      if(dest==='skip') continue;
+      const rows=readRows('ai-rows-'+i);
+      if(!rows.length) continue;
+      let path, name;
+      if(dest==='ov'){
+        const date=document.getElementById('ai-date-'+i).value;
+        if(!date){ toast('เลือกวันที่ให้ "'+aiDays[i].label+'" ก่อนค่ะ'); return; }
+        path='overrides/'+date; name='ผังวันที่ '+date;
+      } else {
+        const d=dest.split(':')[1]; path='template/'+d; name='แม่แบบวัน'+DOW_TH[d];
+      }
+      if(seen[path]){ toast(name+' ถูกเลือกซ้ำ 2 ช่องค่ะ — เปลี่ยนปลายทางหรือเลือก "ไม่ใช้วันนี้"'); return; }
+      seen[path]=1; plan.push({ path, name, rows, dest });
+    }
+    if(!plan.length){ toast('ไม่มีรายการให้ใส่ลงผังค่ะ'); return; }
+
+    // วันเดียว: เติมลงตัวแก้เดิม ยังไม่บันทึก — ให้แอดมินกด 💾 เอง (เหมือนปุ่มคัดลอกอื่นๆ)
+    if(plan.length===1){
+      const p=plan[0];
+      if(p.dest==='ov'){
+        document.getElementById('ov-date').value=p.path.split('/')[1];
+        adminLoadOverride();                 // โหลดไฟล์แนบเดิมของวันนั้นมาแสดง
+        fillRows('ov-rows', p.rows);
+      } else {
+        document.getElementById('tpl-day').value=p.path.split('/')[1];
+        fillRows('tpl-rows', p.rows);
+      }
+      adminEditing=true;
+      closeAiReview();
+      const box=document.getElementById(p.dest==='ov'?'ov-rows':'tpl-rows');
+      if(box) box.scrollIntoView({behavior:'smooth', block:'start'});
+      toast('ใส่ลง'+p.name+' แล้ว — ตรวจอีกครั้งแล้วกด 💾 บันทึกค่ะ');
+      return;
+    }
+
+    // หลายวัน: บันทึกทีเดียวด้วย update เดียว (atomic) หลังยืนยัน
+    if(!confirm('จะแทนที่ผังเดิมของ:\n• '+plan.map(p=>p.name+' ('+p.rows.length+' รายการ)').join('\n• ')+'\n\nยืนยันบันทึกใช่ไหมคะ?')) return;
+    const updates={};
+    plan.forEach(p=>{
+      if(p.dest==='ov'){
+        const date=p.path.split('/')[1];
+        const ov=((schedData.overrides||{})[date])||{};
+        const payload={ items:p.rows };
+        if(ov.fileUrl){ payload.fileUrl=ov.fileUrl; payload.fileType=ov.fileType; }   // คงไฟล์แนบเดิมไว้
+        updates['schedule/'+p.path]=payload;
+      } else {
+        updates['schedule/'+p.path]=p.rows;
+      }
+    });
+    try{
+      await db.ref().update(updates);
+      plan.forEach(p=>{
+        const [kind, k]=p.path.split('/');
+        const bucket = kind==='template' ? 'template' : 'overrides';
+        if(!schedData[bucket]) schedData[bucket]={};
+        schedData[bucket][k] = updates['schedule/'+p.path];
+      });
+      adminEditing=false;
+      closeAiReview();
+      adminLoadTemplateDay(); adminLoadOverride();
+      updateNowChip(); renderSchedule();
+      toast('บันทึกผังจากภาพแล้ว '+plan.length+' วันค่ะ ✅');
+    }catch(e){ saveErr(e); }
+  }
+  // ตรวจซ้ำทุกครั้งที่แอดมินแก้/ย้าย/ลบแถวในหน้าตรวจทาน — แถวที่แก้แล้วถือว่าตรวจแล้ว (ลบธง "AI ไม่แน่ใจ")
+  (function(){
+    const box=document.getElementById('ai-review-days');
+    if(!box) return;
+    box.addEventListener('input', e=>{
+      const r=e.target.closest && e.target.closest('.row-edit');
+      if(r) delete r.dataset.unsure;
+      aiValidateAll_();
+    });
+    box.addEventListener('click', ()=>setTimeout(aiValidateAll_, 0));
+  })();
 
   /* ============================================================
      6.5) Visitor Analytics & Tracking (ระบบสถิติผู้ชม)
