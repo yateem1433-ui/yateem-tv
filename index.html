@@ -874,6 +874,7 @@
     /* ---- อ่านผังจากภาพ (AI) ---- */
     .ai-sched-box .save-btn:disabled{ opacity:.6; cursor:wait; }
     .ai-settings{ margin-top:12px; font-size:13px; }
+    .secret-input{ -webkit-text-security:disc; text-security:disc; }
     .ai-settings summary{ cursor:pointer; color:var(--muted); }
     .ai-settings summary .filehint{ display:inline; }
     .ai-review{ width:100%; max-width:1100px; margin:0 auto; display:flex; flex-direction:column; height:100vh; height:100dvh; }
@@ -2359,7 +2360,8 @@
             <details class="ai-settings" id="ai-settings">
               <summary>⚙️ ตั้งค่า AI (Gemini) <span id="ai-key-status" class="filehint"></span></summary>
               <label for="ai-key-input">Gemini API key</label>
-              <input type="password" id="ai-key-input" autocomplete="off" placeholder="วาง key จาก aistudio.google.com">
+              <!-- type=text + ซ่อนตัวอักษรด้วย CSS: ถ้าเป็น type=password Chrome จะเติมรหัสผ่านแอดมินลงช่องนี้เอง แล้วถูกบันทึกทับ key -->
+              <input type="text" id="ai-key-input" class="secret-input" name="gemini-api-key" autocomplete="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore placeholder="วาง key จาก aistudio.google.com">
               <label for="ai-model-input">โมเดล (เว้นว่าง = เลือกอัตโนมัติ)</label>
               <input type="text" id="ai-model-input" list="ai-model-list" autocomplete="off" placeholder="เว้นว่าง = เลือกอัตโนมัติ">
               <datalist id="ai-model-list"></datalist>
@@ -6697,7 +6699,6 @@
   /* ---- อ่านผังรายการจากภาพด้วย AI (Gemini) ----
      key เก็บที่ adminSecrets/ ใน Firebase (กฎให้อ่านได้เฉพาะแอดมิน) — ห้ามฝัง key ในโค้ดหน้าเว็บ
      ผลที่อ่านได้จะเปิดหน้าตรวจทานก่อนเสมอ ไม่เขียนลงผังเองโดยไม่ผ่านแอดมิน */
-  const AI_DEFAULT_MODEL='gemini-2.5-flash';
   const AI_IMAGE_TYPES=['image/jpeg','image/png','image/webp','image/heic','image/heif'];
   let aiSecrets=null;        // {geminiApiKey, geminiModel} — แคชหลังอ่านครั้งแรก
   let aiDays=[];             // ผลที่อ่านได้ แยกตามวัน (ใช้ในหน้าตรวจทาน)
@@ -6728,8 +6729,11 @@
     if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
     const keyInp=document.getElementById('ai-key-input');
     const key=(keyInp.value||'').trim();
+    // กันรหัสผ่านที่เบราว์เซอร์เติมให้เอง / ข้อความอื่น ถูกบันทึกทับ key จริง
+    if(key && !looksLikeGeminiKey_(key)){ toast('ข้อความในช่อง key ไม่ใช่ Gemini API key (key จริงยาวประมาณ 39 ตัว ขึ้นต้นด้วย AIza) — ยังไม่ได้บันทึกค่ะ'); return; }
     const modelInp=document.getElementById('ai-model-input');
     const model=cleanModelName_(modelInp.value);
+    if(model && !isVisionModel_(model)){ toast('โมเดล "'+model+'" อ่านภาพไม่ได้ (เช่น รุ่น tts / image) — เว้นว่างหรือเลือกจากรายการค่ะ'); return; }
     modelInp.value=model;
     const upd={ geminiModel:model };
     if(key) upd.geminiApiKey=key;   // เว้นช่อง key ว่าง = ใช้ key เดิม
@@ -6749,17 +6753,17 @@
     try{
       const sec=await loadAiSecrets_(true);
       const typed=(document.getElementById('ai-key-input').value||'').trim();
-      const key=typed || sec.geminiApiKey;
+      const key=(typed && looksLikeGeminiKey_(typed)) ? typed : sec.geminiApiKey;   // ไม่ใช้ค่าที่เบราว์เซอร์เติมมาผิดๆ
       if(!key){ toast('กรอก Gemini API key ก่อนค่ะ'); return; }
       if(hint) hint.textContent='กำลังดึงรายชื่อโมเดล...';
-      const names=await listGeminiModels_(key);
+      const names=(await listGeminiModels_(key)).filter(isVisionModel_);   // แสดงเฉพาะรุ่นที่อ่านภาพได้
       const best=pickGeminiModel_(names);
       const list=document.getElementById('ai-model-list');
       const order=names.slice().sort((a,b)=>(a===best?-1:b===best?1:a.localeCompare(b)));
       list.innerHTML=order.map(n=>`<option value="${esc(n)}">${n===best?'แนะนำ':''}</option>`).join('');
       if(hint) hint.textContent = names.length
-        ? `พบ ${names.length} โมเดล — แนะนำ ${best||'-'} (แตะช่องโมเดลเพื่อเลือก แล้วกดบันทึก)`
-        : 'key นี้ยังไม่มีโมเดลที่ใช้ได้ค่ะ';
+        ? `พบ ${names.length} โมเดลที่อ่านภาพได้ — แนะนำ ${best||'-'} (แตะช่องโมเดลเพื่อเลือก แล้วกดบันทึก)`
+        : 'key นี้ยังไม่มีโมเดลที่อ่านภาพได้ค่ะ';
     }catch(e){
       if(hint) hint.textContent='';
       if(!aiPermErr_(e)){ console.error(e); toast(e && e.message ? e.message : 'ดึงรายชื่อโมเดลไม่สำเร็จค่ะ'); }
@@ -6860,9 +6864,13 @@
   }
   // เลือกโมเดลที่เหมาะกับการอ่านภาพจากรายชื่อที่ key ใช้ได้จริง
   // ลำดับ: flash รุ่นเสถียร (เวอร์ชันสูงสุด) > gemini-flash-latest > flash อื่นที่ไม่ใช่ lite > pro รุ่นเสถียร > flash-lite > อื่นๆ
-  function pickGeminiModel_(names){
-    const skip=/image|tts|audio|live|embedding|aqa|learnlm|gemma|robotics|computer-use/;
-    const scored=(names||[]).filter(n=>/^gemini/.test(n) && !skip.test(n)).map(n=>{
+  // รุ่นที่ไม่ใช่สำหรับอ่านภาพเป็นข้อความ (แปลงเสียง / สร้างภาพ / embedding ฯลฯ) — เลือกไว้จะอ่านไม่ได้
+  const AI_NON_VISION=/image|tts|audio|live|embedding|aqa|learnlm|gemma|robotics|computer-use|native|transcribe|banana|customtools/;
+  function isVisionModel_(name){ return /^gemini/.test(name||'') && !AI_NON_VISION.test(name); }
+  function looksLikeGeminiKey_(k){ return typeof k==='string' && k.length>=30 && !/\s/.test(k); }
+  function pickGeminiModel_(names){ return rankGeminiModels_(names)[0]||''; }
+  function rankGeminiModels_(names){
+    const scored=(names||[]).filter(isVisionModel_).map(n=>{
       const m=n.match(/^gemini-(\d+(?:\.\d+)?)-(flash|pro)(-.*)?$/);
       const ver=m ? parseFloat(m[1]) : 0, fam=m ? m[2] : '', suf=m ? (m[3]||'') : '';
       let tier;
@@ -6875,7 +6883,7 @@
       return { n, tier, ver };
     });
     scored.sort((a,b)=>a.tier-b.tier || b.ver-a.ver || a.n.localeCompare(b.n));
-    return scored.length ? scored[0].n : '';
+    return scored.map(s=>s.n);
   }
   function geminiErrMsg_(status, msg){
     if(status===400 && /api key/i.test(msg)) return 'Gemini API key ไม่ถูกต้องค่ะ — ตรวจ key ใน "⚙️ ตั้งค่า AI"';
@@ -6897,53 +6905,74 @@
       .filter(Boolean);
   }
   // โมเดลไม่มี / ชื่อผิด: Gemini ตอบ 404 หรือ 400 ที่พูดถึง model (ไม่ใช่เรื่อง key)
+  // โมเดลใช้กับงานนี้ไม่ได้: 404 หรือ 400 ใดๆ ที่ไม่ใช่เรื่อง key (เช่น รุ่นที่ไม่รองรับภาพ/JSON schema)
   function isModelMissing_(status, msg){
-    return status===404 || (status===400 && /model/i.test(msg) && !/api key/i.test(msg));
+    return status===404 || (status===400 && !/api key/i.test(msg));
   }
-  async function geminiGenerate_(key, model, part){
-    const ctrl=new AbortController(); const timer=setTimeout(()=>ctrl.abort(), 180000);
+  // หมดเวลา = คืน {timeout:true} (ไม่ throw) เพื่อให้ลองโมเดลอื่นต่อได้
+  async function geminiGenerate_(key, model, part, timeoutMs){
+    const ctrl=new AbortController(); const timer=setTimeout(()=>ctrl.abort(), timeoutMs||150000);
     let res;
     try{
       // ส่ง key ทาง header ไม่ใส่ใน URL (กัน key ไปค้างใน log / history)
+      // ไม่ตั้ง temperature: Google แนะนำให้ Gemini 3 ใช้ค่าเริ่มต้น (ตั้งต่ำกว่า 1 อาจวนซ้ำ) — JSON schema คุมรูปแบบอยู่แล้ว
       res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent',{
         method:'POST', signal:ctrl.signal,
         headers:{ 'Content-Type':'application/json', 'x-goog-api-key':key },
         body:JSON.stringify({
           contents:[{ role:'user', parts:[ part, { text:AI_SCHED_PROMPT } ] }],
-          generationConfig:{ temperature:0, responseMimeType:'application/json', responseSchema:AI_SCHED_SCHEMA }
+          generationConfig:{ responseMimeType:'application/json', responseSchema:AI_SCHED_SCHEMA }
         })
       });
     }catch(e){
-      throw new Error(e && e.name==='AbortError' ? 'AI ใช้เวลานานเกินไป ลองใหม่อีกครั้งค่ะ' : 'เชื่อมต่อ Gemini ไม่ได้ ตรวจอินเทอร์เน็ตแล้วลองใหม่ค่ะ');
+      if(e && e.name==='AbortError') return { ok:false, status:0, timeout:true, j:{}, msg:'timeout' };
+      throw new Error('เชื่อมต่อ Gemini ไม่ได้ ตรวจอินเทอร์เน็ตแล้วลองใหม่ค่ะ');
     }finally{ clearTimeout(timer); }
     let j={}; try{ j=await res.json(); }catch(_){}
     return { status:res.status, ok:res.ok, j, msg:(j.error&&j.error.message)||'' };
   }
 
-  async function callGeminiSchedule_(part){
+  // อ่านภาพด้วยโมเดลที่ตั้งไว้ ถ้าใช้ไม่ได้ให้ไล่ลองโมเดลอื่นจากรายชื่อจริง
+  // - 404/400 (ชื่อผิด/ถูกปลด/ไม่รองรับ) = เปลี่ยนถาวรและจำไว้
+  // - 503 คิวแน่น / 429 โควตารุ่นนั้นหมด / หมดเวลา = ลองรุ่นถัดไปเฉพาะครั้งนี้ (ไม่เปลี่ยนค่าที่ตั้งไว้)
+  async function callGeminiSchedule_(part, onAttempt){
     const sec=await loadAiSecrets_(true);
     const key=sec.geminiApiKey;
     if(!key) throw new Error('ยังไม่ได้ตั้ง Gemini API key — เปิด "⚙️ ตั้งค่า AI" ด้านล่างปุ่มแล้วกรอก key ก่อนค่ะ');
-    const model=cleanModelName_(sec.geminiModel) || AI_DEFAULT_MODEL;
-    let r=await geminiGenerate_(key, model, part);
-    if(!r.ok && isModelMissing_(r.status, r.msg)){
-      // โมเดลที่ตั้งไว้ใช้ไม่ได้ (พิมพ์ผิด หรือ Google ปลดแล้ว) — หาโมเดลที่ใช้ได้จริงแล้วลองใหม่ 1 ครั้ง
-      console.warn('Gemini model not usable:', model, r.status, r.msg);
-      const names=await listGeminiModels_(key);
-      const pick=pickGeminiModel_(names.filter(n=>n!==model));
-      if(!pick) throw new Error('key นี้ใช้โมเดล Gemini ที่อ่านภาพได้ไม่ได้เลยค่ะ'+(names.length?' (ที่มี: '+names.slice(0,6).join(', ')+')':'')+' — ตรวจ key ใน aistudio.google.com');
-      r=await geminiGenerate_(key, pick, part);
-      if(r.ok){
-        // จำโมเดลที่ใช้ได้ไว้ ครั้งหน้าไม่ต้องหาใหม่
-        aiSecrets=Object.assign(aiSecrets||{}, { geminiModel:pick });
-        db.ref('adminSecrets/geminiModel').set(pick).catch(e=>console.warn(e));
-        const mi=document.getElementById('ai-model-input'); if(mi) mi.value=pick;
-        toast('โมเดล "'+model+'" ใช้ไม่ได้แล้ว — เปลี่ยนไปใช้ "'+pick+'" อัตโนมัติค่ะ');
+    const saved=cleanModelName_(sec.geminiModel);
+    let savedBroken = !saved || !isVisionModel_(saved);   // ไม่ได้ตั้ง / ตั้งเป็นรุ่นที่อ่านภาพไม่ได้ (เช่น tts)
+    let queue = savedBroken ? [] : [saved];
+    let names=null; const tried=[]; const t0=Date.now();
+    let r=null, used='';
+    for(let attempt=0; attempt<4; attempt++){
+      if(!queue.length){
+        if(!names) names=await listGeminiModels_(key);
+        queue=rankGeminiModels_(names).filter(n=>!tried.includes(n));
+        if(!queue.length) break;
       }
+      if(attempt>0 && Date.now()-t0 > 200000) break;   // ไม่ให้รอนานเกินไปรวมทุกรอบ
+      const model=queue.shift(); tried.push(model);
+      if(onAttempt) onAttempt(model, attempt);
+      r=await geminiGenerate_(key, model, part, 150000);
+      if(r.ok){ used=model; break; }
+      console.warn('Gemini', model, r.timeout ? 'timeout' : r.status, r.msg);
+      // ปัญหาที่ key — เปลี่ยนโมเดลก็ไม่ช่วย
+      if((r.status===400 && /api key/i.test(r.msg)) || r.status===401 || r.status===403) break;
+      if(model===saved && isModelMissing_(r.status, r.msg)) savedBroken=true;
     }
+    if(r && r.ok && used!==saved && savedBroken){
+      // จำโมเดลที่ใช้ได้ไว้ ครั้งหน้าไม่ต้องหาใหม่
+      aiSecrets=Object.assign(aiSecrets||{}, { geminiModel:used });
+      db.ref('adminSecrets/geminiModel').set(used).catch(e=>console.warn(e));
+      const mi=document.getElementById('ai-model-input'); if(mi) mi.value=used;
+      toast(saved ? 'โมเดล "'+saved+'" ใช้กับงานนี้ไม่ได้ — เปลี่ยนไปใช้ "'+used+'" อัตโนมัติค่ะ' : 'เลือกโมเดล "'+used+'" ให้อัตโนมัติค่ะ');
+    }
+    if(!r) throw new Error('key นี้ใช้โมเดล Gemini ที่อ่านภาพได้ไม่ได้เลยค่ะ'+(names&&names.length?' (ที่มี: '+names.slice(0,6).join(', ')+')':'')+' — ตรวจ key ใน aistudio.google.com');
     const j=r.j;
     if(!r.ok){
-      console.error('Gemini error', r.status, r.msg);
+      console.error('Gemini error', r.timeout ? 'timeout' : r.status, r.msg, 'tried:', tried);
+      if(r.timeout || r.status===503) throw new Error('ตอนนี้ Gemini คิวแน่นมาก (ลองแล้ว: '+tried.join(', ')+') — รอสักครู่แล้วกดอ่านใหม่ค่ะ');
+      if(r.status===429) throw new Error('โควตาฟรีของ Gemini เต็มแล้ว (ลองแล้ว: '+tried.join(', ')+') — รอสักพัก (โควตารีเซ็ตรายนาที/รายวัน) แล้วลองใหม่ค่ะ');
       if(isModelMissing_(r.status, r.msg)) throw new Error('ไม่พบโมเดล Gemini ที่ใช้ได้ค่ะ — กด "🔄 ดึงรายชื่อโมเดล" ใน "⚙️ ตั้งค่า AI" แล้วเลือกจากรายการ');
       throw new Error(geminiErrMsg_(r.status, r.msg));
     }
@@ -6998,10 +7027,14 @@
     if(!file){ toast('เลือกภาพผังรายการก่อนค่ะ'); return; }
     const target=document.getElementById('ai-sched-target').value;
     const btn=document.getElementById('ai-sched-btn'); const btnTxt=btn.textContent;
-    aiBusy=true; btn.disabled=true; btn.textContent='⏳ กำลังอ่านภาพ... (ประมาณ 10-60 วินาที)';
+    aiBusy=true; btn.disabled=true; btn.textContent='⏳ กำลังอ่านภาพ... (ช่วงคิวแน่นอาจถึง 2 นาที)';
     try{
       const part=await fileToInlinePart_(file);
-      const raw=await callGeminiSchedule_(part);
+      const raw=await callGeminiSchedule_(part, (model, attempt)=>{
+        btn.textContent = attempt
+          ? '⏳ รุ่นก่อนหน้าไม่ว่าง — ลองใหม่ด้วย '+model+'...'
+          : '⏳ กำลังอ่านภาพด้วย '+model+'... (ช่วงคิวแน่นอาจถึง 2 นาที)';
+      });
       const days=buildAiDays_(raw, target);
       if(!days.some(d=>d.rows.length)){ toast('ไม่พบรายการในภาพนี้ค่ะ — ลองภาพที่ชัดขึ้น หรือครอปเฉพาะส่วนตาราง'); return; }
       aiDays=days;
