@@ -875,6 +875,11 @@
     .ai-sched-box .save-btn:disabled{ opacity:.6; cursor:wait; }
     .ai-settings{ margin-top:12px; font-size:13px; }
     .secret-input{ -webkit-text-security:disc; text-security:disc; }
+    .paste-sched{ width:100%; margin-top:8px; background:var(--glass-2); border:1px solid var(--stroke); color:var(--text);
+      border-radius:10px; padding:10px 12px; font-family:inherit; font-size:14px; line-height:1.5; resize:vertical; outline:none; box-sizing:border-box; }
+    .paste-sched:focus{ border-color:var(--accent); }
+    .ai-review.no-img .ai-review-img{ display:none; }
+    @media (min-width:900px){ .ai-review.no-img .ai-review-body{ grid-template-columns:minmax(0,1fr); } }
     .ai-settings summary{ cursor:pointer; color:var(--muted); }
     .ai-settings summary .filehint{ display:inline; }
     .ai-review{ width:100%; max-width:1100px; margin:0 auto; display:flex; flex-direction:column; height:100vh; height:100dvh; }
@@ -2345,17 +2350,26 @@
 
         <!-- TAB: schedule -->
         <div class="apane" id="apane-schedule" style="display:none">
-          <div class="grp" style="margin-top:4px;border-top:none;padding-top:0">📷 อ่านผังจากภาพ (AI)</div>
+          <div class="grp" style="margin-top:4px;border-top:none;padding-top:0">📥 ใส่ผังรายการอัตโนมัติ</div>
+          <label for="ai-sched-target">ใส่ลงที่</label>
+          <select id="ai-sched-target">
+            <option value="auto">อัตโนมัติตามวันที่พบ (ผังทั้งสัปดาห์ → แม่แบบทุกวันที่พบ)</option>
+            <option value="tpl">แม่แบบของวันที่เลือกด้านล่าง</option>
+            <option value="ov">ผังเฉพาะวันที่ (ตามวันที่ที่เลือกด้านล่าง)</option>
+          </select>
+
           <div class="copy-box ai-sched-box">
-            <div class="filehint" style="margin-top:0">อัปโหลดภาพหรือ PDF ผังรายการ ระบบจะอ่านเวลาและชื่อรายการให้ แล้วเปิดหน้าตรวจทานก่อนใส่ลงผังค่ะ</div>
+            <b>📋 วางข้อความผัง (ฟรี ไม่ต้องรอคิว)</b>
+            <div class="filehint">เปิดภาพผังด้วย <b>Google Lens</b> หรือ <b>LINE (สแกนข้อความ)</b> บนมือถือ → กด "คัดลอกข้อความ" / "เลือกทั้งหมด" → วางในช่องนี้ แล้วกดแยกเป็นรายการค่ะ</div>
+            <textarea id="paste-sched-text" class="paste-sched" rows="8" placeholder="เช่น&#10;วันจันทร์&#10;06.00-07.00 อัลกุรอานยามเช้า&#10;07.00-08.00 ข่าวเช้ามุสลิม"></textarea>
+            <button type="button" class="save-btn" onclick="parseScheduleText()" style="margin-top:10px">🧩 แยกเป็นรายการ</button>
+          </div>
+
+          <div class="copy-box ai-sched-box">
+            <b>📷 อ่านผังจากภาพด้วย AI (Gemini)</b>
+            <div class="filehint">อัปโหลดภาพหรือ PDF ผังรายการ ระบบจะอ่านเวลาและชื่อรายการให้ แล้วเปิดหน้าตรวจทานก่อนใส่ลงผัง (key ฟรีอาจต้องรอคิวนาน)</div>
             <label for="ai-sched-file">ภาพผังรายการ</label>
             <input type="file" id="ai-sched-file" accept="image/*,application/pdf">
-            <label for="ai-sched-target">ใส่ลงที่</label>
-            <select id="ai-sched-target">
-              <option value="auto">อัตโนมัติตามวันที่พบในภาพ (ภาพทั้งสัปดาห์ → แม่แบบทุกวันที่พบ)</option>
-              <option value="tpl">แม่แบบของวันที่เลือกด้านล่าง</option>
-              <option value="ov">ผังเฉพาะวันที่ (ตามวันที่ที่เลือกด้านล่าง)</option>
-            </select>
             <button type="button" class="save-btn" id="ai-sched-btn" onclick="readScheduleFromImage()" style="margin-top:12px">🔍 อ่านผังจากภาพ</button>
             <details class="ai-settings" id="ai-settings">
               <summary>⚙️ ตั้งค่า AI (Gemini) <span id="ai-key-status" class="filehint"></span></summary>
@@ -2680,7 +2694,7 @@
   <div class="backdrop" id="ai-review-backdrop" style="align-items:stretch">
     <div class="ai-review glass">
       <div class="admin-head">
-        <b>📷 ตรวจทานผังที่อ่านจากภาพ</b>
+        <b>📝 ตรวจทานผังรายการก่อนใส่ลงผัง</b>
         <button class="close" style="position:static" onclick="closeAiReview()">×</button>
       </div>
       <div class="ai-review-body">
@@ -7046,20 +7060,194 @@
     }
   }
 
+  /* ---- วางข้อความผัง (จาก Google Lens / LINE สแกนข้อความ) — ฟรี ไม่ใช้ AI ----
+     แยกข้อความเป็น [{dayOfWeek, date, label, items:[{start,end,title,uncertain}]}] รูปแบบเดียวกับผล Gemini
+     แล้วส่งเข้าหน้าตรวจทานเดิม (buildAiDays_ / openAiReview_ / applyAiSchedule) */
+  const PASTE_DAYS=[
+    [/^(?:วัน)?จันทร์/,1],[/^(?:วัน)?อังคาร/,2],[/^(?:วัน)?พุธ/,3],[/^(?:วัน)?พฤหัส(?:บดี)?/,4],
+    [/^(?:วัน)?ศุกร์/,5],[/^(?:วัน)?เสาร์/,6],[/^(?:วัน)?อาทิตย์/,0]
+  ];
+  const PASTE_DAY_ABBR={'จ':1,'อ':2,'พ':3,'พฤ':4,'ศ':5,'ส':6,'อา':0};
+  const PASTE_MONTHS=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const PASTE_MONTHS_ABBR=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const DOW_ORDER=[1,2,3,4,5,6,0];
+  function expandDayRange_(a,b){
+    const ia=DOW_ORDER.indexOf(a), ib=DOW_ORDER.indexOf(b), out=[];
+    for(let k=0;k<7;k++){ const d=DOW_ORDER[(ia+k)%7]; out.push(d); if(d===b) break; }
+    return ib<0 ? [a] : out;
+  }
+  // ถ้าบรรทัดนี้เป็นหัววัน คืน {dows, date} ไม่ใช่คืน null
+  // หัววันต้องขึ้นต้นด้วยชื่อวัน และส่วนที่เหลือเป็นแค่วันอื่น/ช่วงวัน/วันที่ — กันชื่อรายการเช่น "ศุกร์สัญจร" ถูกนับเป็นหัววัน
+  function parseDayHeader_(line){
+    let s=line.replace(/^[\s*•▪►▶■□\-–—|:#]+/,'').trim();
+    if(/^ทุกวัน/.test(s)){ const rest=s.replace(/^ทุกวัน/,'').trim(); if(!rest || /^[\s()\-–—:,.]*$/.test(rest)) return { dows:[1,2,3,4,5,6,0], date:null }; }
+    const dows=[]; let lastWasRange=false; let guard=0;
+    while(s && guard++<10){
+      let m=null, d=null;
+      for(const [re,dw] of PASTE_DAYS){ m=s.match(re); if(m){ d=dw; break; } }
+      if(d===null){
+        const ab=s.match(/^(อา|พฤ|จ|อ|พ|ศ|ส)\./);   // ตัวย่อต้องมีจุด เช่น "จ." กันคำทั่วไป
+        if(ab){ m=ab; d=PASTE_DAY_ABBR[ab[1]]; }
+      }
+      if(d===null) break;
+      if(lastWasRange && dows.length){ const from=dows.pop(); dows.push(...expandDayRange_(from,d)); }
+      else dows.push(d);
+      s=s.slice(m[0].length).trim();
+      const sep=s.match(/^(-|–|—|ถึง|to)\s*/i);
+      if(sep){ lastWasRange=true; s=s.slice(sep[0].length).trim(); continue; }
+      lastWasRange=false;
+      const comma=s.match(/^(,|และ|\/|、)\s*/); if(comma){ s=s.slice(comma[0].length).trim(); continue; }
+    }
+    if(!dows.length) return null;
+    // ที่เหลือต้องเป็นวันที่หรือว่าง เช่น "ที่ 21 พ.ย. 2569" / "21/11/2026"
+    const rest=s.replace(/^ที่\s*/,'').trim();
+    let date=null;
+    if(rest){
+      date=parseThaiDate_(rest);
+      if(!date && !/^[()\[\]\s:.,\-–—]*$/.test(rest)) return null;
+    }
+    return { dows:[...new Set(dows)], date };
+  }
+  function parseThaiDate_(s){
+    let m=s.match(/^(\d{1,2})\s*[\/\-.]\s*(\d{1,2})\s*[\/\-.]\s*(\d{2,4})/);
+    let d, mo, y;
+    if(m){ d=+m[1]; mo=+m[2]; y=+m[3]; }
+    else {
+      m=s.match(/^(\d{1,2})\s*([ก-๙.]+?)\s*(\d{2,4})?\s*$/) || s.match(/^(\d{1,2})\s+([ก-๙.]+)/);
+      if(!m) return null;
+      const name=m[2].replace(/\s/g,'');
+      let idx=PASTE_MONTHS.findIndex(x=>name.startsWith(x));
+      if(idx<0) idx=PASTE_MONTHS_ABBR.findIndex(x=>name===x || name===x.replace(/\.$/,''));
+      if(idx<0) return null;
+      d=+m[1]; mo=idx+1; y=m[3] ? +m[3] : new Date().getFullYear();
+    }
+    if(y<100) y += (y>=50 ? 2500 : 2000);       // 69 -> 2569 (พ.ศ.) / 26 -> 2026
+    if(y>2400) y-=543;                           // พ.ศ. -> ค.ศ.
+    if(!(d>=1&&d<=31&&mo>=1&&mo<=12)) return null;
+    return y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+  }
+  // แยกเวลาออกจากบรรทัด: คืน {t:'06:00-07:00'|'' , text:'ชื่อรายการ'}
+  function splitTimeLine_(line){
+    const re=/(\d{1,2})\s*[:.]\s*(\d{2})(?:\s*น\.?)?/g;
+    const ms=[...line.matchAll(re)].filter(m=>+m[1]<=24 && +m[2]<=59);
+    if(!ms.length) return { t:'', text:line.trim() };
+    const a=ms[0], b=ms[1];
+    let t=normClock_(a[1]+':'+a[2]);
+    let cutEnd=a.index+a[0].length;
+    if(b){
+      const between=line.slice(cutEnd, b.index);
+      if(/^\s*(-|–|—|ถึง|to|~)?\s*$/i.test(between)){
+        const e=normClock_(b[1]+':'+b[2]); if(e && e!==t) t+='-'+e;
+        cutEnd=b.index+b[0].length;
+      }
+    }
+    let text=(line.slice(0,a.index)+' '+line.slice(cutEnd))
+      .replace(/^\s*(น\.|นาฬิกา)/,'')
+      .replace(/^[\s\-–—|:,.~)]+|[\s\-–—|:,(~]+$/g,'')
+      .replace(/\s+/g,' ').trim();
+    return { t, text };
+  }
+  function isJunkLine_(s){
+    if(!/[ก-๙A-Za-z0-9]/.test(s)) return true;                       // มีแต่สัญลักษณ์
+    if(/^https?:\/\/|www\./i.test(s)) return true;
+    if(/^(เวลา|time|รายการ|ชื่อรายการ|program(me)?s?|เวลา\s*รายการ|time\s*program)$/i.test(s)) return true;
+    if(/^\d{1,3}$/.test(s)) return true;                                 // เลขหน้า
+    if(/^\*?\s*(หมายเหตุ|remark|note)/i.test(s)) return true;           // หมายเหตุท้ายผัง
+    return false;
+  }
+  function parseScheduleLines_(text){
+    const lines=String(text||'')
+      .replace(/[​-‍﻿]/g,'').replace(/ /g,' ')
+      .replace(/[๐-๙]/g, d=>'๐๑๒๓๔๕๖๗๘๙'.indexOf(d))
+      .split(/\r?\n/).map(s=>s.replace(/\s+/g,' ').trim()).filter(Boolean);
+    const sections=[]; let cur=null;
+    const newSection=(dows,date,label)=>{
+      // หัววันติดกันโดยยังไม่มีรายการ (เช่นหัวคอลัมน์) = ใช้หัวล่าสุด
+      if(cur && !cur.tokens.length && cur.dows.length){ cur.dows=dows; cur.date=date; cur.label=label; return; }
+      cur={ dows, date, label, tokens:[] }; sections.push(cur);
+    };
+    for(const line of lines){
+      const hasTime=/\d{1,2}\s*[:.]\s*\d{2}/.test(line);
+      if(!hasTime){
+        const h=parseDayHeader_(line);
+        if(h){ newSection(h.dows, h.date, line); continue; }
+        if(/ผังรายการ|program\s*schedule/i.test(line)){        // หัวเรื่องของภาพ — ใช้หาวันถ้ามี แล้วข้าม
+          const inner=line.replace(/^.*?(?=(วัน)?(จันทร์|อังคาร|พุธ|พฤหัส|ศุกร์|เสาร์|อาทิตย์|ทุกวัน))/,'');
+          const h2=inner!==line ? parseDayHeader_(inner) : null;
+          if(h2) newSection(h2.dows, h2.date, line);
+          continue;
+        }
+        if(isJunkLine_(line)) continue;
+      }
+      if(!cur){ cur={ dows:[], date:null, label:'', tokens:[] }; sections.push(cur); }
+      const {t, text:txt}=splitTimeLine_(line);
+      if(t && txt) cur.tokens.push({ type:'both', t, s:txt });
+      else if(t) cur.tokens.push({ type:'time', t });
+      else if(txt && !isJunkLine_(txt)) cur.tokens.push({ type:'text', s:txt });
+    }
+    const out=[];
+    for(const sec of sections){
+      const items=[]; const pending=[]; let columnMode=false, run=0, mismatch=false, prevWasTitle=false;
+      for(const tk of sec.tokens){
+        if(tk.type==='time'){ pending.push(tk.t); run++; if(run>=2) columnMode=true; prevWasTitle=false; continue; }
+        run=0;
+        if(tk.type==='both'){
+          while(pending.length){ items.push({ start:pending.shift(), end:'', title:'', uncertain:true }); mismatch=true; }
+          items.push({ start:tk.t, end:'', title:tk.s, uncertain:false });
+          prevWasTitle=true;
+        } else if(pending.length){
+          items.push({ start:pending.shift(), end:'', title:tk.s, uncertain:false });
+          prevWasTitle=true;
+        } else if(prevWasTitle && !columnMode && items.length){
+          // ชื่อรายการยาวที่ Lens ตัดขึ้นบรรทัดใหม่ — ต่อท้ายชื่อแถวก่อน แล้วให้แอดมินตรวจ
+          const last=items[items.length-1]; last.title=(last.title+' '+tk.s).trim(); last.uncertain=true;
+        } else {
+          items.push({ start:'', end:'', title:tk.s, uncertain:true }); if(columnMode) mismatch=true;
+          prevWasTitle=false;
+        }
+      }
+      while(pending.length){ items.push({ start:pending.shift(), end:'', title:'', uncertain:true }); mismatch=true; }
+      // Lens อ่านทีละคอลัมน์แล้วจำนวนเวลาไม่เท่าชื่อ = การจับคู่อาจเลื่อน ให้ตรวจทุกแถว
+      if(columnMode && mismatch) items.forEach(it=>{ it.uncertain=true; });
+      if(!items.length) continue;
+      if(sec.dows.length){
+        sec.dows.forEach(d=>out.push({ dayOfWeek:d, date: sec.dows.length===1 ? sec.date : null, label: sec.dows.length===1 ? sec.label : 'วัน'+DOW_TH[d]+' (จาก "'+sec.label+'")', items:items.map(it=>Object.assign({},it)) }));
+      } else {
+        out.push({ dayOfWeek:null, date:null, label:'', items });
+      }
+    }
+    return out;
+  }
+  function parseScheduleText(){
+    if(!isAdmin||!db){ toast('ต้องเข้าสู่ระบบแอดมินก่อน'); return; }
+    const text=(document.getElementById('paste-sched-text').value||'');
+    if(!text.trim()){ toast('วางข้อความผังรายการในช่องก่อนค่ะ'); return; }
+    const raw=parseScheduleLines_(text);
+    if(!raw.some(d=>d.items.some(it=>it.start))){ toast('ไม่พบเวลาในข้อความที่วางค่ะ — ตรวจว่าคัดลอกข้อความจาก Lens มาครบ'); return; }
+    const days=buildAiDays_(raw, document.getElementById('ai-sched-target').value);
+    if(!days.some(d=>d.rows.length)){ toast('ไม่พบรายการในข้อความที่วางค่ะ'); return; }
+    aiDays=days;
+    openAiReview_(null);
+  }
+
   function aiDestOptions_(sel){
     return [1,2,3,4,5,6,0].map(d=>`<option value="tpl:${d}"${sel==='tpl:'+d?' selected':''}>แม่แบบวัน${DOW_TH[d]}</option>`).join('')+
       `<option value="ov"${sel==='ov'?' selected':''}>ผังเฉพาะวันที่…</option>`+
       `<option value="skip"${sel==='skip'?' selected':''}>ไม่ใช้วันนี้</option>`;
   }
+  // file = null เมื่อมาจากข้อความที่วาง (ไม่มีภาพต้นฉบับให้แสดง)
   function openAiReview_(file){
     if(aiPreviewUrl){ URL.revokeObjectURL(aiPreviewUrl); aiPreviewUrl=''; }
-    aiPreviewUrl=URL.createObjectURL(file);
+    const panel=document.querySelector('.ai-review');
+    panel.classList.toggle('no-img', !file);
     const imgBox=document.querySelector('.ai-review-img');
     const img=document.getElementById('ai-review-img');
     imgBox.classList.remove('zoom');
     const oldLink=imgBox.querySelector('.ai-pdf-link'); if(oldLink) oldLink.remove();
-    if((file.type||'').startsWith('image/')){ img.style.display=''; img.src=aiPreviewUrl; }
+    if(!file){ img.removeAttribute('src'); }
+    else if((file.type||'').startsWith('image/')){ aiPreviewUrl=URL.createObjectURL(file); img.style.display=''; img.src=aiPreviewUrl; }
     else {
+      aiPreviewUrl=URL.createObjectURL(file);
       img.style.display='none'; img.removeAttribute('src');
       imgBox.insertAdjacentHTML('beforeend', `<a class="mini ai-pdf-link" href="${aiPreviewUrl}" target="_blank" rel="noopener">📄 เปิดดูไฟล์ PDF ต้นฉบับ</a>`);
     }
@@ -7112,7 +7300,7 @@
         if(!t && !title){ r.classList.remove('ai-flag'); r.removeAttribute('data-why'); return; }
         n++;
         const p=parseSlotTime(t);
-        if(r.dataset.unsure==='1') why='AI ไม่แน่ใจ — เทียบกับภาพ';
+        if(r.dataset.unsure==='1') why='ไม่แน่ใจ — เทียบกับผังต้นฉบับ';
         else if(p.start===null) why='ไม่มีเวลา หรืออ่านเวลาไม่ได้';
         else if(!title) why='ไม่มีชื่อรายการ';
         else if(prev){
@@ -7129,7 +7317,7 @@
       if(c) c.textContent = n+' รายการ'+(bad?' · ⚠️ '+bad+' จุดควรตรวจ':' · ✅');
     });
     const s=document.getElementById('ai-review-summary');
-    if(s) s.textContent = `อ่านได้ ${aiDays.length} วัน รวม ${total} รายการ`+(flagged?` · ⚠️ ${flagged} จุดที่ไฮไลต์ควรตรวจกับภาพก่อน`:'')+' — นับจำนวนให้ตรงกับภาพแล้วกดใส่ลงผังค่ะ';
+    if(s) s.textContent = `อ่านได้ ${aiDays.length} วัน รวม ${total} รายการ`+(flagged?` · ⚠️ ${flagged} จุดที่ไฮไลต์ควรตรวจกับผังต้นฉบับก่อน`:'')+' — นับจำนวนให้ตรงกับผังต้นฉบับแล้วกดใส่ลงผังค่ะ';
   }
 
   async function applyAiSchedule(){
